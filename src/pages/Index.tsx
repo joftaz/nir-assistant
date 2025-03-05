@@ -8,7 +8,8 @@ import ApiKeyInput from '@/components/ApiKeyInput';
 import Settings from '@/components/Settings';
 import { getModelResponse } from '@/utils/modelPrompt';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface TopicCategory {
   category: string;
@@ -126,6 +127,25 @@ const Index: React.FC = () => {
       <header className="w-full max-w-3xl mx-auto mb-8 text-center relative">
         <div className="absolute top-0 right-0">
           <Settings onSystemPromptChange={handleSystemPromptChange} />
+        </div>
+        <div className="absolute top-0 left-0">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="rounded-full"
+            title="רענן שיחה"
+            aria-label="רענן שיחה"
+            onClick={() => {
+              setConversation([]);
+              setTopicGroups([]);
+              toast({
+                title: "השיחה אופסה",
+                description: "השיחה אופסה בהצלחה",
+              });
+            }}
+          >
+            <RefreshCw className="h-5 w-5" />
+          </Button>
         </div>
         <motion.h1 
           className="text-2xl sm:text-3xl font-semibold mb-2"
