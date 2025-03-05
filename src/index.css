@@ -5,65 +5,48 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
-
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-
+    --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-
-    --primary: 210 100% 50%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
-
-    --destructive: 0 84% 60%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
-
-    --radius: 0.75rem;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
   }
 
   .dark {
-    --background: 222 47% 11%;
+    --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
-    --card: 222 47% 11%;
+    --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 11%;
+    --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
-    --primary: 210 100% 50%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 217 33% 17%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 217 33% 17%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 63% 31%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 213 27% 84%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
   }
 }
 
@@ -71,51 +54,33 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-@layer components {
-  .topic-chip {
-    @apply px-4 py-2 rounded-full bg-white border border-border shadow-sm 
-           transition-all duration-200 hover:shadow hover:border-primary/30 
-           active:scale-95 font-medium text-sm;
-  }
-  
-  .word-chip {
-    @apply px-3 py-1.5 rounded-full bg-secondary border border-border/50
-           transition-all duration-200 hover:bg-primary/10 hover:border-primary/30
-           active:scale-95 text-sm;
-  }
-  
-  .input-container {
-    @apply w-full bg-white rounded-2xl shadow-sm border border-border/70 
-           p-3 transition duration-300 focus-within:shadow-md 
-           focus-within:border-primary/30 focus-within:ring-1 focus-within:ring-primary/20;
-  }
-  
-  .conversation-bubble {
-    @apply rounded-2xl px-4 py-3 bg-white border border-border/50 shadow-sm
-           animate-slide-up max-w-[85%];
-  }
-  
-  .conversation-bubble.user {
-    @apply bg-primary text-primary-foreground ml-auto;
-  }
-  
-  .topic-group {
-    @apply rounded-xl p-4 bg-white/80 backdrop-blur-sm border border-border/70 
-           shadow-sm transition-all duration-300 animate-scale-in hover:shadow;
-  }
-  
-  .topic-group-header {
-    @apply flex items-center gap-2 font-semibold text-base cursor-pointer;
-  }
-  
-  .topic-group-content {
-    @apply mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-hidden;
-  }
+/* RTL Support */
+html {
+  direction: rtl;
+}
+
+.input-container {
+  @apply flex flex-row-reverse items-center bg-white dark:bg-gray-800 border border-border rounded-full px-4 py-2 shadow-sm;
+}
+
+/* Conversation bubbles */
+.conversation-bubble {
+  @apply max-w-[80%] break-words;
+}
+
+/* Special handling for LTR content inside RTL layout */
+[dir="ltr"] {
+  direction: ltr;
+  text-align: left;
+}
+
+.rtl-text {
+  direction: rtl;
+  text-align: right;
 }

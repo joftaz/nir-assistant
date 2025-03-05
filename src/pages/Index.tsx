@@ -5,7 +5,9 @@ import { motion } from 'framer-motion';
 import TopicInput from '@/components/TopicInput';
 import TopicGroup from '@/components/TopicGroup';
 import ConversationHistory, { ConversationItem } from '@/components/ConversationHistory';
-import { getMockResponse } from '@/utils/modelPrompt';
+import ApiKeyInput from '@/components/ApiKeyInput';
+import { getModelResponse } from '@/utils/modelPrompt';
+import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
 interface TopicCategory {
@@ -17,6 +19,8 @@ const Index: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [conversation, setConversation] = useState<ConversationItem[]>([]);
   const [topicGroups, setTopicGroups] = useState<TopicCategory[]>([]);
+  const [openAIKey, setOpenAIKey] = useState<string>('');
+  const { toast } = useToast();
 
   const handleSubmitTopic = async (topic: string) => {
     // Add user input to conversation
@@ -31,13 +35,16 @@ const Index: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // In production, this would call a real API with the system prompt
-      const response = await getMockResponse(topic);
-      
+      // Call OpenAI if we have a key, otherwise use mock
+      const response = await getModelResponse(topic, !!openAIKey, openAIKey);
       setTopicGroups(response);
     } catch (error) {
       console.error('Error fetching response:', error);
-      // Handle error - perhaps show a toast notification
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בקבלת תשובה. אנא נסה שוב או בדוק את מפתח ה-API.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -54,15 +61,27 @@ const Index: React.FC = () => {
     
     setConversation(prev => [...prev, newMessage]);
     
-    // In a real app, this would trigger a new API call with the updated context
-    // For now, we'll just simulate some changes to the topic groups
+    // Call OpenAI with the selected word
     setIsLoading(true);
-    setTimeout(() => {
-      getMockResponse(word).then(response => {
+    getModelResponse(word, !!openAIKey, openAIKey)
+      .then(response => {
         setTopicGroups(response);
+      })
+      .catch(error => {
+        console.error('Error fetching response:', error);
+        toast({
+          title: "שגיאה",
+          description: "אירעה שגיאה בקבלת תשובה. אנא נסה שוב.",
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
         setIsLoading(false);
       });
-    }, 500);
+  };
+
+  const handleSaveApiKey = (apiKey: string) => {
+    setOpenAIKey(apiKey);
   };
 
   return (
@@ -85,6 +104,8 @@ const Index: React.FC = () => {
           הקלד נושא או לחץ על מילים מוצעות להמשך השיחה
         </motion.p>
       </header>
+
+      <ApiKeyInput onSave={handleSaveApiKey} savedKey={openAIKey} />
 
       <ConversationHistory conversation={conversation} />
 

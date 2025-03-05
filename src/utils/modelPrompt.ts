@@ -1,4 +1,6 @@
 
+import { generateResponse, CategoryResponse, initializeOpenAI } from './openaiService';
+
 export const systemPrompt = `
 אני קלינאית תקשורת שמטפלת באפזיה, אני מטפלת בבחור צעיר שנפצע ב7/10 הוא נשוי לאשתו שרה, יש לו שני ילדים קטנים אמרי בן 4 וזיו בת שנה וחצי. הם גרים בתל אביב.אני רוצה שאם אני אכתוב לך מספר מילים בודדות או אצלם תמונה התגובה שלך תיהיה ברשימת מילים מחלוקת לפי קטגוריות.כל קטגוריה צריכה להחיל בערך 10 מילים. המילים צריכות להיות כאלו שמתארות היטב את המתרחש אך גם מופשטות, ומעניינות כדי להרחיב את המסר התקשורתי האפשרי. אך גם רלוונטיות למטרה.
 בכל קטגוריה צור רשימת מילים, שתציג עמדות שונות סביב עניין ויתנו אופציות מגוונת לתגובה, אפשרויות שנותנות תמונה רחבה. צריך כמה קטגוריות שמתייחסות באופן מופשט יחסית וקגוריות אחרות צריכות להתייחס באופן יותר קונקרטי. תזכור שבכל קטגוריה שם הקטגוריה מופיע בבולד ולאחר מכן רשימת המילים כתובות בשורה עם פסיק בין מילה למילה ולא ברשימת נקודות.
@@ -6,7 +8,7 @@ export const systemPrompt = `
 כמו כן זכור להשתמש במילים בודדות ולא בביטויים.
 `;
 
-// Mock response function - In production this would call a real API
+// This is kept for fallback or testing purposes
 export const getMockResponse = (input: string): Promise<Array<{category: string; words: string[]}>> => {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -79,4 +81,24 @@ export const getMockResponse = (input: string): Promise<Array<{category: string;
       resolve(response);
     }, 500); // Simulate API latency
   });
+};
+
+// New function that determines whether to use mock or real OpenAI responses
+export const getModelResponse = async (
+  input: string, 
+  useOpenAI: boolean = false, 
+  apiKey?: string
+): Promise<CategoryResponse[]> => {
+  if (useOpenAI && apiKey) {
+    try {
+      // Initialize OpenAI if needed
+      initializeOpenAI(apiKey);
+      return await generateResponse(input);
+    } catch (error) {
+      console.error("Error with OpenAI, falling back to mock:", error);
+      return getMockResponse(input);
+    }
+  } else {
+    return getMockResponse(input);
+  }
 };
