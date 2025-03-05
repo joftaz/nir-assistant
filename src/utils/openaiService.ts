@@ -35,7 +35,7 @@ export const generateResponse = async (input: string, systemPrompt: string): Pro
       model: "gpt-4o", // or another model like "gpt-3.5-turbo"
       messages: [
         { role: "system", content: systemPrompt + "\n\n" + defaultSystemJsonInstruction },
-        { role: "user", content: input }
+        { role: "user", content: "מילים מהבחור שלי: " + input }
       ],
       response_format: { type: "json_object" },
       temperature: 0.7,
@@ -150,7 +150,7 @@ export const getOpenAIStreamingResponse = async (
           { role: 'user', content: prompt }
         ],
         stream: true,
-        temperature: 0.7
+        temperature: 0.8
       })
     });
 
