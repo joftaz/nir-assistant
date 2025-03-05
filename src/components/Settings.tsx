@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -60,9 +59,9 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button 
-          variant="outline" 
+          variant="ghost" 
           size="icon" 
-          className="absolute top-4 left-4"
+          className="rounded-full"
           title="הגדרות"
           aria-label="הגדרות"
         >
@@ -82,8 +81,8 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}
             rows={15}
-            className="font-mono text-sm ltr"
-            dir="ltr"
+            className="font-mono text-sm rtl text-right"
+            dir="rtl"
           />
         </div>
         

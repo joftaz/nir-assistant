@@ -124,7 +124,9 @@ const Index: React.FC = () => {
   return (
     <div className="min-h-screen w-full flex flex-col items-center px-4 py-8 sm:py-12">
       <header className="w-full max-w-3xl mx-auto mb-8 text-center relative">
-        <Settings onSystemPromptChange={handleSystemPromptChange} />
+        <div className="absolute top-0 right-0">
+          <Settings onSystemPromptChange={handleSystemPromptChange} />
+        </div>
         <motion.h1 
           className="text-2xl sm:text-3xl font-semibold mb-2"
           initial={{ opacity: 0, y: -10 }}
