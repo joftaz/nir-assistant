@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';
@@ -46,7 +45,16 @@ const Index: React.FC = () => {
     try {
       // Call OpenAI if we have a key, otherwise use mock
       const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-      const response = await getModelResponse(topic, !!apiKey, apiKey);
+      
+      // Create conversation history string from previous messages
+      const conversationHistory = conversation.map(item => 
+        `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
+      ).join('\n');
+      
+      // Send both the new topic and conversation history
+      const prompt = conversationHistory ? `${conversationHistory}\nUser: ${topic}` : topic;
+      
+      const response = await getModelResponse(prompt, !!apiKey, apiKey);
       setTopicGroups(response);
     } catch (error) {
       console.error('Error fetching response:', error);
@@ -71,10 +79,19 @@ const Index: React.FC = () => {
     
     setConversation(prev => [...prev, newMessage]);
     
-    // Call OpenAI with the selected word
+    // Call OpenAI with the selected word and previous conversation
     setIsLoading(true);
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-    getModelResponse(word, !!apiKey, apiKey)
+    
+    // Create conversation history string from previous messages
+    const conversationHistory = conversation.map(item => 
+      `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
+    ).join('\n');
+    
+    // Send both the new word and conversation history
+    const prompt = `${conversationHistory}\nUser: ${word}`;
+    console.log(prompt);
+    getModelResponse(prompt, !!apiKey, apiKey)
       .then(response => {
         setTopicGroups(response);
       })
