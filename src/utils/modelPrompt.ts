@@ -1,6 +1,7 @@
+
 import { generateResponse, CategoryResponse, initializeOpenAI } from './openaiService';
 
-export const systemPrompt = `
+export const defaultSystemPrompt = `
 אני קלינאית תקשורת שמטפלת באפזיה, אני מטפלת בבחור צעיר שנפצע ב7/10 הוא נשוי לאשתו שרה, יש לו שני ילדים קטנים אמרי בן 4 וזיו בת שנה וחצי. הם גרים בתל אביב.אני רוצה שאם אני אכתוב לך מספר מילים בודדות או אצלם תמונה התגובה שלך תיהיה ברשימת מילים מחלוקת לפי קטגוריות.כל קטגוריה צריכה להחיל בערך 10 מילים. המילים צריכות להיות כאלו שמתארות היטב את המתרחש אך גם מופשטות, ומעניינות כדי להרחיב את המסר התקשורתי האפשרי. אך גם רלוונטיות למטרה.
 בכל קטגוריה צור רשימת מילים, שתציג עמדות שונות סביב עניין ויתנו אופציות מגוונת לתגובה, אפשרויות שנותנות תמונה רחבה. צריך כמה קטגוריות שמתייחסות באופן מופשט יחסית וקגוריות אחרות צריכות להתייחס באופן יותר קונקרטי.
 
@@ -20,6 +21,11 @@ export const systemPrompt = `
   ]
 }
 `;
+
+// Get system prompt from localStorage or use default
+export const getSystemPrompt = (): string => {
+  return localStorage.getItem('system_prompt') || defaultSystemPrompt;
+};
 
 // This is kept for fallback or testing purposes
 export const getMockResponse = (input: string): Promise<Array<{category: string; words: string[]}>> => {
@@ -106,7 +112,7 @@ export const getModelResponse = async (
     try {
       // Initialize OpenAI if needed
       initializeOpenAI(apiKey);
-      return await generateResponse(input);
+      return await generateResponse(input, getSystemPrompt());
     } catch (error) {
       console.error("Error with OpenAI, falling back to mock:", error);
       return getMockResponse(input);

@@ -1,6 +1,4 @@
-
 import OpenAI from "openai";
-import { systemPrompt } from "./modelPrompt";
 
 // Initialize OpenAI - this will use the API key from OPENAI_API_KEY environment variable
 // In a production environment, this should come from server-side
@@ -26,7 +24,7 @@ export interface CategoryResponse {
   words: string[];
 }
 
-export const generateResponse = async (input: string): Promise<CategoryResponse[]> => {
+export const generateResponse = async (input: string, systemPrompt: string): Promise<CategoryResponse[]> => {
   if (!openai) {
     throw new Error("OpenAI client not initialized. Call initializeOpenAI first.");
   }

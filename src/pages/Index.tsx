@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';
@@ -5,6 +6,7 @@ import TopicInput from '@/components/TopicInput';
 import TopicGroup from '@/components/TopicGroup';
 import ConversationHistory, { ConversationItem } from '@/components/ConversationHistory';
 import ApiKeyInput from '@/components/ApiKeyInput';
+import Settings from '@/components/Settings';
 import { getModelResponse } from '@/utils/modelPrompt';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
@@ -93,9 +95,19 @@ const Index: React.FC = () => {
     setOpenAIKey(apiKey);
   };
 
+  const handleSystemPromptChange = (newPrompt: string) => {
+    // The system prompt is saved in localStorage by the Settings component
+    // We don't need to do anything here except maybe refresh data if needed
+    toast({
+      title: "הודעת מערכת עודכנה",
+      description: "השאילתות הבאות ישתמשו בהודעת המערכת החדשה",
+    });
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center px-4 py-8 sm:py-12">
-      <header className="w-full max-w-3xl mx-auto mb-8 text-center">
+      <header className="w-full max-w-3xl mx-auto mb-8 text-center relative">
+        <Settings onSystemPromptChange={handleSystemPromptChange} />
         <motion.h1 
           className="text-2xl sm:text-3xl font-semibold mb-2"
           initial={{ opacity: 0, y: -10 }}
