@@ -6,7 +6,7 @@ import TopicGroup from '@/components/TopicGroup';
 import ConversationHistory, { ConversationItem } from '@/components/ConversationHistory';
 import ApiKeyInput from '@/components/ApiKeyInput';
 import Settings from '@/components/Settings';
-import { getModelResponse } from '@/utils/modelPrompt';
+import { getModelResponse, initializeSystemPrompt } from '@/utils/modelPrompt';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ const Index: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [conversation, setConversation] = useState<ConversationItem[]>([]);
   const [topicGroups, setTopicGroups] = useState<TopicCategory[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [openAIKey, setOpenAIKey] = useState<string>('');
   const { toast } = useToast();
   
@@ -29,6 +30,9 @@ const Index: React.FC = () => {
     if (envApiKey) {
       setOpenAIKey(envApiKey);
     }
+    
+    // Initialize system prompt if not already set
+    initializeSystemPrompt();
   }, []);
 
   const handleSubmitTopic = async (topic: string) => {
@@ -42,6 +46,8 @@ const Index: React.FC = () => {
     
     setConversation(prev => [...prev, userMessage]);
     setIsLoading(true);
+    setIsStreaming(true);
+    setTopicGroups([]); // Clear existing topic groups
     
     try {
       // Call OpenAI if we have a key, otherwise use mock
@@ -55,8 +61,27 @@ const Index: React.FC = () => {
       // Send both the new topic and conversation history
       const prompt = conversationHistory ? `${conversationHistory}\nUser: ${topic}` : topic;
       
-      const response = await getModelResponse(prompt, !!apiKey, apiKey);
-      setTopicGroups(response);
+      // Use streaming version of getModelResponse
+      console.log("Starting streaming request...");
+      const categoryReceived = new Set<string>();
+      
+      await getModelResponse(
+        prompt, 
+        !!apiKey, 
+        apiKey, 
+        (partialResponse) => {
+          // This callback will be called with each new group
+          console.log("Received partial response:", partialResponse);
+          
+          // Only add the category if it's not a duplicate
+          if (!categoryReceived.has(partialResponse.category)) {
+            categoryReceived.add(partialResponse.category);
+            setTopicGroups(currentGroups => [...currentGroups, partialResponse]);
+          }
+        }
+      );
+      
+      console.log("Streaming request complete");
     } catch (error) {
       console.error('Error fetching response:', error);
       toast({
@@ -66,6 +91,7 @@ const Index: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
     }
   };
 
@@ -82,6 +108,9 @@ const Index: React.FC = () => {
     
     // Call OpenAI with the selected word and previous conversation
     setIsLoading(true);
+    setIsStreaming(true);
+    setTopicGroups([]); // Clear existing topic groups
+    
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
     
     // Create conversation history string from previous messages
@@ -92,21 +121,36 @@ const Index: React.FC = () => {
     // Send both the new word and conversation history
     const prompt = `${conversationHistory}\nUser: ${word}`;
     console.log(prompt);
-    getModelResponse(prompt, !!apiKey, apiKey)
-      .then(response => {
-        setTopicGroups(response);
-      })
-      .catch(error => {
-        console.error('Error fetching response:', error);
-        toast({
-          title: "שגיאה",
-          description: "אירעה שגיאה בקבלת תשובה. אנא נסה שוב.",
-          variant: "destructive",
-        });
-      })
-      .finally(() => {
-        setIsLoading(false);
+    
+    console.log("Starting streaming request...");
+    const categoryReceived = new Set<string>();
+    
+    // Use streaming version
+    getModelResponse(
+      prompt, 
+      !!apiKey, 
+      apiKey, 
+      (partialResponse) => {
+        // This callback will be called with each new group
+        console.log("Received partial response:", partialResponse);
+        
+        // Only add the category if it's not a duplicate
+        if (!categoryReceived.has(partialResponse.category)) {
+          categoryReceived.add(partialResponse.category);
+          setTopicGroups(currentGroups => [...currentGroups, partialResponse]);
+        }
+      }
+    ).catch(error => {
+      console.error('Error fetching response:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בקבלת תשובה. אנא נסה שוב.",
+        variant: "destructive",
       });
+    }).finally(() => {
+      setIsLoading(false);
+      setIsStreaming(false);
+    });
   };
 
   const handleSaveApiKey = (apiKey: string) => {
@@ -175,19 +219,26 @@ const Index: React.FC = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        {isLoading ? (
+        {isLoading && topicGroups.length === 0 ? (
           <div className="flex justify-center items-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
           </div>
         ) : (
-          topicGroups.map((group, index) => (
-            <TopicGroup
-              key={`${group.category}-${index}`}
-              category={group.category}
-              words={group.words}
-              onWordSelect={handleWordSelect}
-            />
-          ))
+          <>
+            {topicGroups.map((group, index) => (
+              <TopicGroup
+                key={`${group.category}-${index}`}
+                category={group.category}
+                words={group.words}
+                onWordSelect={handleWordSelect}
+              />
+            ))}
+            {isStreaming && (
+              <div className="flex justify-center items-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-primary/70" />
+              </div>
+            )}
+          </>
         )}
       </motion.div>
 

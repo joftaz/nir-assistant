@@ -1,27 +1,42 @@
-
-import { generateResponse, CategoryResponse, initializeOpenAI } from './openaiService';
+import { generateResponse, CategoryResponse, initializeOpenAI, getOpenAIStreamingResponse } from './openaiService';
 
 export const defaultSystemPrompt = `
 אני קלינאית תקשורת שמטפלת באפזיה, אני מטפלת בבחור צעיר שנפצע ב7/10 הוא נשוי לאשתו שרה, יש לו שני ילדים קטנים אמרי בן 4 וזיו בת שנה וחצי. הם גרים בתל אביב.אני רוצה שאם אני אכתוב לך מספר מילים בודדות או אצלם תמונה התגובה שלך תיהיה ברשימת מילים מחלוקת לפי קטגוריות.כל קטגוריה צריכה להחיל בערך 10 מילים. המילים צריכות להיות כאלו שמתארות היטב את המתרחש אך גם מופשטות, ומעניינות כדי להרחיב את המסר התקשורתי האפשרי. אך גם רלוונטיות למטרה.
-בכל קטגוריה צור רשימת מילים, שתציג עמדות שונות סביב עניין ויתנו אופציות מגוונת לתגובה, אפשרויות שנותנות תמונה רחבה. צריך כמה קטגוריות שמתייחסות באופן מופשט יחסית וקגוריות אחרות צריכות להתייחס באופן יותר קונקרטי.
+בכל קטגוריה צור רשימת מילים, שתציג עמדות שונות סביב עניין ויתנו אופציות מגוונת לתגובה, אפשרויות שנותנות תמונה רחבה. צריך כמה קטגוריות שמתייחסות באופן מופשט יחסית וקטגוריות אחרות צריכות להתייחס באופן יותר קונקרטי.
 
 כמו כן זכור להשתמש במילים בודדות ולא בביטויים.
 
-===== הוראות למערכת ====
-אנא החזר את התשובה במבנה JSON לפי הפורמט הבא:
-{
-  "categories": [
-    {
-      "category": "שם הקטגוריה",
-      "words": ["מילה1", "מילה2", "מילה3", "מילה4", "מילה5", "מילה6", "מילה7", "מילה8", "מילה9", "מילה10"]
-    },
-    {
-      "category": "שם קטגוריה אחרת",
-      "words": ["מילה1", "מילה2", "מילה3", "מילה4", "מילה5", "מילה6", "מילה7", "מילה8", "מילה9", "מילה10"]
-    }
-  ]
-}
+* מספר קטגוריות: בין 3 ל- 5
+* מילים בכל קטגוריה: בין 8 ל- 12 מילים
 `;
+
+export const defaultSystemJsonInstruction = `
+===== הוראות למערכת ====
+חשוב מאוד: אנא החזר את התשובה במבנה JSON בלבד לפי הפורמט הבא:
+[
+  {
+    "category": "שם הקטגוריה",
+    "words": ["מילה1", "מילה2", "מילה3", "מילה4", "מילה5", "מילה6", "מילה7", "מילה8", "מילה9", "מילה10"]
+  },
+  {
+    "category": "שם קטגוריה אחרת",
+    "words": ["מילה1", "מילה2", "מילה3", "מילה4", "מילה5", "מילה6", "מילה7", "מילה8"]
+  }
+      {
+    "category": "שם קטגוריה שלישית",
+    "words": ["מילה1", "מילה2", "מילה3", "מילה4", "מילה5", "מילה6", "מילה7", "מילה8", "מילה9", "מילה10"]
+  }
+]
+
+אל תכתוב שום טקסט לפני או אחרי ה-JSON. החזר רק את מבנה ה-JSON.
+`;
+
+// Initialize system prompt in localStorage if not present
+export const initializeSystemPrompt = (): void => {
+  if (!localStorage.getItem('system_prompt')) {
+    localStorage.setItem('system_prompt', defaultSystemPrompt);
+  }
+};
 
 // Get system prompt from localStorage or use default
 export const getSystemPrompt = (): string => {
@@ -105,20 +120,34 @@ export const getMockResponse = (input: string): Promise<Array<{category: string;
 
 // New function that determines whether to use mock or real OpenAI responses
 export const getModelResponse = async (
-  input: string, 
-  useOpenAI: boolean = false, 
-  apiKey?: string
-): Promise<CategoryResponse[]> => {
+  prompt: string, 
+  useOpenAI: boolean = true, 
+  apiKey: string = '',
+  onPartialResponse?: (group: TopicCategory) => void
+): Promise<TopicCategory[]> => {
   if (useOpenAI && apiKey) {
     try {
-      // Initialize OpenAI if needed
-      initializeOpenAI(apiKey);
-      return await generateResponse(input, getSystemPrompt());
+      // Call the streaming version of the OpenAI service
+      return await getOpenAIStreamingResponse(prompt, apiKey, onPartialResponse);
     } catch (error) {
-      console.error("Error with OpenAI, falling back to mock:", error);
-      return getMockResponse(input);
+      console.error('Error calling OpenAI:', error);
+      throw error;
     }
   } else {
-    return getMockResponse(input);
+    // For mock data, simulate streaming with setTimeout
+    const mockData = getMockResponse(prompt);
+    
+    if (onPartialResponse) {
+      // Simulate streaming for mock data
+      const results: TopicCategory[] = [];
+      for (const group of mockData) {
+        await new Promise(resolve => setTimeout(resolve, 300)); // Delay for simulation
+        onPartialResponse(group);
+        results.push(group);
+      }
+      return results;
+    }
+    
+    return mockData;
   }
 };
