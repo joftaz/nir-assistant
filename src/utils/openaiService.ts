@@ -35,9 +35,10 @@ export const generateResponse = async (input: string): Promise<CategoryResponse[
     const response = await openai.chat.completions.create({
       model: "gpt-4o", // or another model like "gpt-3.5-turbo"
       messages: [
-        { role: "system", content: systemPrompt },
+        { role: "system", content: systemPrompt + "\n\nIMPORTANT: Please respond with a JSON structure that follows this format: [{\"category\": \"Category Name\", \"words\": [\"word1\", \"word2\", \"word3\", ...]}]" },
         { role: "user", content: input }
       ],
+      response_format: { type: "json_object" },
       temperature: 0.7,
     });
 
@@ -57,7 +58,20 @@ export const generateResponse = async (input: string): Promise<CategoryResponse[
 // Parse the OpenAI response into our expected format
 const parseOpenAIResponse = (content: string): CategoryResponse[] => {
   try {
-    // Split the content by new lines and process each category
+    // Try to parse JSON directly
+    const jsonResponse = JSON.parse(content);
+    
+    // Check if the response has a categories property (for structured JSON response)
+    if (jsonResponse.categories && Array.isArray(jsonResponse.categories)) {
+      return jsonResponse.categories;
+    }
+    
+    // For direct array response
+    if (Array.isArray(jsonResponse)) {
+      return jsonResponse;
+    }
+    
+    // Fallback to the text parsing logic for backward compatibility
     const lines = content.split('\n').filter(line => line.trim());
     const categories: CategoryResponse[] = [];
     let currentCategory = '';

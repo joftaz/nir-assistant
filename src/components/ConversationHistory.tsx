@@ -33,8 +33,8 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({ conversation 
           key={item.id}
           className={`conversation-bubble p-3 rounded-lg shadow-sm ${
             item.isUser 
-              ? 'bg-primary text-primary-foreground self-start rounded-tr-xl rounded-br-xl rounded-bl-xl' 
-              : 'bg-muted text-muted-foreground self-end rounded-tl-xl rounded-bl-xl rounded-br-xl'
+              ? 'bg-primary text-primary-foreground self-end rounded-tl-xl rounded-bl-xl rounded-br-xl' 
+              : 'bg-muted text-muted-foreground self-start rounded-tr-xl rounded-br-xl rounded-bl-xl'
           }`}
           dir="auto"
         >
