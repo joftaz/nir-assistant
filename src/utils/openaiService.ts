@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { defaultSystemPrompt, defaultSystemJsonInstruction } from "./modelPrompt";
+import type { TopicCategory } from '../types/models';
 
 // Initialize OpenAI - this will use the API key from OPENAI_API_KEY environment variable
 // In a production environment, this should come from server-side
@@ -119,7 +120,7 @@ export const getOpenAIStreamingResponse = async (
   const processedCategories = new Set<string>();
   
   try {
-    console.log("Sending streaming request to OpenAI...");
+    console.log("Initializing OpenAI with streaming...");
     
     // Function to safely add a category and trigger callback
     const addCategory = (category: TopicCategory) => {
@@ -136,7 +137,11 @@ export const getOpenAIStreamingResponse = async (
       return false;
     };
     
-    // Use streaming approach
+    // Construct the message with the system prompt + JSON instruction
+    const fullSystemPrompt = `${systemPrompt}\n\n${defaultSystemJsonInstruction}`;
+    
+    // Make the API call with streaming
+    console.log("Calling OpenAI API with streaming...");
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -144,13 +149,14 @@ export const getOpenAIStreamingResponse = async (
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: "gpt-3.5-turbo",
         messages: [
-          { role: 'system', content: systemPrompt + "\n\n" + defaultSystemJsonInstruction},
+          { role: 'system', content: fullSystemPrompt },
           { role: 'user', content: prompt }
         ],
         stream: true,
-        temperature: 0.8
+        temperature: 0.8,
+        response_format: { type: "json_object" }  // Force JSON formatting
       })
     });
 
@@ -200,7 +206,16 @@ export const getOpenAIStreamingResponse = async (
             withinObject = false;
             
             try {
-              const obj = JSON.parse(partialObject);
+              // Try to clean up the JSON before parsing
+              let cleanedObject = partialObject;
+              
+              // Fix missing quotes around properties
+              cleanedObject = cleanedObject.replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3');
+              
+              // Ensure property values that should be strings have quotes
+              cleanedObject = cleanedObject.replace(/:(\s*)([^"{}\[\],\s][^{}\[\],]*[^"{}\[\],\s])(\s*[,}])/g, ':"$2"$3');
+              
+              const obj = JSON.parse(cleanedObject);
               if (obj.category && Array.isArray(obj.words)) {
                 console.log("Found object in stream:", obj.category);
                 addCategory(obj);
@@ -208,6 +223,7 @@ export const getOpenAIStreamingResponse = async (
               partialObject = '';
             } catch (e) {
               console.log("Couldn't parse object yet:", partialObject);
+              console.log("Parse error:", e.message);
             }
           }
         } 
@@ -222,18 +238,35 @@ export const getOpenAIStreamingResponse = async (
     
     // Additional method to extract objects with regex
     const tryExtractObjects = (text: string) => {
-      const objRegex = /{[^{]*"category"[^{]*"words"[^{}]*}/g;
+      // Use a more lenient regex pattern to handle missing quotes
+      const objRegex = /{[^{]*["']?category["']?\s*:\s*["'][^"']*["'][^{]*["']?words["']?\s*:\s*\[[^\]]*\][^{}]*}/g;
       const matches = text.match(objRegex);
       
       if (matches) {
         for (const match of matches) {
           try {
-            const obj = JSON.parse(match);
+            // Clean up the JSON string before parsing
+            let cleanMatch = match;
+            
+            // Fix missing quotes around properties
+            cleanMatch = cleanMatch.replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3');
+            
+            // Ensure proper string quotes
+            cleanMatch = cleanMatch.replace(/:(\s*)([^"{}\[\],\s][^{}\[\],]*[^"{}\[\],\s])(\s*[,}])/g, ':"$2"$3');
+            
+            // Log the cleaned JSON for debugging
+            if (cleanMatch !== match) {
+              console.log("Fixed JSON:", cleanMatch);
+            }
+            
+            const obj = JSON.parse(cleanMatch);
             if (obj.category && Array.isArray(obj.words)) {
               addCategory(obj);
             }
           } catch (e) {
-            // Not valid JSON yet
+            // Not valid JSON yet, log more details about the parsing error
+            console.log("Failed to parse potential JSON object:", match);
+            console.log("Parse error:", e.message);
           }
         }
       }
@@ -274,6 +307,21 @@ export const getOpenAIStreamingResponse = async (
             
           } catch (e) {
             console.error('Error parsing streaming response:', e);
+            // Try to fix and retry if it looks like we have a JSON object
+            try {
+              if (data.includes('{') && data.includes('}')) {
+                const fixedData = data.replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3');
+                const json = JSON.parse(fixedData);
+                const content = json.choices[0]?.delta?.content || '';
+                
+                if (content) {
+                  console.log('Recovered from JSON parsing error');
+                  processStreamChunk(content);
+                }
+              }
+            } catch (retryError) {
+              // Failed to recover, continue with next chunk
+            }
           }
         }
       }
