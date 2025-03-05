@@ -15,6 +15,7 @@ interface TopicCategory {
   category: string;
   words: string[];
   isCollapsed?: boolean;
+  isOld?: boolean;
 }
 
 const Index: React.FC = () => {
@@ -49,11 +50,12 @@ const Index: React.FC = () => {
     setIsLoading(true);
     setIsStreaming(true);
     
-    // Instead of clearing groups, collapse existing ones
+    // Mark existing groups as old and collapsed
     setTopicGroups(currentGroups => 
       currentGroups.map(group => ({
         ...group,
-        isCollapsed: true
+        isCollapsed: true,
+        isOld: true
       }))
     );
     
@@ -84,10 +86,20 @@ const Index: React.FC = () => {
           // Only add the category if it's not a duplicate
           if (!categoryReceived.has(partialResponse.category)) {
             categoryReceived.add(partialResponse.category);
-            setTopicGroups(currentGroups => [
-              ...currentGroups, 
-              {...partialResponse, isCollapsed: false}
-            ]);
+            
+            // Place new groups after existing new groups but before old groups
+            setTopicGroups(currentGroups => {
+              // Separate groups into old and new
+              const oldGroups = currentGroups.filter(group => group.isOld);
+              const newGroups = currentGroups.filter(group => !group.isOld);
+              
+              // Add the new category to the end of new groups
+              return [
+                ...newGroups,
+                {...partialResponse, isCollapsed: false, isOld: false},
+                ...oldGroups
+              ];
+            });
           }
         }
       );
@@ -121,12 +133,12 @@ const Index: React.FC = () => {
     setIsLoading(true);
     setIsStreaming(true);
     
-    // Instead of clearing topic groups, we'll collapse them
-    // We'll create a collapsed version of the current groups
+    // Mark existing groups as old and collapsed
     setTopicGroups(currentGroups => 
       currentGroups.map(group => ({
         ...group,
-        isCollapsed: true // Add this flag to mark groups as collapsed
+        isCollapsed: true,
+        isOld: true
       }))
     );
     
@@ -156,11 +168,20 @@ const Index: React.FC = () => {
         // Only add the category if it's not a duplicate
         if (!categoryReceived.has(partialResponse.category)) {
           categoryReceived.add(partialResponse.category);
-          // Append new groups to the existing ones, and mark them as expanded
-          setTopicGroups(currentGroups => [
-            ...currentGroups, 
-            {...partialResponse, isCollapsed: false}
-          ]);
+          
+          // Place new groups after existing new groups but before old groups
+          setTopicGroups(currentGroups => {
+            // Separate groups into old and new
+            const oldGroups = currentGroups.filter(group => group.isOld);
+            const newGroups = currentGroups.filter(group => !group.isOld);
+            
+            // Add the new category to the end of new groups
+            return [
+              ...newGroups,
+              {...partialResponse, isCollapsed: false, isOld: false},
+              ...oldGroups
+            ];
+          });
         }
       }
     ).catch(error => {
@@ -255,6 +276,7 @@ const Index: React.FC = () => {
                 words={group.words}
                 onWordSelect={handleWordSelect}
                 isCollapsed={group.isCollapsed}
+                isOld={group.isOld}
               />
             ))}
             {isStreaming && (
@@ -264,7 +286,7 @@ const Index: React.FC = () => {
             )}
             {!isStreaming && topicGroups.length > 0 && topicGroups.some(group => !group.isCollapsed) && (
               <div className="text-center text-sm text-muted-foreground py-2">
-                ⤴ קבוצות קודמות | קבוצות חדשות ⤵
+                ⤴ קבוצות חדשות | קבוצות קודמות ⤵
               </div>
             )}
           </>
