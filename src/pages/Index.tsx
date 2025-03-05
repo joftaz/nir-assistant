@@ -27,18 +27,15 @@ const Index: React.FC = () => {
   const { toast } = useToast();
   
   useEffect(() => {
-    // Try to get API key from environment variable
     const envApiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
     if (envApiKey) {
       setOpenAIKey(envApiKey);
     }
     
-    // Initialize system prompt if not already set
     initializeSystemPrompt();
   }, []);
 
   const handleSubmitTopic = async (topic: string) => {
-    // Add user input to conversation
     const userMessage: ConversationItem = {
       id: uuidv4(),
       text: topic,
@@ -50,7 +47,6 @@ const Index: React.FC = () => {
     setIsLoading(true);
     setIsStreaming(true);
     
-    // Mark existing groups as old and collapsed
     setTopicGroups(currentGroups => 
       currentGroups.map(group => ({
         ...group,
@@ -60,18 +56,14 @@ const Index: React.FC = () => {
     );
     
     try {
-      // Call OpenAI if we have a key, otherwise use mock
       const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
       
-      // Create conversation history string from previous messages
       const conversationHistory = conversation.map(item => 
         `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
       ).join('\n');
       
-      // Send both the new topic and conversation history
       const prompt = conversationHistory ? `${conversationHistory}\nUser: ${topic}` : topic;
       
-      // Use streaming version of getModelResponse
       console.log("Starting streaming request...");
       const categoryReceived = new Set<string>();
       
@@ -80,20 +72,15 @@ const Index: React.FC = () => {
         !!apiKey, 
         apiKey, 
         (partialResponse) => {
-          // This callback will be called with each new group
           console.log("Received partial response:", partialResponse);
           
-          // Only add the category if it's not a duplicate
           if (!categoryReceived.has(partialResponse.category)) {
             categoryReceived.add(partialResponse.category);
             
-            // Place new groups after existing new groups but before old groups
             setTopicGroups(currentGroups => {
-              // Separate groups into old and new
               const oldGroups = currentGroups.filter(group => group.isOld);
               const newGroups = currentGroups.filter(group => !group.isOld);
               
-              // Add the new category to the end of new groups
               return [
                 ...newGroups,
                 {...partialResponse, isCollapsed: false, isOld: false},
@@ -119,7 +106,6 @@ const Index: React.FC = () => {
   };
 
   const handleWordSelect = (word: string) => {
-    // Add selected word to conversation
     const newMessage: ConversationItem = {
       id: uuidv4(),
       text: word,
@@ -129,11 +115,9 @@ const Index: React.FC = () => {
     
     setConversation(prev => [...prev, newMessage]);
     
-    // Call OpenAI with the selected word and previous conversation
     setIsLoading(true);
     setIsStreaming(true);
     
-    // Mark existing groups as old and collapsed
     setTopicGroups(currentGroups => 
       currentGroups.map(group => ({
         ...group,
@@ -144,38 +128,30 @@ const Index: React.FC = () => {
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
     
-    // Create conversation history string from previous messages
     const conversationHistory = conversation.map(item => 
       `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
     ).join('\n');
     
-    // Send both the new word and conversation history
     const prompt = `${conversationHistory}\nUser: ${word}`;
     console.log(prompt);
     
     console.log("Starting streaming request...");
     const categoryReceived = new Set<string>();
     
-    // Use streaming version
     getModelResponse(
       prompt, 
       !!apiKey, 
       apiKey, 
       (partialResponse) => {
-        // This callback will be called with each new group
         console.log("Received partial response:", partialResponse);
         
-        // Only add the category if it's not a duplicate
         if (!categoryReceived.has(partialResponse.category)) {
           categoryReceived.add(partialResponse.category);
           
-          // Place new groups after existing new groups but before old groups
           setTopicGroups(currentGroups => {
-            // Separate groups into old and new
             const oldGroups = currentGroups.filter(group => group.isOld);
             const newGroups = currentGroups.filter(group => !group.isOld);
             
-            // Add the new category to the end of new groups
             return [
               ...newGroups,
               {...partialResponse, isCollapsed: false, isOld: false},
@@ -202,8 +178,6 @@ const Index: React.FC = () => {
   };
 
   const handleSystemPromptChange = (newPrompt: string) => {
-    // The system prompt is saved in localStorage by the Settings component
-    // We don't need to do anything here except maybe refresh data if needed
     toast({
       title: "הודעת מערכת עודכנה",
       description: "השאילתות הבאות ישתמשו בהודעת המערכת החדשה",
@@ -253,8 +227,6 @@ const Index: React.FC = () => {
         </motion.p>
       </header>
 
-      {/* <ApiKeyInput onSave={handleSaveApiKey} savedKey={openAIKey} /> */}
-
       <ConversationHistory conversation={conversation} />
 
       <motion.div 
@@ -299,7 +271,11 @@ const Index: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
       >
-        <TopicInput onSubmit={handleSubmitTopic} isLoading={isLoading} />
+        <TopicInput 
+          onSubmit={handleSubmitTopic} 
+          isLoading={isLoading} 
+          apiKey={openAIKey}
+        />
       </motion.div>
     </div>
   );

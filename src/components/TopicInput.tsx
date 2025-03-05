@@ -2,13 +2,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
+import VoiceRecorder from './VoiceRecorder';
+import { Input } from '@/components/ui/input';
 
 interface TopicInputProps {
   onSubmit: (topic: string) => void;
   isLoading: boolean;
+  apiKey?: string;
 }
 
-const TopicInput: React.FC<TopicInputProps> = ({ onSubmit, isLoading }) => {
+const TopicInput: React.FC<TopicInputProps> = ({ onSubmit, isLoading, apiKey = '' }) => {
   const [topic, setTopic] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -27,19 +30,36 @@ const TopicInput: React.FC<TopicInputProps> = ({ onSubmit, isLoading }) => {
     }
   };
 
+  const handleTranscription = (text: string) => {
+    setTopic(text);
+    // Auto-submit if there's a transcription
+    if (text && !isLoading) {
+      onSubmit(text);
+      // Clear after submission
+      setTimeout(() => setTopic(''), 100);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto">
-      <div className="input-container flex items-center">
-        <input
+      <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm border rounded-full px-4 py-2 shadow-sm">
+        <VoiceRecorder 
+          onTranscription={handleTranscription} 
+          isLoading={isLoading} 
+          apiKey={apiKey}
+        />
+        
+        <Input
           ref={inputRef}
           type="text"
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
           placeholder="נושא או מילת מפתח..."
-          className="flex-1 bg-transparent outline-none text-base px-2 rtl:text-right"
+          className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 px-2 text-base rtl:text-right"
           dir="rtl"
           disabled={isLoading}
         />
+        
         <Button 
           type="submit" 
           size="icon" 

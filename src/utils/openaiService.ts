@@ -349,3 +349,43 @@ export const getOpenAIStreamingResponse = async (
     throw error;
   }
 };
+
+// New function to transcribe audio using OpenAI
+export const transcribeAudio = async (audioBlob: Blob, apiKey: string): Promise<string> => {
+  if (!apiKey) {
+    throw new Error("API key is required for transcription");
+  }
+
+  try {
+    // Initialize OpenAI with the provided API key
+    initializeOpenAI(apiKey);
+    const openai = getOpenAI();
+
+    // Create a FormData object to send the audio file
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'recording.webm');
+    formData.append('model', 'whisper-1');
+    formData.append('language', 'he'); // Hebrew language
+
+    // Make the API call to OpenAI's transcription endpoint
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Transcription error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data.text || '';
+
+  } catch (error) {
+    console.error('Error transcribing audio:', error);
+    throw error;
+  }
+};
