@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';
@@ -21,6 +20,14 @@ const Index: React.FC = () => {
   const [topicGroups, setTopicGroups] = useState<TopicCategory[]>([]);
   const [openAIKey, setOpenAIKey] = useState<string>('');
   const { toast } = useToast();
+  
+  useEffect(() => {
+    // Try to get API key from environment variable
+    const envApiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
+    if (envApiKey) {
+      setOpenAIKey(envApiKey);
+    }
+  }, []);
 
   const handleSubmitTopic = async (topic: string) => {
     // Add user input to conversation
@@ -36,7 +43,8 @@ const Index: React.FC = () => {
     
     try {
       // Call OpenAI if we have a key, otherwise use mock
-      const response = await getModelResponse(topic, !!openAIKey, openAIKey);
+      const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
+      const response = await getModelResponse(topic, !!apiKey, apiKey);
       setTopicGroups(response);
     } catch (error) {
       console.error('Error fetching response:', error);
@@ -63,7 +71,8 @@ const Index: React.FC = () => {
     
     // Call OpenAI with the selected word
     setIsLoading(true);
-    getModelResponse(word, !!openAIKey, openAIKey)
+    const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
+    getModelResponse(word, !!apiKey, apiKey)
       .then(response => {
         setTopicGroups(response);
       })
@@ -105,7 +114,7 @@ const Index: React.FC = () => {
         </motion.p>
       </header>
 
-      <ApiKeyInput onSave={handleSaveApiKey} savedKey={openAIKey} />
+      {/* <ApiKeyInput onSave={handleSaveApiKey} savedKey={openAIKey} /> */}
 
       <ConversationHistory conversation={conversation} />
 
