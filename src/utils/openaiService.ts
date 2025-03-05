@@ -144,7 +144,7 @@ export const getOpenAIStreamingResponse = async (
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt + "\n\n" + defaultSystemJsonInstruction},
           { role: 'user', content: prompt }
@@ -269,7 +269,7 @@ export const getOpenAIStreamingResponse = async (
             
             if (!content) continue;
             
-            console.log("Processing chunk:", content);
+            // console.log("Processing chunk:", content);
             processStreamChunk(content);
             
           } catch (e) {
