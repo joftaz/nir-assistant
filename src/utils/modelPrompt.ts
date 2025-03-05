@@ -1,26 +1,11 @@
 import { generateResponse, CategoryResponse, initializeOpenAI, getOpenAIStreamingResponse } from './openaiService';
+import systemPromptMd from './systemPrompt.md?raw';
 
-export const defaultSystemPrompt = `
-## מי את?
-את קלינאית תקשורת שמטפלת באפזיה, את מטפלת בבחור צעיר שנפצע ב7/10 הוא נשוי לאשתו שרה, יש לו שני ילדים קטנים אמרי בן 4 וזיו בת שנה וחצי. הם גרים בתל אביב. 
+// Import or define the TopicCategory type to fix the linter errors
+import type { TopicCategory } from '../types/models';
 
-## תפקידך:
-הבחור יכתוב מספר מילים קטן שיתאר או יסביר את החוויה שלו. את צריכה להעריך איזה מילים נוספות יעזרו לו לתאר את החוויה שלו.
-
-## הוראות
-* תצרי מספר קטגוריות ומילים בכל קטגוריה כדי לעזור לו למצוא את המילה הבאה.
-* כל קטגוריה צריכה להכיל בערך 8-12 מילים. המילים צריכות להיות כאלו שמתארות היטב את המתרחש אך גם מופשטות, ומעניינות כדי להרחיב את המסר התקשורתי האפשרי. אך גם רלוונטיות למטרה.
-* בכל קטגוריה צור רשימת מילים או צמדי-מילים, שתציג עמדות שונות סביב עניין ויתנו אופציות מגוונת לתגובה, אפשרויות שנותנות תמונה רחבה. 
-
-* מספר קטגוריות מתייחסות באופן מופשט
-* מספר קטגוריות אחרות צריכות להתייחס באופן יותר קונקרטי.
-
-* כמו כן זכרי להשתמש במילים בודדות או בצמדי-מילים ולא בביטויים.
-
-* מספר קטגוריות: 5-6
-* מילים בכל קטגוריה: בין 8 ל- 12 מילים
-
-`;
+// Use the imported markdown file
+export const defaultSystemPrompt = systemPromptMd;
 
 export const defaultSystemJsonInstruction = `
 ===== הוראות למערכת ====
@@ -123,10 +108,10 @@ export const getMockResponse = (input: string): Promise<Array<{category: string;
         ]
       };
       
-      // Return a mock response based on input or use default
-      const response = mockResponses[input.toLowerCase()] || mockResponses["default"];
-      resolve(response);
-    }, 500); // Simulate API latency
+      // Get matching response or default
+      const mockData = mockResponses[input.toLowerCase()] || mockResponses["default"];
+      resolve(mockData);
+    }, 1000);
   });
 };
 
@@ -139,27 +124,34 @@ export const getModelResponse = async (
 ): Promise<TopicCategory[]> => {
   if (useOpenAI && apiKey) {
     try {
-      // Call the streaming version of the OpenAI service
-      return await getOpenAIStreamingResponse(prompt, apiKey, onPartialResponse);
+      // Use OpenAI streaming response
+      if (onPartialResponse) {
+        return await getOpenAIStreamingResponse(prompt, apiKey, onPartialResponse);
+      } else {
+        // Call the original OpenAI service if no streaming callback
+        return await generateResponse(prompt, apiKey);
+      }
     } catch (error) {
       console.error('Error calling OpenAI:', error);
-      throw error;
+      // Fallback to mock
+      console.log('Falling back to mock response');
     }
-  } else {
-    // For mock data, simulate streaming with setTimeout
-    const mockData = getMockResponse(prompt);
-    
-    if (onPartialResponse) {
-      // Simulate streaming for mock data
-      const results: TopicCategory[] = [];
-      for (const group of mockData) {
-        await new Promise(resolve => setTimeout(resolve, 300)); // Delay for simulation
-        onPartialResponse(group);
-        results.push(group);
-      }
-      return results;
-    }
-    
-    return mockData;
   }
+  
+  // Use mock data for testing or when OpenAI is not available
+  const mockData = await getMockResponse(prompt);
+  
+  if (onPartialResponse) {
+    // Simulate streaming for mock data
+    const results: TopicCategory[] = [];
+    // Convert Promise to actual data before iteration
+    for (const group of await mockData) {
+      await new Promise(resolve => setTimeout(resolve, 300)); // Delay for simulation
+      onPartialResponse(group as TopicCategory);
+      results.push(group as TopicCategory);
+    }
+    return results;
+  }
+  
+  return mockData as TopicCategory[];
 };
