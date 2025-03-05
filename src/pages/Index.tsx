@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 interface TopicCategory {
   category: string;
   words: string[];
+  isCollapsed?: boolean;
 }
 
 const Index: React.FC = () => {
@@ -47,7 +48,14 @@ const Index: React.FC = () => {
     setConversation(prev => [...prev, userMessage]);
     setIsLoading(true);
     setIsStreaming(true);
-    setTopicGroups([]); // Clear existing topic groups
+    
+    // Instead of clearing groups, collapse existing ones
+    setTopicGroups(currentGroups => 
+      currentGroups.map(group => ({
+        ...group,
+        isCollapsed: true
+      }))
+    );
     
     try {
       // Call OpenAI if we have a key, otherwise use mock
@@ -76,7 +84,10 @@ const Index: React.FC = () => {
           // Only add the category if it's not a duplicate
           if (!categoryReceived.has(partialResponse.category)) {
             categoryReceived.add(partialResponse.category);
-            setTopicGroups(currentGroups => [...currentGroups, partialResponse]);
+            setTopicGroups(currentGroups => [
+              ...currentGroups, 
+              {...partialResponse, isCollapsed: false}
+            ]);
           }
         }
       );
@@ -109,7 +120,15 @@ const Index: React.FC = () => {
     // Call OpenAI with the selected word and previous conversation
     setIsLoading(true);
     setIsStreaming(true);
-    setTopicGroups([]); // Clear existing topic groups
+    
+    // Instead of clearing topic groups, we'll collapse them
+    // We'll create a collapsed version of the current groups
+    setTopicGroups(currentGroups => 
+      currentGroups.map(group => ({
+        ...group,
+        isCollapsed: true // Add this flag to mark groups as collapsed
+      }))
+    );
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
     
@@ -137,7 +156,11 @@ const Index: React.FC = () => {
         // Only add the category if it's not a duplicate
         if (!categoryReceived.has(partialResponse.category)) {
           categoryReceived.add(partialResponse.category);
-          setTopicGroups(currentGroups => [...currentGroups, partialResponse]);
+          // Append new groups to the existing ones, and mark them as expanded
+          setTopicGroups(currentGroups => [
+            ...currentGroups, 
+            {...partialResponse, isCollapsed: false}
+          ]);
         }
       }
     ).catch(error => {
@@ -231,11 +254,17 @@ const Index: React.FC = () => {
                 category={group.category}
                 words={group.words}
                 onWordSelect={handleWordSelect}
+                isCollapsed={group.isCollapsed}
               />
             ))}
             {isStreaming && (
               <div className="flex justify-center items-center py-4">
                 <Loader2 className="h-6 w-6 animate-spin text-primary/70" />
+              </div>
+            )}
+            {!isStreaming && topicGroups.length > 0 && topicGroups.some(group => !group.isCollapsed) && (
+              <div className="text-center text-sm text-muted-foreground py-2">
+                ⤴ קבוצות קודמות | קבוצות חדשות ⤵
               </div>
             )}
           </>

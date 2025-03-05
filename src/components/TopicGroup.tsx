@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -7,10 +6,15 @@ interface TopicGroupProps {
   category: string;
   words: string[];
   onWordSelect: (word: string) => void;
+  isCollapsed?: boolean;
 }
 
-const TopicGroup: React.FC<TopicGroupProps> = ({ category, words, onWordSelect }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+const TopicGroup: React.FC<TopicGroupProps> = ({ category, words, onWordSelect, isCollapsed = false }) => {
+  const [isExpanded, setIsExpanded] = useState(!isCollapsed);
+  
+  useEffect(() => {
+    setIsExpanded(!isCollapsed);
+  }, [isCollapsed]);
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
