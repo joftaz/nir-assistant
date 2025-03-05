@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
@@ -30,6 +29,16 @@ const TopicInput: React.FC<TopicInputProps> = ({ onSubmit, isLoading, apiKey = '
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (topic.trim() && !isLoading) {
+        onSubmit(topic.trim());
+        setTopic('');
+      }
+    }
+  };
+
   const handleTranscription = (text: string) => {
     setTopic(text);
     // Auto-submit if there's a transcription
@@ -41,7 +50,7 @@ const TopicInput: React.FC<TopicInputProps> = ({ onSubmit, isLoading, apiKey = '
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto">
+    <form onSubmit={(e) => e.preventDefault()} className="w-full max-w-3xl mx-auto">
       <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm border rounded-full px-4 py-2 shadow-sm">
         <VoiceRecorder 
           onTranscription={handleTranscription} 
@@ -54,6 +63,7 @@ const TopicInput: React.FC<TopicInputProps> = ({ onSubmit, isLoading, apiKey = '
           type="text"
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="נושא או מילת מפתח..."
           className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 px-2 text-base rtl:text-right"
           dir="rtl"
@@ -61,11 +71,12 @@ const TopicInput: React.FC<TopicInputProps> = ({ onSubmit, isLoading, apiKey = '
         />
         
         <Button 
-          type="submit" 
+          type="button" 
           size="icon" 
           className={`rounded-full w-8 h-8 flex items-center justify-center transition-all
                      ${!topic.trim() || isLoading ? 'opacity-50 cursor-not-allowed' : 'opacity-100'}`}
           disabled={!topic.trim() || isLoading}
+          onClick={handleSubmit}
         >
           <Send size={16} className="rotate-[45deg]" />
         </Button>
