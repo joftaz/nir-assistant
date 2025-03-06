@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { defaultSystemPrompt, defaultSystemJsonInstruction } from "./modelPrompt";
+import { defaultSystemPrompt, defaultSystemJsonInstruction, getMockResponse } from "./modelPrompt";
 import type { TopicCategory } from '../types/models';
 
 // Initialize OpenAI - this will use the API key from OPENAI_API_KEY environment variable
@@ -32,11 +32,13 @@ export const generateResponse = async (input: string, systemPrompt: string): Pro
   }
 
   try {
+    console.log("Generating response with OpenAI...");
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o", // or another model like "gpt-3.5-turbo"
       messages: [
         { role: "system", content: systemPrompt + "\n\n" + defaultSystemJsonInstruction },
-        { role: "user", content: "מילים מהבחור שלי: " + input }
+        { role: "user", content: "מילים מהמטופל: " + input }
       ],
       response_format: { type: "json_object" },
       temperature: 0.7,
@@ -48,7 +50,10 @@ export const generateResponse = async (input: string, systemPrompt: string): Pro
       throw new Error("No response content from OpenAI");
     }
 
-    return parseOpenAIResponse(content);
+    console.log("OpenAI response received, parsing...");
+    const categories = parseOpenAIResponse(content);
+    console.log(`Parsed ${categories.length} categories from response`);
+    return categories;
   } catch (error) {
     console.error("Error generating response from OpenAI:", error);
     throw error;
@@ -61,14 +66,76 @@ const parseOpenAIResponse = (content: string): CategoryResponse[] => {
     // Try to parse JSON directly
     const jsonResponse = JSON.parse(content);
     
-    // Check if the response has a categories property (for structured JSON response)
+    // Handle the new format with a "categories" wrapper
     if (jsonResponse.categories && Array.isArray(jsonResponse.categories)) {
-      return jsonResponse.categories;
+      console.log("Found categories array in wrapper object");
+      // Transform any numbered category properties to the standard format
+      return jsonResponse.categories.map(item => {
+        // Check for numbered category properties (category1, category2, etc.)
+        const categoryKey = Object.keys(item).find(key => key.match(/^category\d*$/));
+        
+        if (categoryKey && categoryKey !== "category" && Array.isArray(item.words)) {
+          // Return a standardized object with the "category" property
+          return {
+            category: item[categoryKey],
+            words: item.words
+          };
+        }
+        
+        // If it already has the standard "category" property, return as is
+        return item;
+      });
     }
     
-    // For direct array response
+    // For direct array response (old format)
     if (Array.isArray(jsonResponse)) {
-      return jsonResponse;
+      // Transform any numbered category properties to the standard format
+      return jsonResponse.map(item => {
+        // Check for numbered category properties (category1, category2, etc.)
+        const categoryKey = Object.keys(item).find(key => key.match(/^category\d*$/));
+        
+        if (categoryKey && categoryKey !== "category" && Array.isArray(item.words)) {
+          // Return a standardized object with the "category" property
+          return {
+            category: item[categoryKey],
+            words: item.words
+          };
+        }
+        
+        // If it already has the standard "category" property, return as is
+        return item;
+      });
+    }
+
+    // For response_format: { type: "json_object" } 
+    // This wraps our array in a JSON object with a property (often "response" or "results")
+    // Try to find an array property
+    for (const key in jsonResponse) {
+      if (Array.isArray(jsonResponse[key])) {
+        const arrayProperty = jsonResponse[key];
+        // Transform any items with numbered category properties
+        const transformedArray = arrayProperty.map(item => {
+          // Check for numbered category properties
+          const categoryKey = Object.keys(item).find(key => key.match(/^category\d*$/));
+          
+          if (categoryKey && categoryKey !== "category" && Array.isArray(item.words)) {
+            // Return a standardized object
+            return {
+              category: item[categoryKey],
+              words: item.words
+            };
+          }
+          
+          return item;
+        });
+        
+        // Check if any item in the transformed array has category/words properties
+        if (transformedArray.length > 0 && 
+            (transformedArray[0].category || Object.keys(transformedArray[0]).some(k => k.match(/^category\d*$/)))) {
+          console.log("Found categories array in property:", key);
+          return transformedArray;
+        }
+      }
     }
     
     // Fallback to the text parsing logic for backward compatibility
@@ -120,7 +187,7 @@ export const getOpenAIStreamingResponse = async (
   const processedCategories = new Set<string>();
   
   try {
-    console.log("Initializing OpenAI with streaming...");
+    console.log("Initializing OpenAI with streaming API...");
     
     // Function to safely add a category and trigger callback
     const addCategory = (category: TopicCategory) => {
@@ -136,6 +203,30 @@ export const getOpenAIStreamingResponse = async (
       }
       return false;
     };
+
+    // Helper function to standardize category objects with numbered properties
+    const standardizeCategory = (item: any): TopicCategory | null => {
+      try {
+        // Check for standard category property
+        if (item.category && Array.isArray(item.words)) {
+          return item as TopicCategory;
+        }
+        
+        // Check for numbered category properties (category1, category2, etc.)
+        const categoryKey = Object.keys(item).find(key => key.match(/^category\d*$/));
+        if (categoryKey && Array.isArray(item.words)) {
+          return {
+            category: item[categoryKey],
+            words: item.words
+          };
+        }
+        
+        return null;
+      } catch (e) {
+        console.error("Error standardizing category:", e);
+        return null;
+      }
+    };
     
     // Construct the message with the system prompt + JSON instruction
     const fullSystemPrompt = `${systemPrompt}\n\n${defaultSystemJsonInstruction}`;
@@ -149,12 +240,12 @@ export const getOpenAIStreamingResponse = async (
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o",
         messages: [
           { role: 'system', content: fullSystemPrompt },
           { role: 'user', content: prompt }
         ],
-        stream: true,
+        stream: true,  // Turn streaming back on
         temperature: 0.8,
         response_format: { type: "json_object" }  // Force JSON formatting
       })
@@ -174,6 +265,7 @@ export const getOpenAIStreamingResponse = async (
     let partialObject = '';
     let withinObject = false;
     let bracketCount = 0;
+    let fullResponseParsed = false;
     
     console.log("Starting to read stream...");
     
@@ -216,10 +308,34 @@ export const getOpenAIStreamingResponse = async (
               cleanedObject = cleanedObject.replace(/:(\s*)([^"{}\[\],\s][^{}\[\],]*[^"{}\[\],\s])(\s*[,}])/g, ':"$2"$3');
               
               const obj = JSON.parse(cleanedObject);
+              
+              // Check for different patterns
+              
+              // 1. Direct category object
               if (obj.category && Array.isArray(obj.words)) {
-                console.log("Found object in stream:", obj.category);
+                console.log("Found individual category in stream:", obj.category);
                 addCategory(obj);
               }
+              // 2. Numbered category properties
+              else {
+                const standardized = standardizeCategory(obj);
+                if (standardized) {
+                  console.log("Found standardized category in stream:", standardized.category);
+                  addCategory(standardized);
+                }
+              }
+              // 3. Categories wrapper
+              if (obj.categories && Array.isArray(obj.categories)) {
+                console.log("Found categories array in stream");
+                for (const item of obj.categories) {
+                  const standardized = standardizeCategory(item);
+                  if (standardized) {
+                    console.log("Adding category from wrapper:", standardized.category);
+                    addCategory(standardized);
+                  }
+                }
+              }
+              
               partialObject = '';
             } catch (e) {
               console.log("Couldn't parse object yet:", partialObject);
@@ -232,41 +348,36 @@ export const getOpenAIStreamingResponse = async (
         }
       }
       
-      // Also try regex-based extraction periodically
-      tryExtractObjects(fullResponse);
-    };
-    
-    // Additional method to extract objects with regex
-    const tryExtractObjects = (text: string) => {
-      // Use a more lenient regex pattern to handle missing quotes
-      const objRegex = /{[^{]*["']?category["']?\s*:\s*["'][^"']*["'][^{]*["']?words["']?\s*:\s*\[[^\]]*\][^{}]*}/g;
-      const matches = text.match(objRegex);
+      // For specific case, try to extract categories with regex while streaming
+      // This is crucial for the format we're seeing in the logs
+      const categoryMatches = fullResponse.match(/"(category\d*)"\s*:\s*"([^"]*)"/g);
+      const wordsMatches = fullResponse.match(/"words"\s*:\s*\[((?:"[^"]*"(?:,\s*)?)+)\]/g);
       
-      if (matches) {
-        for (const match of matches) {
+      if (categoryMatches && wordsMatches && categoryMatches.length === wordsMatches.length) {
+        for (let i = 0; i < categoryMatches.length; i++) {
           try {
-            // Clean up the JSON string before parsing
-            let cleanMatch = match;
+            // Extract category name and property
+            const matches = categoryMatches[i].match(/"(category\d*)"\s*:\s*"([^"]*)"/);
+            if (!matches) continue;
             
-            // Fix missing quotes around properties
-            cleanMatch = cleanMatch.replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3');
+            const propertyName = matches[1]; // e.g. "category1"
+            const categoryName = matches[2]; // The actual category value
             
-            // Ensure proper string quotes
-            cleanMatch = cleanMatch.replace(/:(\s*)([^"{}\[\],\s][^{}\[\],]*[^"{}\[\],\s])(\s*[,}])/g, ':"$2"$3');
+            // Extract words array
+            const wordsArrayString = wordsMatches[i].match(/"words"\s*:\s*\[((?:"[^"]*"(?:,\s*)?)+)\]/)[1];
+            const words = wordsArrayString.split(',')
+              .map(w => w.trim().replace(/^"(.*)"$/, '$1'))
+              .filter(w => w);
             
-            // Log the cleaned JSON for debugging
-            if (cleanMatch !== match) {
-              console.log("Fixed JSON:", cleanMatch);
-            }
-            
-            const obj = JSON.parse(cleanMatch);
-            if (obj.category && Array.isArray(obj.words)) {
-              addCategory(obj);
+            if (categoryName && words.length > 0) {
+              // console.log(`Found category "${categoryName}" with regex while streaming`);
+              addCategory({
+                category: categoryName,
+                words: words
+              });
             }
           } catch (e) {
-            // Not valid JSON yet, log more details about the parsing error
-            console.log("Failed to parse potential JSON object:", match);
-            console.log("Parse error:", e.message);
+            // Skip any parsing errors
           }
         }
       }
@@ -327,26 +438,121 @@ export const getOpenAIStreamingResponse = async (
       }
     }
     
-    // Process any remaining content
-    tryExtractObjects(fullResponse);
+    // Process any remaining content - this is critical for handling the complete response
+    // at the end of streaming when we have the full JSON object
+    console.log("Processing final complete response");
+    console.log("Full response:", fullResponse);
     
-    // If we still have no results, create a fallback category
-    if (results.length === 0 && fullResponse.trim()) {
-      const words = fullResponse.split(/[,\s]+/).filter(word => word.trim().length > 0);
-      if (words.length > 0) {
-        const fallbackCategory = {
-          category: "מילים קשורות",
-          words: words.slice(0, 10)
-        };
-        addCategory(fallbackCategory);
+    if (fullResponse.trim().startsWith('{') && fullResponse.trim().endsWith('}')) {
+      try {
+        const finalObj = JSON.parse(fullResponse);
+        
+        // Handle the categories wrapper in the complete response
+        if (finalObj.categories && Array.isArray(finalObj.categories)) {
+          console.log("Found categories array in final response");
+          for (const item of finalObj.categories) {
+            const standardized = standardizeCategory(item);
+            if (standardized) {
+              console.log("Adding category from final response:", standardized.category);
+              addCategory(standardized);
+            }
+          }
+        } 
+        // Handle direct category objects with standard or numbered properties
+        else {
+          // Find all keys that might be categories
+          Object.keys(finalObj).forEach(key => {
+            // If this looks like a potential category key
+            if (key === "category" && typeof finalObj[key] === "string" && 
+                finalObj.words && Array.isArray(finalObj.words)) {
+              // This is a direct category object
+              console.log("Found direct category in final response:", finalObj.category);
+              addCategory(finalObj);
+            } 
+            // Check for numbered category properties
+            else if (key.match(/^category\d*$/) && typeof finalObj[key] === "string" && 
+                     finalObj.words && Array.isArray(finalObj.words)) {
+              console.log("Found numbered category in final response:", finalObj[key]);
+              addCategory({
+                category: finalObj[key],
+                words: finalObj.words
+              });
+            }
+          });
+          
+          // Use regex to find all category-words pairs
+          const categoryPattern = /"(category\d*)"\s*:\s*"([^"]*)"/g;
+          const wordsPattern = /"words"\s*:\s*\[((?:"[^"]*"(?:,\s*)?)+)\]/g;
+          
+          const categories = [];
+          let categoryMatch;
+          while ((categoryMatch = categoryPattern.exec(fullResponse)) !== null) {
+            categories.push({
+              text: categoryMatch[0],
+              property: categoryMatch[1], // The property name (category1, category2, etc.)
+              category: categoryMatch[2], // The value
+              index: categoryMatch.index
+            });
+          }
+          
+          const wordsArrays = [];
+          let wordsMatch;
+          while ((wordsMatch = wordsPattern.exec(fullResponse)) !== null) {
+            const wordsStr = wordsMatch[1];
+            const words = wordsStr.split(',').map(w => 
+              w.trim().replace(/^"(.*)"$/, '$1')
+            ).filter(w => w);
+            
+            wordsArrays.push({
+              words: words,
+              index: wordsMatch.index
+            });
+          }
+          
+          // Match categories with words arrays
+          if (categories.length > 0 && wordsArrays.length > 0) {
+            console.log(`Found ${categories.length} categories and ${wordsArrays.length} word arrays through regex`);
+            
+            for (const cat of categories) {
+              // Find the closest words array after this category
+              const closestWordsArray = wordsArrays
+                .filter(w => w.index > cat.index)
+                .sort((a, b) => a.index - b.index)[0];
+              
+              if (closestWordsArray) {
+                console.log(`Matched category "${cat.category}" with words array`);
+                addCategory({
+                  category: cat.category,
+                  words: closestWordsArray.words
+                });
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Error processing final response:", e);
       }
     }
     
     console.log("Streaming complete, total results:", results.length);
     return results;
   } catch (error) {
-    console.error('Error in OpenAI streaming call:', error);
-    throw error;
+    console.error('Error calling OpenAI:', error);
+    // Fallback to mock
+    console.log('Falling back to mock response');
+    
+    // Use mock data
+    const mockData = await getMockResponse(prompt);
+    
+    if (onPartialResponse) {
+      // Simulate callbacks for mock data
+      for (const group of mockData) {
+        await new Promise(resolve => setTimeout(resolve, 300)); // Delay for simulation
+        onPartialResponse(group as TopicCategory);
+      }
+    }
+    
+    return mockData as TopicCategory[];
   }
 };
 

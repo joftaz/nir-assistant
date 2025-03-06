@@ -62,7 +62,7 @@ const Index: React.FC = () => {
         `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
       ).join('\n');
       
-      const prompt = conversationHistory ? `${conversationHistory}\nUser: ${topic}` : topic;
+      const prompt = conversationHistory ? `${conversationHistory}\nמשתמש: ${topic}` : topic;
       
       console.log("Starting streaming request...");
       const categoryReceived = new Set<string>();
@@ -132,7 +132,7 @@ const Index: React.FC = () => {
       `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
     ).join('\n');
     
-    const prompt = `${conversationHistory}\nUser: ${word}`;
+    const prompt = `${conversationHistory}\nמשתמש: ${word}`;
     console.log(prompt);
     
     console.log("Starting streaming request...");

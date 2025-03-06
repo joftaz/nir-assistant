@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 
 interface TopicInputProps {
   onSubmit: (topic: string) => void;
-  isLoading: boolean;
+    isLoading: boolean;
   apiKey?: string;
 }
 

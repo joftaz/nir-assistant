@@ -1,5 +1,5 @@
 import { generateResponse, CategoryResponse, initializeOpenAI, getOpenAIStreamingResponse } from './openaiService';
-import systemPromptMd from './systemPrompt.rtl.md?raw';
+import systemPromptMd from './systemPrompt.md?raw';
 
 // Import or define the TopicCategory type to fix the linter errors
 import type { TopicCategory } from '../types/models';
@@ -8,28 +8,35 @@ import type { TopicCategory } from '../types/models';
 export const defaultSystemPrompt = systemPromptMd;
 
 export const defaultSystemJsonInstruction = `
-===== הוראות למערכת ====
-חשוב מאוד: אנא החזר את התשובה במבנה JSON בלבד לפי הפורמט הבא:
+===== System Instructions =====
+IMPORTANT:
+0. Return a list of categories (at least 4 categories) with words. Every item in the list is dict with two keys: "category" and "words".
+1. Make sure the structure is valid with double quotes ("") around all property names and string values.
+2. The "category" property must be surrounded by double quotes.
+3. The "words" property must be surrounded by double quotes.
+4. Each word in the words array must be surrounded by double quotes.
+5. Ensure the JSON formatting is correct, including commas between items and structural validity.
+6. Do not include control characters or unencoded special characters within strings.
+7. IF YOU WILL RESPOND WITH ONLY A SINGLE CATEGORY, I WILL BE VERY ANGRY and VERY DISAPPOINTED. THE SUCCESS OF THIS INJURED MAN IS DEPENDS ON IT.
+Please return only a valid JSON structure.
+IMPORTANT: Please return the answer in JSON format only according to the following structure:
+example:
+{"categories":
 [
   {
-    "category": "שם הקטגוריה",
+    "category1": "שם הקטגוריה",
     "words": ["מילה1", "מילה2", "מילה3", "מילה4", "מילה5", "מילה6", "מילה7", "מילה8", "מילה9", "מילה10"]
   },
   {
-    "category": "שם קטגוריה אחרת",
+    "category2": "שם קטגוריה אחרת",
+    "words": ["מילה1", "מילה2", "מילה3", "מילה4", "מילה5", "מילה6", "מילה7", "מילה8"]
+  },
+  {
+    "category3": "שם קטגוריה שלישי",
     "words": ["מילה1", "מילה2", "מילה3", "מילה4", "מילה5", "מילה6", "מילה7", "מילה8"]
   }
 ]
-
-חשוב מאוד:
-1. וודא שהמבנה תקין עם מירכאות כפולות ("") סביב כל שמות המאפיינים וערכי מחרוזת.
-2. מאפיין "category" חייב להיות מוקף במירכאות כפולות.
-3. מאפיין "words" חייב להיות מוקף במירכאות כפולות.
-4. כל מילה במערך words חייבת להיות מוקפת במירכאות כפולות.
-5. וודא שהסימון JSON תקין, כולל פסיקים בין פריטים ותקינות מבנית.
-6. אל תכלול תווי בקרה או תווים מיוחדים לא מקודדים בתוך מחרוזות.
-
-אנא החזר מבנה JSON תקין בלבד.
+}
 `;
 
 // Initialize system prompt in localStorage if not present
