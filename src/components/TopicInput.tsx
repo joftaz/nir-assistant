@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
@@ -6,7 +7,7 @@ import { Input } from '@/components/ui/input';
 
 interface TopicInputProps {
   onSubmit: (topic: string) => void;
-    isLoading: boolean;
+  isLoading: boolean;
   apiKey?: string;
 }
 
@@ -51,7 +52,7 @@ const TopicInput: React.FC<TopicInputProps> = ({ onSubmit, isLoading, apiKey = '
 
   return (
     <form onSubmit={(e) => e.preventDefault()} className="w-full max-w-3xl mx-auto">
-      <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm border rounded-full px-4 py-2 shadow-sm">
+      <div className="flex items-center gap-1 bg-background/80 backdrop-blur-sm border rounded-full px-3 py-1 shadow-sm">
         <VoiceRecorder 
           onTranscription={handleTranscription} 
           isLoading={isLoading} 
@@ -73,12 +74,12 @@ const TopicInput: React.FC<TopicInputProps> = ({ onSubmit, isLoading, apiKey = '
         <Button 
           type="button" 
           size="icon" 
-          className={`rounded-full w-8 h-8 flex items-center justify-center transition-all
+          className={`rounded-full w-7 h-7 flex items-center justify-center transition-all
                      ${!topic.trim() || isLoading ? 'opacity-50 cursor-not-allowed' : 'opacity-100'}`}
           disabled={!topic.trim() || isLoading}
           onClick={handleSubmit}
         >
-          <Send size={16} className="rotate-[45deg]" />
+          <Send size={14} className="rotate-[45deg]" />
         </Button>
       </div>
     </form>

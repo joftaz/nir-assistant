@@ -223,8 +223,8 @@ const Index: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center px-4 py-8 sm:py-12">
-      <header className="w-full max-w-3xl mx-auto mb-8 text-center relative">
+    <div className="min-h-screen w-full flex flex-col items-center px-4 py-4 sm:py-6">
+      <header className="w-full max-w-3xl mx-auto mb-2 text-center relative">
         <div className="absolute top-0 right-0">
           <Settings onSystemPromptChange={handleSystemPromptChange} />
         </div>
@@ -252,7 +252,7 @@ const Index: React.FC = () => {
           </Button>
         </div>
         <motion.h1 
-          className="text-2xl sm:text-3xl font-semibold mb-2"
+          className="text-xl sm:text-2xl font-semibold mb-1"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -260,7 +260,7 @@ const Index: React.FC = () => {
           סיוע בשליפת מילים
         </motion.h1>
         <motion.p 
-          className="text-muted-foreground"
+          className="text-muted-foreground text-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -272,13 +272,13 @@ const Index: React.FC = () => {
       <ConversationHistory conversation={conversation} />
 
       <motion.div 
-        className="w-full max-w-3xl mx-auto grid gap-4 sm:gap-6 mt-4 mb-8"
+        className="w-full max-w-3xl mx-auto grid gap-2 sm:gap-3 mt-2 mb-2"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
         {isLoading && topicGroups.length === 0 ? (
-          <div className="flex justify-center items-center py-12">
+          <div className="flex justify-center items-center py-6">
             <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
           </div>
         ) : (
@@ -294,12 +294,12 @@ const Index: React.FC = () => {
               />
             ))}
             {isStreaming && (
-              <div className="flex justify-center items-center py-4">
+              <div className="flex justify-center items-center py-2">
                 <Loader2 className="h-6 w-6 animate-spin text-primary/70" />
               </div>
             )}
             {!isStreaming && topicGroups.length > 0 && topicGroups.some(group => !group.isCollapsed) && (
-              <div className="text-center text-sm text-muted-foreground py-2">
+              <div className="text-center text-xs text-muted-foreground py-1">
                 ⤴ קבוצות חדשות | קבוצות קודמות ⤵
               </div>
             )}
@@ -308,7 +308,7 @@ const Index: React.FC = () => {
       </motion.div>
 
       <motion.div 
-        className="w-full sticky bottom-6 px-2"
+        className="w-full sticky bottom-2 px-2"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
