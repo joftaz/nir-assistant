@@ -1,5 +1,5 @@
 import { generateResponse, CategoryResponse, initializeOpenAI, getOpenAIStreamingResponse } from './openaiService';
-import systemPromptMd from './systemPrompt.md?raw';
+import systemPromptMd from './systemPrompt.rtl.md?raw';
 
 // Import or define the TopicCategory type to fix the linter errors
 import type { TopicCategory } from '../types/models';
@@ -10,7 +10,7 @@ export const defaultSystemPrompt = systemPromptMd;
 export const defaultSystemJsonInstruction = `
 ===== System Instructions =====
 IMPORTANT:
-0. Return a list of categories (at least 4 categories) with words. Every item in the list is dict with two keys: "category" and "words".
+0. Return a list of categories (at least 5 categories) with words. Every item in the list is dict with two keys: "category" and "words".
 1. Make sure the structure is valid with double quotes ("") around all property names and string values.
 2. The "category" property must be surrounded by double quotes.
 3. The "words" property must be surrounded by double quotes.
