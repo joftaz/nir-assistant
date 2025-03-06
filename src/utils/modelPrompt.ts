@@ -1,5 +1,5 @@
 import { generateResponse, CategoryResponse, initializeOpenAI, getOpenAIStreamingResponse } from './openaiService';
-import systemPromptMd from './systemPrompt.md?raw';
+import systemPromptMd from './systemPrompt.rtl.md?raw';
 
 // Import or define the TopicCategory type to fix the linter errors
 import type { TopicCategory } from '../types/models';
