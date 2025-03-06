@@ -22,16 +22,6 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({ conversation 
     }
   }, [conversation]);
 
-  if (conversation.length === 0) {
-    return (
-      <div className="w-full max-w-3xl mx-auto my-6 flex flex-col items-center">
-        <p className="text-muted-foreground text-center">
-          כאן יופיעו ההודעות בשיחה שלך
-        </p>
-      </div>
-    );
-  }
-
   // Group consecutive user messages together
   const groupedConversation: Array<{
     isGroup: boolean;
