@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 
 export interface ConversationItem {
@@ -22,7 +23,13 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({ conversation 
   }, [conversation]);
 
   if (conversation.length === 0) {
-    return null;
+    return (
+      <div className="w-full max-w-3xl mx-auto my-6 flex flex-col items-center">
+        <p className="text-muted-foreground text-center">
+          כאן יופיעו ההודעות בשיחה שלך
+        </p>
+      </div>
+    );
   }
 
   // Group consecutive user messages together
@@ -73,7 +80,7 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({ conversation 
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto my-6 flex flex-col gap-3 px-2">
+    <div className="w-full max-w-3xl mx-auto my-6 flex flex-col gap-3 px-2 max-h-[50vh] overflow-y-auto">
       {groupedConversation.map((group, groupIndex) => (
         group.isGroup ? (
           // Render grouped user messages

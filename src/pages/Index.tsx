@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import TopicInput from '@/components/TopicInput';
 import TopicGroup from '@/components/TopicGroup';
 import ConversationHistory, { ConversationItem } from '@/components/ConversationHistory';
@@ -8,15 +9,10 @@ import ApiKeyInput from '@/components/ApiKeyInput';
 import Settings from '@/components/Settings';
 import { getModelResponse, initializeSystemPrompt } from '@/utils/modelPrompt';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw, History as HistoryIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-interface TopicCategory {
-  category: string;
-  words: string[];
-  isCollapsed?: boolean;
-  isOld?: boolean;
-}
+import { saveHistory, getHistoryById } from '@/utils/conversationManager';
+import { TopicCategory } from '@/types/models';
 
 const Index: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -24,6 +20,9 @@ const Index: React.FC = () => {
   const [topicGroups, setTopicGroups] = useState<TopicCategory[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [openAIKey, setOpenAIKey] = useState<string>('');
+  const [conversationId, setConversationId] = useState<string>(uuidv4());
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
   
   useEffect(() => {
@@ -33,7 +32,36 @@ const Index: React.FC = () => {
     }
     
     initializeSystemPrompt();
-  }, []);
+    
+    const historyId = searchParams.get('history');
+    if (historyId) {
+      const history = getHistoryById(historyId);
+      if (history) {
+        setConversationId(historyId);
+        setConversation(history.messages);
+        setTopicGroups(history.topicGroups);
+        toast({
+          title: "השיחה נטענה",
+          description: "השיחה הקודמת נטענה בהצלחה",
+        });
+      } else {
+        toast({
+          title: "שגיאה",
+          description: "לא ניתן לטעון את השיחה המבוקשת",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [searchParams, toast]);
+  
+  useEffect(() => {
+    if (conversation.length > 0) {
+      const firstUserMessage = conversation.find(item => item.isUser);
+      const title = firstUserMessage ? firstUserMessage.text : "שיחה חדשה";
+      
+      saveHistory(conversationId, title, conversation, topicGroups);
+    }
+  }, [conversation, topicGroups, conversationId]);
 
   const handleSubmitTopic = async (topic: string) => {
     const userMessage: ConversationItem = {
@@ -184,29 +212,43 @@ const Index: React.FC = () => {
     });
   };
 
+  const handleReset = () => {
+    setConversation([]);
+    setTopicGroups([]);
+    setConversationId(uuidv4());
+    toast({
+      title: "השיחה אופסה",
+      description: "השיחה אופסה בהצלחה",
+    });
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center px-4 py-8 sm:py-12">
       <header className="w-full max-w-3xl mx-auto mb-8 text-center relative">
         <div className="absolute top-0 right-0">
           <Settings onSystemPromptChange={handleSystemPromptChange} />
         </div>
-        <div className="absolute top-0 left-0">
+        <div className="absolute top-0 left-0 flex gap-2">
           <Button 
             variant="ghost" 
             size="icon" 
             className="rounded-full"
             title="רענן שיחה"
             aria-label="רענן שיחה"
-            onClick={() => {
-              setConversation([]);
-              setTopicGroups([]);
-              toast({
-                title: "השיחה אופסה",
-                description: "השיחה אופסה בהצלחה",
-              });
-            }}
+            onClick={handleReset}
           >
             <RefreshCw className="h-5 w-5" />
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="rounded-full"
+            title="היסטוריית שיחות"
+            aria-label="היסטוריית שיחות"
+            onClick={() => navigate('/history')}
+          >
+            <HistoryIcon className="h-5 w-5" />
           </Button>
         </div>
         <motion.h1 
