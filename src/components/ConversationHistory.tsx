@@ -70,19 +70,19 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({ conversation 
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto my-6 flex flex-col gap-3 px-2 max-h-[50vh] overflow-y-auto">
+    <div className="w-full max-w-3xl mx-auto py-2 flex flex-col gap-1.5 px-2 max-h-[30vh] overflow-y-auto">
       {groupedConversation.map((group, groupIndex) => (
         group.isGroup ? (
           // Render grouped user messages
           <div
             key={`group-${groupIndex}`}
-            className="conversation-group self-end flex flex-wrap gap-2 justify-end max-w-[90%]"
+            className="conversation-group self-end flex flex-wrap gap-1 justify-end max-w-[90%]"
             dir="auto"
           >
             {group.items.map((item) => (
               <div
                 key={item.id}
-                className="bg-primary text-primary-foreground p-2 rounded-lg shadow-sm"
+                className="bg-primary text-primary-foreground text-sm p-1.5 rounded-lg shadow-sm"
               >
                 {item.text}
               </div>
@@ -92,7 +92,7 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({ conversation 
           // Render non-grouped (AI) messages
           <div
             key={group.items[0].id}
-            className="conversation-bubble p-3 rounded-lg shadow-sm bg-muted text-muted-foreground self-start rounded-tr-xl rounded-br-xl rounded-bl-xl"
+            className="conversation-bubble p-2 text-sm rounded-lg shadow-sm bg-muted text-muted-foreground self-start rounded-tr-xl rounded-br-xl rounded-bl-xl"
             dir="auto"
           >
             {group.items[0].text}
