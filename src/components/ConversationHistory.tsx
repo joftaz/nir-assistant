@@ -1,5 +1,6 @@
 
 import React, { useRef, useEffect } from 'react';
+import { X } from 'lucide-react';
 
 export interface ConversationItem {
   id: string;
@@ -10,9 +11,13 @@ export interface ConversationItem {
 
 interface ConversationHistoryProps {
   conversation: ConversationItem[];
+  onRemoveMessage?: (id: string) => void;
 }
 
-const ConversationHistory: React.FC<ConversationHistoryProps> = ({ conversation }) => {
+const ConversationHistory: React.FC<ConversationHistoryProps> = ({ 
+  conversation, 
+  onRemoveMessage 
+}) => {
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
@@ -69,6 +74,12 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({ conversation 
     });
   }
 
+  const handleRemove = (id: string) => {
+    if (onRemoveMessage) {
+      onRemoveMessage(id);
+    }
+  };
+
   return (
     <div className="w-full max-w-3xl mx-auto py-1 flex flex-col gap-1 px-2 max-h-[25vh] overflow-y-auto">
       {groupedConversation.map((group, groupIndex) => (
@@ -82,9 +93,21 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({ conversation 
             {group.items.map((item) => (
               <div
                 key={item.id}
-                className="bg-primary text-primary-foreground text-xs p-1 rounded-lg shadow-sm"
+                className="bg-primary text-primary-foreground text-sm p-1.5 rounded-lg shadow-sm inline-flex items-center gap-1 relative group"
               >
                 {item.text}
+                {onRemoveMessage && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemove(item.id);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 hover:bg-primary-foreground/20 rounded-full p-0.5"
+                    aria-label="Remove message"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
               </div>
             ))}
           </div>

@@ -64,7 +64,7 @@ const TopicGroup: React.FC<TopicGroupProps> = ({ category, words, onWordSelect, 
                   isOld 
                     ? 'bg-muted/70 hover:bg-primary/15' 
                     : 'bg-muted/50 hover:bg-primary/10'
-                } py-1 px-1.5 rounded-md transition-colors`}
+                } py-1 px-1.5 rounded-md transition-colors inline-flex`}
                 onClick={() => onWordSelect(word)}
               >
                 {word}
