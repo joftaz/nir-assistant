@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 
@@ -87,22 +86,22 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
           // Render grouped user messages
           <div
             key={`group-${groupIndex}`}
-            className="conversation-group self-end flex flex-wrap gap-1 justify-end max-w-[90%]"
+            className="conversation-group self-end flex flex-wrap gap-1 justify-end"
             dir="auto"
           >
             {group.items.map((item) => (
               <div
                 key={item.id}
-                className="bg-primary text-primary-foreground text-sm p-1.5 rounded-lg shadow-sm inline-flex items-center gap-1 relative group"
+                className="bg-primary text-primary-foreground text-sm p-1.5 rounded-lg shadow-sm inline-block whitespace-normal relative group"
               >
-                {item.text}
+                <span className="inline-block">{item.text}</span>
                 {onRemoveMessage && (
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
                       handleRemove(item.id);
                     }}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 hover:bg-primary-foreground/20 rounded-full p-0.5"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 hover:bg-primary-foreground/20 rounded-full p-0.5 inline-flex"
                     aria-label="Remove message"
                   >
                     <X size={12} />
@@ -115,10 +114,10 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
           // Render non-grouped (AI) messages
           <div
             key={group.items[0].id}
-            className="conversation-bubble p-1.5 text-xs rounded-lg shadow-sm bg-muted text-muted-foreground self-start rounded-tr-xl rounded-br-xl rounded-bl-xl"
-            dir="auto"
+            className="conversation-bubble p-1.5 text-xs rounded-lg shadow-sm bg-muted text-muted-foreground self-start rounded-tr-xl rounded-br-xl rounded-bl-xl inline-block whitespace-normal"
+            dir="rtl"
           >
-            {group.items[0].text}
+            <span className="inline-block">{group.items[0].text}</span>
           </div>
         )
       ))}

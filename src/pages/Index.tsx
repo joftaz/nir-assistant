@@ -222,6 +222,21 @@ const Index: React.FC = () => {
     });
   };
 
+  const handleRemoveMessage = (id: string) => {
+    // Find the message to remove
+    const messageToRemove = conversation.find(item => item.id === id);
+    
+    if (messageToRemove && messageToRemove.isUser) {
+      // Remove the message from conversation
+      setConversation(prev => prev.filter(item => item.id !== id));
+      
+      toast({
+        title: "הודעה הוסרה",
+        description: "ההודעה הוסרה בהצלחה",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center px-4 py-4 sm:py-6">
       <header className="w-full max-w-3xl mx-auto mb-2 text-center relative">
@@ -269,7 +284,10 @@ const Index: React.FC = () => {
         </motion.p>
       </header>
 
-      <ConversationHistory conversation={conversation} />
+      <ConversationHistory 
+        conversation={conversation} 
+        onRemoveMessage={handleRemoveMessage}
+      />
 
       <motion.div 
         className="w-full max-w-3xl mx-auto grid gap-2 sm:gap-3 mt-2 mb-2"
