@@ -20,7 +20,7 @@ const StagingArea: React.FC<StagingAreaProps> = ({
     <div className="w-full max-w-3xl mx-auto mt-2 mb-3 p-3 bg-muted/30 border border-muted rounded-lg">
       <div className="mb-2 flex justify-between items-center">
         <h3 className="text-sm font-medium text-muted-foreground" dir="rtl">
-          מילים זמניות ({stagedWords.length})
+          מילים זמניות ({stagedWords.length}) <span className="text-xs font-normal">- לחיצה כדי להוסיף לשיחה</span>
         </h3>
         <button 
           onClick={onCancel}
