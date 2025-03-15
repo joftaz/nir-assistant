@@ -146,47 +146,30 @@ const Index: React.FC = () => {
   };
 
   const handleWordSelect = (word: string) => {
-    if (isStaging) {
-      const newMessage: ConversationItem = {
-        id: uuidv4(),
-        text: word,
-        isUser: true,
-        timestamp: new Date()
-      };
-      
-      setConversation(prev => [...prev, newMessage]);
-      
-      removeWordFromStaging(word);
-      
-      if (stagedWords.length <= 1) {
-        setIsStaging(false);
-        clearStagingArea();
-        setStagingTopicGroups([]);
-      }
-      
-      toast({
-        title: "נוספה מילה",
-        description: `המילה "${word}" נוספה לשיחה בהצלחה`,
-      });
-      
-      return;
-    }
-    
-    setIsStaging(true);
+    // Always add the word to staging area
     addWordToStaging(word);
     
-    setStagingTopicGroups(topicGroups);
+    // If not already in staging mode, set it
+    if (!isStaging) {
+      setIsStaging(true);
+    }
+    
+    // Clear existing staging topic groups to ensure fresh categories
+    setStagingTopicGroups([]);
     
     setIsLoading(true);
     setIsStreaming(true);
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
     
+    // Create conversation history including all staged words
     const conversationHistory = conversation.map(item => 
       `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
     ).join('\n');
     
-    const prompt = `${conversationHistory}\nמשתמש: ${word}`;
+    // Include all staged words in the prompt
+    const allStagedWords = [...stagedWords, word];
+    const prompt = `${conversationHistory}\nמשתמש: ${allStagedWords.join(' ')}`;
     console.log(prompt);
     
     console.log("Starting streaming request for staging...");
@@ -203,13 +186,10 @@ const Index: React.FC = () => {
           categoryReceived.add(partialResponse.category);
           
           setStagingTopicGroups(currentGroups => {
-            const oldGroups = currentGroups.filter(group => group.isOld);
-            const newGroups = currentGroups.filter(group => !group.isOld);
-            
+            // Don't preserve old groups, always show fresh categories
             return [
-              ...newGroups,
-              {...partialResponse, isCollapsed: false, isOld: false, isStaging: true},
-              ...oldGroups
+              ...currentGroups.filter(group => !group.isOld),
+              {...partialResponse, isCollapsed: false, isOld: false, isStaging: true}
             ];
           });
         }
@@ -228,6 +208,7 @@ const Index: React.FC = () => {
   };
 
   const handleStagingWordSelect = (word: string) => {
+    // Add the selected word to the conversation
     const newMessage: ConversationItem = {
       id: uuidv4(),
       text: word,
@@ -237,17 +218,75 @@ const Index: React.FC = () => {
     
     setConversation(prev => [...prev, newMessage]);
     
-    removeWordFromStaging(word);
+    // Clear the staging area
+    setIsStaging(false);
+    clearStagingArea();
+    setStagingTopicGroups([]);
     
-    if (stagedWords.length <= 1) {
-      setIsStaging(false);
-      clearStagingArea();
-      setStagingTopicGroups([]);
-    }
-    
+    // Show toast notification
     toast({
       title: "נוספה מילה",
       description: `המילה "${word}" נוספה לשיחה בהצלחה`,
+    });
+    
+    // Regenerate categories based on the updated conversation
+    setIsLoading(true);
+    setIsStreaming(true);
+    
+    // Mark existing topic groups as old
+    setTopicGroups(currentGroups => 
+      currentGroups.map(group => ({
+        ...group,
+        isCollapsed: true,
+        isOld: true
+      }))
+    );
+    
+    const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
+    
+    // Create updated conversation history including the newly added word
+    const updatedConversation = [...conversation, newMessage];
+    const conversationHistory = updatedConversation.map(item => 
+      `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
+    ).join('\n');
+    
+    const prompt = conversationHistory;
+    console.log("Regenerating categories after staging word selection:", prompt);
+    
+    const categoryReceived = new Set<string>();
+    
+    getModelResponse(
+      prompt, 
+      !!apiKey, 
+      apiKey, 
+      (partialResponse) => {
+        console.log("Received partial response for regeneration:", partialResponse);
+        
+        if (!categoryReceived.has(partialResponse.category)) {
+          categoryReceived.add(partialResponse.category);
+          
+          setTopicGroups(currentGroups => {
+            const oldGroups = currentGroups.filter(group => group.isOld);
+            const newGroups = currentGroups.filter(group => !group.isOld);
+            
+            return [
+              ...newGroups,
+              {...partialResponse, isCollapsed: false, isOld: false},
+              ...oldGroups
+            ];
+          });
+        }
+      }
+    ).catch(error => {
+      console.error('Error fetching response:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בקבלת תשובה. אנא נסה שוב.",
+        variant: "destructive",
+      });
+    }).finally(() => {
+      setIsLoading(false);
+      setIsStreaming(false);
     });
   };
 
@@ -374,6 +413,7 @@ const Index: React.FC = () => {
           stagedWords={stagedWords}
           onRemoveWord={removeWordFromStaging}
           onWordSelect={handleStagingWordSelect}
+          onCancel={handleStagingCancel}
         />
       )}
 

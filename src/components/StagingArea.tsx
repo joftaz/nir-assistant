@@ -5,21 +5,31 @@ interface StagingAreaProps {
   stagedWords: string[];
   onRemoveWord: (word: string) => void;
   onWordSelect: (word: string) => void;
+  onCancel: () => void;
 }
 
 const StagingArea: React.FC<StagingAreaProps> = ({
   stagedWords,
   onRemoveWord,
-  onWordSelect
+  onWordSelect,
+  onCancel
 }) => {
   if (stagedWords.length === 0) return null;
 
   return (
     <div className="w-full max-w-3xl mx-auto mt-2 mb-3 p-3 bg-muted/30 border border-muted rounded-lg">
-      <div className="mb-2">
+      <div className="mb-2 flex justify-between items-center">
         <h3 className="text-sm font-medium text-muted-foreground" dir="rtl">
           מילים זמניות ({stagedWords.length})
         </h3>
+        <button 
+          onClick={onCancel}
+          className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-full hover:bg-muted"
+          aria-label="Cancel staging"
+          title="בטל בחירה"
+        >
+          <X size={16} />
+        </button>
       </div>
       
       <div className="flex flex-wrap gap-1.5 justify-end" dir="rtl">
