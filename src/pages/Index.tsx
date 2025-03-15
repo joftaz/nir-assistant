@@ -102,7 +102,16 @@ const Index: React.FC = () => {
         `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
       ).join('\n');
       
-      const prompt = conversationHistory ? `${conversationHistory}\nמשתמש: ${topic}` : topic;
+      // Get all user words from the conversation to avoid repeating them
+      const updatedConversation = [...conversation, userMessage];
+      const allUserWords = updatedConversation
+        .filter(item => item.isUser)
+        .map(item => item.text);
+      
+      // Create a prompt that includes the topic and instructs the model not to repeat words already used
+      const prompt = conversationHistory 
+        ? `${conversationHistory}\nמשתמש: ${topic}\n\nהערה למודל: המילים הבאות כבר נבחרו, אנא הצע מילים חדשות שקשורות לנושא אך שונות מאלו: ${allUserWords.join(', ')}`
+        : `משתמש: ${topic}`;
       
       console.log("Starting streaming request...");
       const categoryReceived = new Set<string>();
@@ -117,13 +126,23 @@ const Index: React.FC = () => {
           if (!categoryReceived.has(partialResponse.category)) {
             categoryReceived.add(partialResponse.category);
             
+            // Filter out any words that are already in the conversation
+            const filteredWords = partialResponse.words.filter(
+              suggestedWord => !allUserWords.includes(suggestedWord)
+            );
+            
             setTopicGroups(currentGroups => {
               const oldGroups = currentGroups.filter(group => group.isOld);
               const newGroups = currentGroups.filter(group => !group.isOld);
               
               return [
                 ...newGroups,
-                {...partialResponse, isCollapsed: false, isOld: false},
+                {
+                  ...partialResponse, 
+                  words: filteredWords,
+                  isCollapsed: false, 
+                  isOld: false
+                },
                 ...oldGroups
               ];
             });
@@ -169,7 +188,10 @@ const Index: React.FC = () => {
     
     // Include all staged words in the prompt
     const allStagedWords = [...stagedWords, word];
-    const prompt = `${conversationHistory}\nמשתמש: ${allStagedWords.join(' ')}`;
+    
+    // Create a prompt that includes the staged words and instructs the model not to repeat them
+    const prompt = `${conversationHistory}\nמשתמש: ${allStagedWords.join(' ')}\n\nהערה למודל: המילים הבאות כבר נבחרו, אנא הצע מילים חדשות שקשורות לנושא אך שונות מאלו: ${allStagedWords.join(', ')}`;
+    
     console.log(prompt);
     
     console.log("Starting streaming request for staging...");
@@ -185,11 +207,22 @@ const Index: React.FC = () => {
         if (!categoryReceived.has(partialResponse.category)) {
           categoryReceived.add(partialResponse.category);
           
+          // Filter out any words that are already in the staging area
+          const filteredWords = partialResponse.words.filter(
+            suggestedWord => !allStagedWords.includes(suggestedWord)
+          );
+          
           setStagingTopicGroups(currentGroups => {
             // Don't preserve old groups, always show fresh categories
             return [
               ...currentGroups.filter(group => !group.isOld),
-              {...partialResponse, isCollapsed: false, isOld: false, isStaging: true}
+              {
+                ...partialResponse, 
+                words: filteredWords,
+                isCollapsed: false, 
+                isOld: false, 
+                isStaging: true
+              }
             ];
           });
         }
@@ -250,7 +283,14 @@ const Index: React.FC = () => {
       `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
     ).join('\n');
     
-    const prompt = conversationHistory;
+    // Get all user words from the conversation to avoid repeating them
+    const allUserWords = updatedConversation
+      .filter(item => item.isUser)
+      .map(item => item.text);
+    
+    // Create a prompt that instructs the model not to repeat words already used
+    const prompt = `${conversationHistory}\n\nהערה למודל: המילים הבאות כבר נבחרו, אנא הצע מילים חדשות שקשורות לנושא אך שונות מאלו: ${allUserWords.join(', ')}`;
+    
     console.log("Regenerating categories after staging word selection:", prompt);
     
     const categoryReceived = new Set<string>();
@@ -265,13 +305,23 @@ const Index: React.FC = () => {
         if (!categoryReceived.has(partialResponse.category)) {
           categoryReceived.add(partialResponse.category);
           
+          // Filter out any words that are already in the conversation
+          const filteredWords = partialResponse.words.filter(
+            suggestedWord => !allUserWords.includes(suggestedWord)
+          );
+          
           setTopicGroups(currentGroups => {
             const oldGroups = currentGroups.filter(group => group.isOld);
             const newGroups = currentGroups.filter(group => !group.isOld);
             
             return [
               ...newGroups,
-              {...partialResponse, isCollapsed: false, isOld: false},
+              {
+                ...partialResponse, 
+                words: filteredWords,
+                isCollapsed: false, 
+                isOld: false
+              },
               ...oldGroups
             ];
           });
