@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,9 +9,17 @@ interface TopicGroupProps {
   onWordSelect: (word: string) => void;
   isCollapsed?: boolean;
   isOld?: boolean;
+  isStaging?: boolean;
 }
 
-const TopicGroup: React.FC<TopicGroupProps> = ({ category, words, onWordSelect, isCollapsed = false, isOld = false }) => {
+const TopicGroup: React.FC<TopicGroupProps> = ({ 
+  category, 
+  words, 
+  onWordSelect, 
+  isCollapsed = false, 
+  isOld = false,
+  isStaging = false
+}) => {
   const [isExpanded, setIsExpanded] = useState(!isCollapsed);
   
   useEffect(() => {
@@ -41,6 +50,11 @@ const TopicGroup: React.FC<TopicGroupProps> = ({ category, words, onWordSelect, 
               קודם
             </span>
           )}
+          {isStaging && (
+            <span className="text-xs px-1 py-0.5 bg-primary/20 rounded text-primary">
+              זמני
+            </span>
+          )}
         </div>
         <button className="p-1 rounded-full hover:bg-muted transition-colors">
           {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -63,7 +77,9 @@ const TopicGroup: React.FC<TopicGroupProps> = ({ category, words, onWordSelect, 
                 className={`word-chip text-xs ${
                   isOld 
                     ? 'bg-muted/70 hover:bg-primary/15' 
-                    : 'bg-muted/50 hover:bg-primary/10'
+                    : isStaging
+                      ? 'bg-primary/10 hover:bg-primary/20'
+                      : 'bg-muted/50 hover:bg-primary/10'
                 } py-1 px-1.5 rounded-md transition-colors`}
                 onClick={() => onWordSelect(word)}
                 dir="rtl"

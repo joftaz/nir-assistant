@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import TopicInput from '@/components/TopicInput';
 import TopicGroup from '@/components/TopicGroup';
+import StagingArea from '@/components/StagingArea';
 import ConversationHistory, { ConversationItem } from '@/components/ConversationHistory';
 import ApiKeyInput from '@/components/ApiKeyInput';
 import Settings from '@/components/Settings';
@@ -13,17 +14,28 @@ import { Loader2, RefreshCw, History as HistoryIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { saveHistory, getHistoryById } from '@/utils/conversationManager';
 import { TopicCategory } from '@/types/models';
+import { useStagingArea } from '@/hooks/use-staging-area';
 
 const Index: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [conversation, setConversation] = useState<ConversationItem[]>([]);
   const [topicGroups, setTopicGroups] = useState<TopicCategory[]>([]);
+  const [stagingTopicGroups, setStagingTopicGroups] = useState<TopicCategory[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [openAIKey, setOpenAIKey] = useState<string>('');
   const [conversationId, setConversationId] = useState<string>(uuidv4());
+  const [isStaging, setIsStaging] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  const {
+    stagedWords,
+    addWordToStaging,
+    removeWordFromStaging,
+    clearStagingArea,
+    createMessageFromStaged
+  } = useStagingArea();
   
   useEffect(() => {
     const envApiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
@@ -134,25 +146,21 @@ const Index: React.FC = () => {
   };
 
   const handleWordSelect = (word: string) => {
-    const newMessage: ConversationItem = {
-      id: uuidv4(),
-      text: word,
-      isUser: true,
-      timestamp: new Date()
-    };
+    if (isStaging) {
+      // In staging mode, add to staging area
+      addWordToStaging(word);
+      return;
+    }
     
-    setConversation(prev => [...prev, newMessage]);
+    // Start staging mode
+    setIsStaging(true);
+    addWordToStaging(word);
+    
+    // Clone current topic groups as staging topic groups
+    setStagingTopicGroups(topicGroups);
     
     setIsLoading(true);
     setIsStreaming(true);
-    
-    setTopicGroups(currentGroups => 
-      currentGroups.map(group => ({
-        ...group,
-        isCollapsed: true,
-        isOld: true
-      }))
-    );
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
     
@@ -163,7 +171,7 @@ const Index: React.FC = () => {
     const prompt = `${conversationHistory}\nמשתמש: ${word}`;
     console.log(prompt);
     
-    console.log("Starting streaming request...");
+    console.log("Starting streaming request for staging...");
     const categoryReceived = new Set<string>();
     
     getModelResponse(
@@ -171,18 +179,18 @@ const Index: React.FC = () => {
       !!apiKey, 
       apiKey, 
       (partialResponse) => {
-        console.log("Received partial response:", partialResponse);
+        console.log("Received partial response for staging:", partialResponse);
         
         if (!categoryReceived.has(partialResponse.category)) {
           categoryReceived.add(partialResponse.category);
           
-          setTopicGroups(currentGroups => {
+          setStagingTopicGroups(currentGroups => {
             const oldGroups = currentGroups.filter(group => group.isOld);
             const newGroups = currentGroups.filter(group => !group.isOld);
             
             return [
               ...newGroups,
-              {...partialResponse, isCollapsed: false, isOld: false},
+              {...partialResponse, isCollapsed: false, isOld: false, isStaging: true},
               ...oldGroups
             ];
           });
@@ -201,6 +209,36 @@ const Index: React.FC = () => {
     });
   };
 
+  const handleStagingConfirm = () => {
+    if (stagedWords.length === 0) return;
+    
+    // Add staged words to conversation
+    const newMessage = createMessageFromStaged();
+    setConversation(prev => [...prev, newMessage]);
+    
+    // End staging mode
+    setIsStaging(false);
+    clearStagingArea();
+    setStagingTopicGroups([]);
+    
+    toast({
+      title: "נוספו מילים",
+      description: `המילים נוספו לשיחה בהצלחה: ${stagedWords.join(' ')}`,
+    });
+  };
+  
+  const handleStagingCancel = () => {
+    // End staging mode without keeping the words
+    setIsStaging(false);
+    clearStagingArea();
+    setStagingTopicGroups([]);
+    
+    toast({
+      title: "בוטלה בחירה",
+      description: "המילים הזמניות נמחקו",
+    });
+  };
+
   const handleSaveApiKey = (apiKey: string) => {
     setOpenAIKey(apiKey);
   };
@@ -216,6 +254,9 @@ const Index: React.FC = () => {
     setConversation([]);
     setTopicGroups([]);
     setConversationId(uuidv4());
+    setIsStaging(false);
+    clearStagingArea();
+    setStagingTopicGroups([]);
     toast({
       title: "השיחה אופסה",
       description: "השיחה אופסה בהצלחה",
@@ -236,6 +277,8 @@ const Index: React.FC = () => {
       });
     }
   };
+
+  const activeTopicGroups = isStaging ? stagingTopicGroups : topicGroups;
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center px-4 py-4 sm:py-6">
@@ -289,27 +332,37 @@ const Index: React.FC = () => {
         onRemoveMessage={handleRemoveMessage}
       />
 
+      {isStaging && (
+        <StagingArea
+          stagedWords={stagedWords}
+          onRemoveWord={removeWordFromStaging}
+          onConfirm={handleStagingConfirm}
+          onCancel={handleStagingCancel}
+        />
+      )}
+
       <motion.div 
         className="w-full max-w-3xl mx-auto grid gap-2 sm:gap-3 mt-2 mb-2"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        {isLoading && topicGroups.length === 0 ? (
+        {isLoading && activeTopicGroups.length === 0 ? (
           <div className="flex justify-center items-center py-6">
             <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full">
-              {topicGroups.map((group, index) => (
+              {activeTopicGroups.map((group, index) => (
                 <TopicGroup
-                  key={`${group.category}-${index}`}
+                  key={`${group.category}-${index}-${isStaging ? 'staging' : 'main'}`}
                   category={group.category}
                   words={group.words}
                   onWordSelect={handleWordSelect}
                   isCollapsed={group.isCollapsed}
                   isOld={group.isOld}
+                  isStaging={isStaging}
                 />
               ))}
             </div>
@@ -318,7 +371,7 @@ const Index: React.FC = () => {
                 <Loader2 className="h-6 w-6 animate-spin text-primary/70" />
               </div>
             )}
-            {!isStreaming && topicGroups.length > 0 && topicGroups.some(group => !group.isCollapsed) && (
+            {!isStreaming && activeTopicGroups.length > 0 && activeTopicGroups.some(group => !group.isCollapsed) && (
               <div className="text-center text-xs text-muted-foreground py-1">
                 ⤴ קבוצות חדשות | קבוצות קודמות ⤵
               </div>
@@ -335,7 +388,7 @@ const Index: React.FC = () => {
       >
         <TopicInput 
           onSubmit={handleSubmitTopic} 
-          isLoading={isLoading} 
+          isLoading={isLoading || isStaging} 
           apiKey={openAIKey}
         />
       </motion.div>
