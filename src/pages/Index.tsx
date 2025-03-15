@@ -283,16 +283,18 @@ const Index: React.FC = () => {
           </div>
         ) : (
           <>
-            {topicGroups.map((group, index) => (
-              <TopicGroup
-                key={`${group.category}-${index}`}
-                category={group.category}
-                words={group.words}
-                onWordSelect={handleWordSelect}
-                isCollapsed={group.isCollapsed}
-                isOld={group.isOld}
-              />
-            ))}
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full">
+              {topicGroups.map((group, index) => (
+                <TopicGroup
+                  key={`${group.category}-${index}`}
+                  category={group.category}
+                  words={group.words}
+                  onWordSelect={handleWordSelect}
+                  isCollapsed={group.isCollapsed}
+                  isOld={group.isOld}
+                />
+              ))}
+            </div>
             {isStreaming && (
               <div className="flex justify-center items-center py-2">
                 <Loader2 className="h-6 w-6 animate-spin text-primary/70" />
