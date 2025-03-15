@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -55,17 +54,19 @@ const TopicGroup: React.FC<TopicGroupProps> = ({ category, words, onWordSelect, 
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="p-1.5 pt-0 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1.5"
+            className="p-1.5 pt-0 flex flex-wrap gap-1.5 justify-start"
+            dir="rtl"
           >
             {words.map((word, index) => (
               <button
                 key={index}
-                className={`word-chip text-right text-xs ${
+                className={`word-chip text-xs ${
                   isOld 
                     ? 'bg-muted/70 hover:bg-primary/15' 
                     : 'bg-muted/50 hover:bg-primary/10'
-                } py-1 px-1.5 rounded-md transition-colors inline-flex`}
+                } py-1 px-1.5 rounded-md transition-colors`}
                 onClick={() => onWordSelect(word)}
+                dir="rtl"
               >
                 {word}
               </button>
