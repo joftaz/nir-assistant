@@ -147,16 +147,34 @@ const Index: React.FC = () => {
 
   const handleWordSelect = (word: string) => {
     if (isStaging) {
-      // In staging mode, add to staging area
-      addWordToStaging(word);
+      const newMessage: ConversationItem = {
+        id: uuidv4(),
+        text: word,
+        isUser: true,
+        timestamp: new Date()
+      };
+      
+      setConversation(prev => [...prev, newMessage]);
+      
+      removeWordFromStaging(word);
+      
+      if (stagedWords.length <= 1) {
+        setIsStaging(false);
+        clearStagingArea();
+        setStagingTopicGroups([]);
+      }
+      
+      toast({
+        title: "נוספה מילה",
+        description: `המילה "${word}" נוספה לשיחה בהצלחה`,
+      });
+      
       return;
     }
     
-    // Start staging mode
     setIsStaging(true);
     addWordToStaging(word);
     
-    // Clone current topic groups as staging topic groups
     setStagingTopicGroups(topicGroups);
     
     setIsLoading(true);
@@ -209,14 +227,36 @@ const Index: React.FC = () => {
     });
   };
 
+  const handleStagingWordSelect = (word: string) => {
+    const newMessage: ConversationItem = {
+      id: uuidv4(),
+      text: word,
+      isUser: true,
+      timestamp: new Date()
+    };
+    
+    setConversation(prev => [...prev, newMessage]);
+    
+    removeWordFromStaging(word);
+    
+    if (stagedWords.length <= 1) {
+      setIsStaging(false);
+      clearStagingArea();
+      setStagingTopicGroups([]);
+    }
+    
+    toast({
+      title: "נוספה מילה",
+      description: `המילה "${word}" נוספה לשיחה בהצלחה`,
+    });
+  };
+
   const handleStagingConfirm = () => {
     if (stagedWords.length === 0) return;
     
-    // Add staged words to conversation
     const newMessage = createMessageFromStaged();
     setConversation(prev => [...prev, newMessage]);
     
-    // End staging mode
     setIsStaging(false);
     clearStagingArea();
     setStagingTopicGroups([]);
@@ -228,7 +268,6 @@ const Index: React.FC = () => {
   };
   
   const handleStagingCancel = () => {
-    // End staging mode without keeping the words
     setIsStaging(false);
     clearStagingArea();
     setStagingTopicGroups([]);
@@ -264,11 +303,9 @@ const Index: React.FC = () => {
   };
 
   const handleRemoveMessage = (id: string) => {
-    // Find the message to remove
     const messageToRemove = conversation.find(item => item.id === id);
     
     if (messageToRemove && messageToRemove.isUser) {
-      // Remove the message from conversation
       setConversation(prev => prev.filter(item => item.id !== id));
       
       toast({
@@ -336,8 +373,7 @@ const Index: React.FC = () => {
         <StagingArea
           stagedWords={stagedWords}
           onRemoveWord={removeWordFromStaging}
-          onConfirm={handleStagingConfirm}
-          onCancel={handleStagingCancel}
+          onWordSelect={handleStagingWordSelect}
         />
       )}
 
