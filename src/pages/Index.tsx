@@ -63,6 +63,18 @@ const Index: React.FC = () => {
     }
   }, [conversation, topicGroups, conversationId]);
 
+  const handleRemoveMessage = (id: string) => {
+    setConversation(prevConversation => {
+      const updatedConversation = prevConversation.filter(message => message.id !== id);
+      return updatedConversation;
+    });
+    
+    toast({
+      title: "הודעה הוסרה",
+      description: "ההודעה הוסרה בהצלחה מההיסטוריה",
+    });
+  };
+
   const handleSubmitTopic = async (topic: string) => {
     const userMessage: ConversationItem = {
       id: uuidv4(),
@@ -269,7 +281,10 @@ const Index: React.FC = () => {
         </motion.p>
       </header>
 
-      <ConversationHistory conversation={conversation} />
+      <ConversationHistory 
+        conversation={conversation} 
+        onRemoveMessage={handleRemoveMessage}
+      />
 
       <motion.div 
         className="w-full max-w-3xl mx-auto grid gap-2 sm:gap-3 mt-2 mb-2"
