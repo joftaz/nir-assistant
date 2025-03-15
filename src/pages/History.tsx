@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -35,7 +34,11 @@ import { he } from 'date-fns/locale';
 const History: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [histories, setHistories] = useState(getAllHistories);
+  const [histories, setHistories] = useState(() => {
+    // Sort histories by updatedAt date in descending order (newest first)
+    const allHistories = getAllHistories();
+    return allHistories.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  });
   const [isSavingEnabled, setSavingEnabled] = useState(isHistorySavingEnabled);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
@@ -66,7 +69,9 @@ const History: React.FC = () => {
   const handleDeleteHistory = () => {
     if (historyToDelete) {
       deleteHistory(historyToDelete);
-      setHistories(getAllHistories());
+      // Sort histories by updatedAt date in descending order (newest first)
+      const allHistories = getAllHistories();
+      setHistories(allHistories.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()));
       setIsDeleteDialogOpen(false);
       
       toast({
@@ -78,6 +83,7 @@ const History: React.FC = () => {
 
   const handleDeleteAllHistories = () => {
     deleteAllHistories();
+    // Set to empty array since all histories are deleted
     setHistories([]);
     setIsDeleteAllDialogOpen(false);
     
