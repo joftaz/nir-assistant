@@ -108,3 +108,10 @@ html {
 .staging-word {
   @apply text-muted-foreground;
 }
+
+/* Dynamic text sizing for word chips */
+.word-chip.text-[10px] {
+  font-size: 10px;
+  line-height: 1.2;
+  padding: 0.15rem 0.3rem;
+}

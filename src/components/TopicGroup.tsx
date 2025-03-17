@@ -30,6 +30,23 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
     setIsExpanded(!isExpanded);
   };
 
+  // Calculate text size based on the number of words
+  const getWordTextSize = () => {
+    const wordCount = words.length;
+    if (wordCount <= 6) return 'text-sm';
+    if (wordCount <= 10) return 'text-xs';
+    if (wordCount <= 15) return 'text-xs';
+    return 'text-[10px]';
+  };
+
+  const getCategoryTextSize = () => {
+    const wordCount = words.length;
+    if (wordCount <= 10) return 'text-base';
+    return 'text-sm';
+  };
+
+  const wordTextSize = getWordTextSize();
+
   return (
     <div 
       className={`topic-group w-full border ${
@@ -44,7 +61,7 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
         onClick={toggleExpanded}
       >
         <div className="flex items-center gap-1.5">
-          <h3 className="font-medium text-base">{category}</h3>
+          <h3 className={`font-medium ${getCategoryTextSize()}`}>{category}</h3>
           {isOld && (
             <span className="text-xs px-1 py-0.5 bg-muted-foreground/20 rounded text-muted-foreground">
               קודם
@@ -74,13 +91,13 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
             {words.map((word, index) => (
               <button
                 key={index}
-                className={`word-chip text-xs ${
+                className={`word-chip ${wordTextSize} ${
                   isOld 
                     ? 'bg-muted/70 hover:bg-primary/15' 
                     : isStaging
                       ? 'bg-primary/10 hover:bg-primary/20'
                       : 'bg-muted/50 hover:bg-primary/10'
-                } py-1 px-1.5 rounded-md transition-colors`}
+                } py-1 px-1.5 rounded-md transition-colors ${isStaging ? 'staging-word' : ''}`}
                 onClick={() => onWordSelect(word)}
                 dir="rtl"
               >
