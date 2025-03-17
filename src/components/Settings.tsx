@@ -146,7 +146,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
                       <div className="flex items-center justify-between">
                         <Slider
                           defaultValue={[field.value]}
-                          min={6}
+                          min={2}
                           max={20}
                           step={1}
                           onValueChange={(value) => field.onChange(value[0])}
