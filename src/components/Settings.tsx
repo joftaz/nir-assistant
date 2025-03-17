@@ -1,6 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 import { Settings as SettingsIcon } from 'lucide-react';
 import { 
   Dialog,
@@ -13,45 +17,82 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { defaultSystemPrompt } from '@/utils/modelPrompt';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
 
 const SYSTEM_PROMPT_STORAGE_KEY = 'system_prompt';
+const CATEGORIES_COUNT_KEY = 'categories_count';
+const WORDS_PER_CATEGORY_KEY = 'words_per_category';
 
 interface SettingsProps {
   onSystemPromptChange: (newPrompt: string) => void;
 }
 
+interface SettingsFormValues {
+  systemPrompt: string;
+  categoriesCount: number;
+  wordsPerCategory: number;
+}
+
 const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [systemPrompt, setSystemPrompt] = useState('');
   const { toast } = useToast();
+  
+  const form = useForm<SettingsFormValues>({
+    defaultValues: {
+      systemPrompt: '',
+      categoriesCount: 4,
+      wordsPerCategory: 10
+    }
+  });
 
   useEffect(() => {
-    // Load saved system prompt from localStorage or use default
+    // Load saved settings from localStorage or use defaults
     const savedPrompt = localStorage.getItem(SYSTEM_PROMPT_STORAGE_KEY);
-    if (savedPrompt) {
-      setSystemPrompt(savedPrompt);
-    } else {
-      setSystemPrompt(defaultSystemPrompt);
-    }
-  }, []);
+    const savedCategoriesCount = localStorage.getItem(CATEGORIES_COUNT_KEY);
+    const savedWordsPerCategory = localStorage.getItem(WORDS_PER_CATEGORY_KEY);
+    
+    form.reset({
+      systemPrompt: savedPrompt || defaultSystemPrompt,
+      categoriesCount: savedCategoriesCount ? parseInt(savedCategoriesCount) : 4,
+      wordsPerCategory: savedWordsPerCategory ? parseInt(savedWordsPerCategory) : 10
+    });
+  }, [form]);
 
-  const handleSave = () => {
-    // Save to localStorage
-    localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, systemPrompt);
-    onSystemPromptChange(systemPrompt);
+  const handleSave = (values: SettingsFormValues) => {
+    // Update prompt with the new values
+    let updatedPrompt = values.systemPrompt;
+    
+    // Replace categories count in the prompt
+    updatedPrompt = updatedPrompt.replace(/חייבת ליצור בדיוק \d+ קטגוריות/g, `חייבת ליצור בדיוק ${values.categoriesCount} קטגוריות`);
+    
+    // Replace words per category count in the prompt
+    updatedPrompt = updatedPrompt.replace(/חייבת ליצור לפחות \d+ מילים בכל קטגוריה/g, `חייבת ליצור לפחות ${values.wordsPerCategory} מילים בכל קטגוריה`);
+    
+    // Save all values to localStorage
+    localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, updatedPrompt);
+    localStorage.setItem(CATEGORIES_COUNT_KEY, values.categoriesCount.toString());
+    localStorage.setItem(WORDS_PER_CATEGORY_KEY, values.wordsPerCategory.toString());
+    
+    onSystemPromptChange(updatedPrompt);
     setIsOpen(false);
     
     toast({
       title: "נשמר בהצלחה",
-      description: "הודעת המערכת נשמרה",
+      description: "הגדרות המערכת נשמרו",
     });
   };
 
   const handleResetToDefault = () => {
-    setSystemPrompt(defaultSystemPrompt);
+    form.reset({
+      systemPrompt: defaultSystemPrompt,
+      categoriesCount: 4,
+      wordsPerCategory: 10
+    });
+    
     toast({
       title: "איפוס בוצע",
-      description: "הודעת המערכת אופסה לברירת המחדל",
+      description: "הגדרות המערכת אופסו לברירת המחדל",
     });
   };
 
@@ -72,29 +113,90 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
         <DialogHeader>
           <DialogTitle>הגדרות</DialogTitle>
           <DialogDescription>
-            שנה את הודעת המערכת שנשלחת ל-AI
+            שנה את הגדרות המערכת
           </DialogDescription>
         </DialogHeader>
         
-        <div className="py-4">
-          <Textarea
-            value={systemPrompt}
-            onChange={(e) => setSystemPrompt(e.target.value)}
-            rows={15}
-            className="font-mono text-sm rtl text-right"
-            dir="rtl"
-          />
-        </div>
-        
-        <DialogFooter className="flex justify-between sm:justify-between">
-          <Button
-            variant="outline"
-            onClick={handleResetToDefault}
-          >
-            שחזר ברירת מחדל
-          </Button>
-          <Button onClick={handleSave}>שמור</Button>
-        </DialogFooter>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="categoriesCount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>מספר קטגוריות</FormLabel>
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Slider
+                          defaultValue={[field.value]}
+                          min={2}
+                          max={8}
+                          step={1}
+                          onValueChange={(value) => field.onChange(value[0])}
+                          className="w-full"
+                        />
+                        <span className="text-sm font-medium mr-4 w-8 text-center">{field.value}</span>
+                      </div>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="wordsPerCategory"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>מספר מילים בכל קטגוריה</FormLabel>
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Slider
+                          defaultValue={[field.value]}
+                          min={6}
+                          max={20}
+                          step={1}
+                          onValueChange={(value) => field.onChange(value[0])}
+                          className="w-full"
+                        />
+                        <span className="text-sm font-medium mr-4 w-8 text-center">{field.value}</span>
+                      </div>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="systemPrompt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>הודעת מערכת</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        rows={12}
+                        className="font-mono text-xs rtl text-right"
+                        dir="rtl"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <DialogFooter className="flex justify-between sm:justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleResetToDefault}
+              >
+                שחזר ברירת מחדל
+              </Button>
+              <Button type="submit">שמור</Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

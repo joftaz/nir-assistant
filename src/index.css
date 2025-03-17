@@ -84,3 +84,27 @@ html {
   direction: rtl;
   text-align: right;
 }
+
+/* Responsive text sizing for topic groups and words */
+@media (max-width: 640px) {
+  .topic-category {
+    @apply text-sm font-medium;
+  }
+  .topic-word {
+    @apply text-xs;
+  }
+}
+
+@media (min-width: 641px) {
+  .topic-category {
+    @apply text-base font-medium;
+  }
+  .topic-word {
+    @apply text-sm;
+  }
+}
+
+/* Staging area words should have a weaker color */
+.staging-word {
+  @apply text-muted-foreground;
+}

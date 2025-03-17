@@ -39,16 +39,36 @@ example:
 }
 `;
 
-// Initialize system prompt in localStorage if not present
+// Initialize system prompt and settings in localStorage if not present
 export const initializeSystemPrompt = (): void => {
   if (!localStorage.getItem('system_prompt')) {
     localStorage.setItem('system_prompt', defaultSystemPrompt);
+  }
+  
+  if (!localStorage.getItem('categories_count')) {
+    localStorage.setItem('categories_count', '4');
+  }
+  
+  if (!localStorage.getItem('words_per_category')) {
+    localStorage.setItem('words_per_category', '10');
   }
 };
 
 // Get system prompt from localStorage or use default
 export const getSystemPrompt = (): string => {
-  return localStorage.getItem('system_prompt') || defaultSystemPrompt;
+  let prompt = localStorage.getItem('system_prompt') || defaultSystemPrompt;
+  
+  // Update prompt with current settings if needed
+  const categoriesCount = localStorage.getItem('categories_count') || '4';
+  const wordsPerCategory = localStorage.getItem('words_per_category') || '10';
+  
+  // Replace categories count in the prompt if not already updated
+  prompt = prompt.replace(/חייבת ליצור בדיוק \d+ קטגוריות/g, `חייבת ליצור בדיוק ${categoriesCount} קטגוריות`);
+  
+  // Replace words per category count in the prompt
+  prompt = prompt.replace(/חייבת ליצור לפחות \d+ מילים בכל קטגוריה/g, `חייבת ליצור לפחות ${wordsPerCategory} מילים בכל קטגוריה`);
+  
+  return prompt;
 };
 
 // This is kept for fallback or testing purposes
