@@ -1,3 +1,4 @@
+
 import { generateResponse, CategoryResponse, initializeOpenAI, getOpenAIStreamingResponse } from './openaiService';
 import systemPromptMd from './systemPrompt.rtl.md?raw';
 
@@ -78,6 +79,21 @@ export const getMockResponse = (input: string): Promise<Array<{category: string;
           {
             category: "משפחה",
             words: ["אישה", "ילדים", "אבא", "אמא", "אח", "אחות", "סבא", "סבתא", "דוד", "דודה"]
+          }
+        ],
+        // Example with few words per category for testing the new sizing
+        "מינימום": [
+          {
+            category: "רגשות",
+            words: ["שמחה", "עצב"]
+          },
+          {
+            category: "פעולות",
+            words: ["ללכת", "לדבר", "לנוח"]
+          },
+          {
+            category: "משפחה",
+            words: ["אבא", "אמא"]
           }
         ],
         "ספורט": [

@@ -115,3 +115,14 @@ html {
   line-height: 1.2;
   padding: 0.15rem 0.3rem;
 }
+
+/* Optimized spacing for few words */
+.word-chip.text-base {
+  padding: 0.4rem 0.7rem;
+  margin: 0.2rem;
+}
+
+.word-chip.text-lg {
+  padding: 0.5rem 0.8rem;
+  margin: 0.25rem;
+}
