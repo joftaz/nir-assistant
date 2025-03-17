@@ -56,19 +56,8 @@ export const initializeSystemPrompt = (): void => {
 
 // Get system prompt from localStorage or use default
 export const getSystemPrompt = (): string => {
-  let prompt = localStorage.getItem('system_prompt') || defaultSystemPrompt;
-  
-  // Update prompt with current settings if needed
-  const categoriesCount = localStorage.getItem('categories_count') || '4';
-  const wordsPerCategory = localStorage.getItem('words_per_category') || '10';
-  
-  // Replace categories count in the prompt if not already updated
-  prompt = prompt.replace(/חייבת ליצור בדיוק \d+ קטגוריות/g, `חייבת ליצור בדיוק ${categoriesCount} קטגוריות`);
-  
-  // Replace words per category count in the prompt
-  prompt = prompt.replace(/חייבת ליצור לפחות \d+ מילים בכל קטגוריה/g, `חייבת ליצור לפחות ${wordsPerCategory} מילים בכל קטגוריה`);
-  
-  return prompt;
+  const prompt = localStorage.getItem('system_prompt') || defaultSystemPrompt;
+  return replacePromptPlaceholders(prompt);
 };
 
 // This is kept for fallback or testing purposes
@@ -185,4 +174,13 @@ export const getModelResponse = async (
   }
   
   return mockData as TopicCategory[];
+};
+
+export const replacePromptPlaceholders = (prompt: string): string => {
+  const categoriesCount = localStorage.getItem('categories_count') || '4';
+  const wordsPerCategory = localStorage.getItem('words_per_category') || '10';
+  
+  return prompt
+    .replace(/{categoriesCount}/g, categoriesCount)
+    .replace(/{wordsPerCategory}/g, wordsPerCategory);
 };

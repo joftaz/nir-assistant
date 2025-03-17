@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,7 +15,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { defaultSystemPrompt } from '@/utils/modelPrompt';
+import { defaultSystemPrompt, replacePromptPlaceholders } from '@/utils/modelPrompt';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 
@@ -61,13 +60,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
 
   const handleSave = (values: SettingsFormValues) => {
     // Update prompt with the new values
-    let updatedPrompt = values.systemPrompt;
-    
-    // Replace categories count in the prompt
-    updatedPrompt = updatedPrompt.replace(/חייבת ליצור בדיוק \d+ קטגוריות/g, `חייבת ליצור בדיוק ${values.categoriesCount} קטגוריות`);
-    
-    // Replace words per category count in the prompt
-    updatedPrompt = updatedPrompt.replace(/חייבת ליצור לפחות \d+ מילים בכל קטגוריה/g, `חייבת ליצור לפחות ${values.wordsPerCategory} מילים בכל קטגוריה`);
+    let updatedPrompt = replacePromptPlaceholders(values.systemPrompt);
     
     // Save all values to localStorage
     localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, updatedPrompt);
