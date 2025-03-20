@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { generateSentences } from '@/utils/openaiService';
@@ -7,7 +6,24 @@ import { ConversationItem } from '@/components/ConversationHistory';
 export function useSentenceGenerator() {
   const [sentences, setSentences] = useState<string[]>([]);
   const [isGeneratingSentences, setIsGeneratingSentences] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const { toast } = useToast();
+  
+  // Helper function to add a sentence while preventing duplicates
+  const addSentence = (partialSentence: string) => {
+    setSentences(prev => {
+      // Check if sentence already exists (case insensitive comparison)
+      const isDuplicate = prev.some(s => 
+        s.toLowerCase().trim() === partialSentence.toLowerCase().trim()
+      );
+      
+      if (isDuplicate) return prev;
+      
+      // Add the new sentence
+      console.log("Adding new sentence to UI:", partialSentence);
+      return [...prev, partialSentence];
+    });
+  };
   
   const generateSentencesFromWords = async (words: string[], apiKey: string) => {
     if (words.length === 0) {
@@ -20,11 +36,26 @@ export function useSentenceGenerator() {
     }
     
     setIsGeneratingSentences(true);
+    setIsStreaming(true);
     setSentences([]);
     
     try {
-      const generatedSentences = await generateSentences(words.join(' '), apiKey);
-      setSentences(generatedSentences);
+      // Use the streaming version with callback
+      const generatedSentences = await generateSentences(
+        words.join(' '), 
+        apiKey,
+        (partialSentence) => {
+          addSentence(partialSentence);
+        }
+      );
+      
+      // Ensure all sentences from the final list are included
+      setTimeout(() => {
+        generatedSentences.forEach(sentence => {
+          addSentence(sentence);
+        });
+      }, 100);
+      
     } catch (error) {
       console.error('Error generating sentences:', error);
       toast({
@@ -33,7 +64,10 @@ export function useSentenceGenerator() {
         variant: "destructive",
       });
     } finally {
-      setIsGeneratingSentences(false);
+      setTimeout(() => {
+        setIsGeneratingSentences(false);
+        setIsStreaming(false);
+      }, 300); // Small delay to ensure UI updates are complete
     }
   };
   
@@ -48,6 +82,7 @@ export function useSentenceGenerator() {
     }
     
     setIsGeneratingSentences(true);
+    setIsStreaming(true);
     setSentences([]);
     
     try {
@@ -57,8 +92,22 @@ export function useSentenceGenerator() {
         .map(item => item.text)
         .join(' ');
       
-      const generatedSentences = await generateSentences(userWords, apiKey);
-      setSentences(generatedSentences);
+      // Use the streaming version with callback
+      const generatedSentences = await generateSentences(
+        userWords, 
+        apiKey,
+        (partialSentence) => {
+          addSentence(partialSentence);
+        }
+      );
+      
+      // Ensure all sentences from the final list are included
+      setTimeout(() => {
+        generatedSentences.forEach(sentence => {
+          addSentence(sentence);
+        });
+      }, 100);
+      
     } catch (error) {
       console.error('Error generating sentences from conversation:', error);
       toast({
@@ -67,7 +116,10 @@ export function useSentenceGenerator() {
         variant: "destructive",
       });
     } finally {
-      setIsGeneratingSentences(false);
+      setTimeout(() => {
+        setIsGeneratingSentences(false);
+        setIsStreaming(false);
+      }, 300); // Small delay to ensure UI updates are complete
     }
   };
   
@@ -78,6 +130,7 @@ export function useSentenceGenerator() {
   return {
     sentences,
     isGeneratingSentences,
+    isStreaming,
     generateSentencesFromWords,
     generateSentencesFromConversation,
     clearSentences

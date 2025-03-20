@@ -1,12 +1,12 @@
-
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { X, Plus } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
 interface SentencesDisplayProps {
   sentences: string[];
   isLoading: boolean;
+  isStreaming?: boolean;
   onSelectSentence: (sentence: string) => void;
   onCancel: () => void;
   onGenerateMore?: () => void;
@@ -15,11 +15,24 @@ interface SentencesDisplayProps {
 const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
   sentences,
   isLoading,
+  isStreaming = false,
   onSelectSentence,
   onCancel,
   onGenerateMore
 }) => {
   if (sentences.length === 0 && !isLoading) return null;
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Auto-scroll to the bottom when new sentences appear
+  useEffect(() => {
+    if (containerRef.current && sentences.length > 0) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [sentences]);
+
+  const showingLoadingState = isLoading && sentences.length === 0;
+  const showingStreamingState = isStreaming && sentences.length > 0;
 
   return (
     <motion.div
@@ -30,7 +43,10 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
     >
       <div className="mb-2 flex justify-between items-center">
         <h3 className="text-sm font-medium" dir="rtl">
-          משפטים מוצעים {isLoading ? '(טוען...)' : `(${sentences.length})`}
+          משפטים מוצעים 
+          {showingLoadingState ? ' (טוען...)' : 
+           showingStreamingState ? ' (ממשיך לייצר...)' : 
+           `(${sentences.length})`}
         </h3>
         <button 
           onClick={onCancel}
@@ -42,7 +58,7 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
         </button>
       </div>
       
-      {isLoading ? (
+      {showingLoadingState ? (
         <div className="py-8 flex justify-center">
           <div className="animate-pulse flex flex-col gap-3 w-full">
             {[...Array(5)].map((_, i) => (
@@ -51,26 +67,47 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-2" dir="rtl">
-          {sentences.map((sentence, index) => (
-            <button
-              key={index}
-              onClick={() => onSelectSentence(sentence)}
-              className="p-3 text-right text-sm bg-muted/30 hover:bg-primary/10 rounded-md transition-colors border border-border/50 hover:border-primary/30"
-            >
-              {sentence}
-            </button>
-          ))}
+        <div className="flex flex-col gap-2">
+          {/* Sentences scrollable container */}
+          <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto" dir="rtl" ref={containerRef}>
+            <AnimatePresence>
+              {sentences.map((sentence, index) => (
+                <motion.button
+                  key={`sentence-${index}-${sentence.substring(0, 10)}`}
+                  onClick={() => onSelectSentence(sentence)}
+                  className="p-3 text-right text-sm bg-muted/30 hover:bg-primary/10 rounded-md transition-colors border border-border/50 hover:border-primary/30"
+                  initial={{ opacity: 0, y: 10, height: 0, padding: 0, margin: 0, overflow: 'hidden' }}
+                  animate={{ opacity: 1, y: 0, height: 'auto', padding: '0.75rem', marginBottom: '0.5rem', overflow: 'visible' }}
+                  exit={{ opacity: 0, height: 0, padding: 0, margin: 0, overflow: 'hidden' }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {sentence}
+                </motion.button>
+              ))}
+            </AnimatePresence>
+            
+            {isStreaming && (
+              <motion.div 
+                className="h-10 animate-pulse bg-muted/30 rounded-md w-full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              />
+            )}
+          </div>
           
-          {onGenerateMore && (
-            <Button 
-              variant="outline" 
-              className="mt-2 gap-2 self-center"
-              onClick={onGenerateMore}
-            >
-              <Plus size={16} />
-              <span>יצירת משפטים נוספים</span>
-            </Button>
+          {/* Generate more button - now outside the scrollable container */}
+          {!isLoading && !isStreaming && onGenerateMore && (
+            <div className="mt-3 flex justify-center border-t border-border pt-3">
+              <Button 
+                variant="outline" 
+                className="gap-2 self-center"
+                onClick={onGenerateMore}
+              >
+                <Plus size={16} />
+                <span>יצירת משפטים נוספים</span>
+              </Button>
+            </div>
           )}
         </div>
       )}

@@ -42,6 +42,7 @@ const Index: React.FC = () => {
   const {
     sentences,
     isGeneratingSentences,
+    isStreaming: sentenceIsStreaming,
     generateSentencesFromWords,
     generateSentencesFromConversation,
     clearSentences
@@ -612,6 +613,7 @@ const Index: React.FC = () => {
         <SentencesDisplay
           sentences={sentences}
           isLoading={isGeneratingSentences}
+          isStreaming={sentenceIsStreaming}
           onSelectSentence={handleSentenceSelect}
           onCancel={handleCancelSentences}
           onGenerateMore={handleGenerateSentencesFromConversation}

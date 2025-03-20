@@ -605,7 +605,8 @@ export const transcribeAudio = async (audioBlob: Blob, apiKey: string): Promise<
 // Add this new function for generating sentences
 export const generateSentences = async (
   wordsString: string,
-  apiKey: string
+  apiKey: string,
+  onPartialSentence?: (sentence: string) => void
 ): Promise<string[]> => {
   try {
     // Initialize OpenAI with the provided API key
@@ -621,54 +622,224 @@ export const generateSentences = async (
       1. קבל סדרה של מילים.
       2. צור 5 משפטים שונים שמשלבים את המילים בצורה טבעית ומשמעותית.
       3. המשפטים צריכים להיות הגיוניים וקוהרנטיים, לא רק אוסף מילים.
-      4. הניסוח צריך להיות ברור וטבעי, כאי��ו אדם היה אומר אותם.
+      4. הניסוח צריך להיות ברור וטבעי, כאילו אדם היה אומר אותם.
       5. ההקשר והמשמעות של המשפטים צריכים להיות קשורים לנושא של המילים.
       6. שמור על אורך סביר של משפט (לא ארוך מדי).
       7. אל תוסיף פירוש, הסבר או כל טקסט נוסף.
       
       חזור אך ורק רשימה של 5 משפטים שונים, כל אחד בשורה נפרדת.
     `;
-    
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [
-          { role: 'system', content: sentenceGenerationPrompt },
-          { role: 'user', content: wordsString }
-        ],
-        temperature: 0.7,
-      })
-    });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Error calling OpenAI API: ${response.status} ${response.statusText} - ${errorText}`);
-    }
+    // If streaming is requested, use streaming implementation
+    if (onPartialSentence) {
+      const sentences: string[] = [];
+      
+      // Make streaming request
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [
+            { role: 'system', content: sentenceGenerationPrompt },
+            { role: 'user', content: wordsString }
+          ],
+          temperature: 0.7,
+          stream: true
+        })
+      });
 
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content;
-    
-    if (!content) {
-      throw new Error("No response content from OpenAI");
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Error calling OpenAI API: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      // Process the stream
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('Failed to get response reader');
+
+      let fullResponse = '';
+      let currentSentence = '';
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        // Convert the chunk to text
+        const chunk = new TextDecoder().decode(value);
+        
+        // Process the chunk
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+          if (line.trim() === '') continue;
+          
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            
+            if (data === '[DONE]') continue;
+            
+            try {
+              const json = JSON.parse(data);
+              const content = json.choices[0]?.delta?.content || '';
+              
+              fullResponse += content;
+              
+              // Process the content for sentences
+              for (let i = 0; i < content.length; i++) {
+                const char = content[i];
+                currentSentence += char;
+                
+                // Check for sentence separators - better handling for Hebrew 
+                // Detect end of sentence by these markers: newline, period, question mark, exclamation
+                // In Hebrew, sentences might end with '.' '?' '!' or  (\n) newline
+                if (
+                  (char === '\n' || 
+                   char === '.' || 
+                   char === '?' || 
+                   char === '!') && 
+                  currentSentence.trim().length > 0
+                ) {
+                  // Wait for at least a few characters after a period to ensure it's really end of sentence
+                  // This avoids splitting on periods in abbreviations
+                  if (char === '.' && i < content.length - 1 && content[i + 1] !== ' ' && content[i + 1] !== '\n') {
+                    continue; // Not end of sentence, probably an abbreviation
+                  }
+                  
+                  const trimmedSentence = currentSentence.trim();
+                  // Only if it's a significant sentence and not just line noise
+                  if (trimmedSentence.length > 5) {
+                    // Clean up the sentence
+                    const cleanSentence = trimmedSentence
+                      .replace(/^\d+[\.\s]+|\-\s*/, '')  // Remove any numbering or bullets
+                      .replace(/^["']|["']$/g, '')       // Remove quotes at start/end
+                      .trim();
+                      
+                    if (cleanSentence.length > 5 && !sentences.includes(cleanSentence)) {
+                      console.log("Adding sentence:", cleanSentence);
+                      sentences.push(cleanSentence);
+                      onPartialSentence(cleanSentence);
+                      currentSentence = '';
+                    }
+                  }
+                }
+              }
+            } catch (e) {
+              // Ignore parse errors in streaming
+            }
+          }
+        }
+      }
+      
+      // Process any remaining text as a final sentence
+      if (currentSentence.trim().length > 5) {
+        // Check if the current sentence contains any actual sentence patterns
+        // If we have multiple sentences in the remaining text, split and process each
+        const remainingText = currentSentence.trim();
+        
+        // First try to split by newlines
+        const newlineSplit = remainingText.split(/\n+/).filter(s => s.trim().length > 0);
+        
+        if (newlineSplit.length > 1) {
+          // Process each line as a separate sentence
+          for (const line of newlineSplit) {
+            const cleanLine = line
+              .replace(/^\d+[\.\s]+|\-\s*/, '')  // Remove any numbering or bullets
+              .replace(/^["']|["']$/g, '')       // Remove quotes at start/end
+              .trim();
+            
+            if (cleanLine.length > 5 && !sentences.includes(cleanLine)) {
+              console.log("Adding remaining line:", cleanLine);
+              sentences.push(cleanLine);
+              onPartialSentence(cleanLine);
+            }
+          }
+        } else {
+          // Try to split by sentence ending punctuation
+          const punctSplit = remainingText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+          
+          if (punctSplit.length > 1) {
+            // Process each punctuation-separated sentence
+            for (const sent of punctSplit) {
+              const cleanSent = sent
+                .replace(/^\d+[\.\s]+|\-\s*/, '')  // Remove any numbering or bullets
+                .replace(/^["']|["']$/g, '')       // Remove quotes at start/end
+                .trim();
+                
+              if (cleanSent.length > 5 && !sentences.includes(cleanSent)) {
+                console.log("Adding remaining sentence:", cleanSent);
+                sentences.push(cleanSent);
+                onPartialSentence(cleanSent);
+              }
+            }
+          } else {
+            // Just process the whole remaining text as one sentence
+            const finalSentence = remainingText
+              .replace(/^\d+[\.\s]+|\-\s*/, '')  // Remove any numbering or bullets
+              .replace(/^["']|["']$/g, '')       // Remove quotes at start/end
+              .trim();
+            
+            if (finalSentence.length > 5 && !sentences.includes(finalSentence)) {
+              console.log("Adding final sentence:", finalSentence);
+              sentences.push(finalSentence);
+              onPartialSentence(finalSentence);
+            }
+          }
+        }
+      }
+      
+      // Clean and deduplicate sentences
+      const finalSentences = sentences
+        .map(s => s.replace(/^\d+\.\s*/, '').trim()) // Remove numbering
+        .filter((s, i, arr) => s && arr.indexOf(s) === i); // Remove duplicates
+        
+      console.log("Generated sentences (streaming):", finalSentences);
+      return finalSentences;
+    } else {
+      // Non-streaming implementation (original code)
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [
+            { role: 'system', content: sentenceGenerationPrompt },
+            { role: 'user', content: wordsString }
+          ],
+          temperature: 0.7,
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Error calling OpenAI API: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      const content = data.choices[0]?.message?.content;
+      
+      if (!content) {
+        throw new Error("No response content from OpenAI");
+      }
+      
+      // Parse the sentences from the response
+      // Split by new lines and filter out any empty lines
+      const sentences = content
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line)
+        // Remove any numbering or bullet points at the beginning of the line
+        .map(line => line.replace(/^\d+\.\s*|\-\s*/, ''));
+      
+      console.log("Generated sentences:", sentences);
+      
+      return sentences;
     }
-    
-    // Parse the sentences from the response
-    // Split by new lines and filter out any empty lines
-    const sentences = content
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line)
-      // Remove any numbering or bullet points at the beginning of the line
-      .map(line => line.replace(/^\d+\.\s*|\-\s*/, ''));
-    
-    console.log("Generated sentences:", sentences);
-    
-    return sentences;
   } catch (error) {
     console.error('Error generating sentences from OpenAI:', error);
     
