@@ -5,7 +5,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import TopicInput from '@/components/TopicInput';
 import TopicGroup from '@/components/TopicGroup';
 import StagingArea from '@/components/StagingArea';
-import SentencesDisplay from '@/components/SentencesDisplay';
 import ConversationHistory, { ConversationItem } from '@/components/ConversationHistory';
 import ApiKeyInput from '@/components/ApiKeyInput';
 import Settings from '@/components/Settings';
@@ -29,11 +28,6 @@ const Index: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // New state for sentences generation
-  const [isSentencesMode, setIsSentencesMode] = useState(false);
-  const [sentences, setSentences] = useState<string[]>([]);
-  const [isLoadingSentences, setIsLoadingSentences] = useState(false);
   
   const {
     stagedWords,
@@ -391,8 +385,6 @@ const Index: React.FC = () => {
     setIsStaging(false);
     clearStagingArea();
     setStagingTopicGroups([]);
-    setIsSentencesMode(false);
-    setSentences([]);
     toast({
       title: "השיחה אופסה",
       description: "השיחה אופסה בהצלחה",
@@ -410,159 +402,6 @@ const Index: React.FC = () => {
         description: "ההודעה הוסרה בהצלחה",
       });
     }
-  };
-
-  // New function to generate sentences based on staged words
-  const handleGenerateSentences = async () => {
-    if (stagedWords.length === 0) {
-      toast({
-        title: "שגיאה",
-        description: "אין מילים נבחרות ליצירת משפטים",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSentencesMode(true);
-    setIsLoadingSentences(true);
-    
-    try {
-      const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-      if (!apiKey) {
-        throw new Error("API key not provided");
-      }
-      
-      // Create a specific prompt for sentence generation
-      const sentencePrompt = `
-אתה עוזר ליצירת משפטים פשוטים וברורים בעברית. המשפטים צריכים להיות קצרים, פשוטים ושימושיים למטופל שמתקשה בדיבור.
-
-יצירת משפטים עם המילים הבאות: ${stagedWords.join(', ')}. 
-אנא צור 5 משפטים מגוונים וקצרים (3-5 מילים) בעברית שמשלבים את המילים האלה בדרכים שונות. 
-כל משפט צריך להיות קצר, ברור ומועיל למטופל שמתקשה בדיבור. סגנון המשפטים צריך להיות יומיומי.`;
-      
-      // For demonstration, we'll use a timeout with mock data
-      // In production, this would be an actual API call
-      if (process.env.NODE_ENV === 'development' && !apiKey) {
-        // Mock data for development
-        setTimeout(() => {
-          const mockSentences = [
-            "אני מרגיש שמחה היום",
-            "יש לי געגוע לאהבה",
-            "הדאגה גורמת לפחד",
-            "עצב וכעס מעורבבים",
-            "מרגיש תקווה והקלה"
-          ];
-          setSentences(mockSentences);
-          setIsLoadingSentences(false);
-        }, 1500);
-      } else {
-        // Real API call to OpenAI
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4o-mini",
-            messages: [
-              {
-                role: "system",
-                content: "אתה עוזר ליצירת משפטים פשוטים וברורים בעברית. המשפטים צריכים להיות קצרים, פשוטים ושימושיים למטופל שמתקשה בדיבור."
-              },
-              {
-                role: "user",
-                content: `יצירת משפטים עם המילים הבאות: ${stagedWords.join(', ')}. 
-      אנא צור 5 משפטים מגוונים וקצרים (3-5 מילים) בעברית שמשלבים את המילים האלה בדרכים שונות. 
-      כל משפט צריך להיות קצר, ברור ומועיל למטופל שמתקשה בדיבור. סגנון המשפטים צריך להיות יומיומי.`
-              }
-            ],
-            temperature: 0.7
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error(`OpenAI API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const content = data.choices[0]?.message?.content;
-        
-        if (!content) {
-          throw new Error("No response content from OpenAI");
-        }
-
-        // Parse the response to extract sentences
-        // The response might be a numbered list, lines separated by newlines, or other formats
-        // We'll handle common formats
-        let generatedSentences: string[] = [];
-        
-        // Try to extract numbered list (e.g., "1. Sentence one\n2. Sentence two")
-        const numberedMatches = content.match(/\d+\.\s*(.*?)(?=\n\d+\.|\n*$)/gs);
-        if (numberedMatches && numberedMatches.length > 0) {
-          generatedSentences = numberedMatches.map(s => 
-            s.replace(/^\d+\.\s*/, '').trim()
-          );
-        } 
-        // If not a numbered list, try to split by newlines and filter empty lines
-        else {
-          generatedSentences = content
-            .split('\n')
-            .map(s => s.trim())
-            .filter(s => s && !s.startsWith('משפטים:') && !s.startsWith('הנה'));
-        }
-        
-        // Limit to 5 sentences
-        setSentences(generatedSentences.slice(0, 5));
-      }
-    } catch (error) {
-      console.error('Error generating sentences:', error);
-      toast({
-        title: "שגיאה",
-        description: "אירעה שגיאה ביצירת המשפטים. אנא נסה שוב.",
-        variant: "destructive",
-      });
-      setIsSentencesMode(false);
-    } finally {
-      setIsLoadingSentences(false);
-    }
-  };
-
-  // Handler for when user selects a sentence
-  const handleSentenceSelect = (sentence: string) => {
-    // Add the selected sentence to the conversation
-    const newMessage: ConversationItem = {
-      id: uuidv4(),
-      text: sentence,
-      isUser: true,
-      timestamp: new Date()
-    };
-    
-    setConversation(prev => [...prev, newMessage]);
-    
-    // Clear the sentences and staging areas
-    setIsSentencesMode(false);
-    setSentences([]);
-    setIsStaging(false);
-    clearStagingArea();
-    setStagingTopicGroups([]);
-    
-    // Show toast notification
-    toast({
-      title: "נוסף משפט",
-      description: `המשפט "${sentence}" נוסף לשיחה בהצלחה`,
-    });
-  };
-
-  // Handler for canceling sentence mode
-  const handleSentencesCancel = () => {
-    setIsSentencesMode(false);
-    setSentences([]);
-    
-    toast({
-      title: "בוטלה יצירת משפטים",
-      description: "המשפטים המוצעים נמחקו",
-    });
   };
 
   const activeTopicGroups = isStaging ? stagingTopicGroups : topicGroups;
@@ -628,15 +467,6 @@ const Index: React.FC = () => {
         />
       )}
 
-      {isSentencesMode && (
-        <SentencesDisplay
-          sentences={sentences}
-          onSentenceSelect={handleSentenceSelect}
-          onCancel={handleSentencesCancel}
-          isLoading={isLoadingSentences}
-        />
-      )}
-
       <motion.div 
         className="w-full max-w-3xl mx-auto grid gap-2 sm:gap-3 mt-2 mb-2"
         initial={{ opacity: 0 }}
@@ -656,7 +486,6 @@ const Index: React.FC = () => {
                   category={group.category}
                   words={group.words}
                   onWordSelect={handleWordSelect}
-                  onGenerateSentences={isStaging && !isSentencesMode ? handleGenerateSentences : undefined}
                   isCollapsed={group.isCollapsed}
                   isOld={group.isOld}
                   isStaging={isStaging}
@@ -685,7 +514,7 @@ const Index: React.FC = () => {
       >
         <TopicInput 
           onSubmit={handleSubmitTopic} 
-          isLoading={isLoading || isStaging || isSentencesMode} 
+          isLoading={isLoading || isStaging} 
           apiKey={openAIKey}
         />
       </motion.div>

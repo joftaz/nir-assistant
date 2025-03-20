@@ -1,14 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 
 interface TopicGroupProps {
   category: string;
   words: string[];
   onWordSelect: (word: string) => void;
-  onGenerateSentences?: () => void;
   isCollapsed?: boolean;
   isOld?: boolean;
   isStaging?: boolean;
@@ -18,7 +15,6 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
   category, 
   words, 
   onWordSelect, 
-  onGenerateSentences,
   isCollapsed = false, 
   isOld = false,
   isStaging = false
@@ -90,7 +86,7 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="p-1.5 pt-0 flex flex-wrap gap-1.5 justify-start relative"
+            className="p-1.5 pt-0 flex flex-wrap gap-1.5 justify-start"
             dir="rtl"
           >
             {words.map((word, index) => (
@@ -109,21 +105,6 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
                 {word}
               </button>
             ))}
-            
-            {!isOld && !isStaging && onGenerateSentences && words.length > 0 && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="mt-1.5 w-full flex justify-center items-center gap-1.5 text-xs"
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent toggle expansion
-                  onGenerateSentences();
-                }}
-              >
-                <MessageSquare size={14} />
-                <span>יצירת משפטים</span>
-              </Button>
-            )}
           </motion.div>
         )}
       </AnimatePresence>
