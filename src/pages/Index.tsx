@@ -618,7 +618,7 @@ const Index: React.FC = () => {
         />
       )}
       
-      {hasUserMessages && !showingSentences && (
+      {!isStaging &&hasUserMessages && !showingSentences && (
         <div className="w-full max-w-3xl mx-auto flex justify-center mt-2 mb-2">
           <Button
             variant="outline"
