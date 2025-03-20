@@ -1,20 +1,23 @@
 
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 interface SentencesDisplayProps {
   sentences: string[];
   isLoading: boolean;
   onSelectSentence: (sentence: string) => void;
   onCancel: () => void;
+  onGenerateMore?: () => void;
 }
 
 const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
   sentences,
   isLoading,
   onSelectSentence,
-  onCancel
+  onCancel,
+  onGenerateMore
 }) => {
   if (sentences.length === 0 && !isLoading) return null;
 
@@ -58,6 +61,17 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
               {sentence}
             </button>
           ))}
+          
+          {onGenerateMore && (
+            <Button 
+              variant="outline" 
+              className="mt-2 gap-2 self-center"
+              onClick={onGenerateMore}
+            >
+              <Plus size={16} />
+              <span>יצירת משפטים נוספים</span>
+            </Button>
+          )}
         </div>
       )}
     </motion.div>

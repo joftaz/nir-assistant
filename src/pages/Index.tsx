@@ -11,7 +11,7 @@ import ApiKeyInput from '@/components/ApiKeyInput';
 import Settings from '@/components/Settings';
 import { getModelResponse, initializeSystemPrompt } from '@/utils/modelPrompt';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, RefreshCw, History as HistoryIcon, MessageSquare } from 'lucide-react';
+import { Loader2, RefreshCw, History as HistoryIcon, MessageSquare, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { saveHistory, getHistoryById } from '@/utils/conversationManager';
 import { TopicCategory } from '@/types/models';
@@ -43,6 +43,7 @@ const Index: React.FC = () => {
     sentences,
     isGeneratingSentences,
     generateSentencesFromWords,
+    generateSentencesFromConversation,
     clearSentences
   } = useSentenceGenerator();
   
@@ -414,6 +415,36 @@ const Index: React.FC = () => {
     await generateSentencesFromWords(stagedWords, apiKey);
   };
   
+  const handleGenerateSentencesFromConversation = async () => {
+    if (conversation.length === 0) {
+      toast({
+        title: "אין מילים בשיחה",
+        description: "יש להוסיף מילים לשיחה לפני יצירת משפטים",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setShowingSentences(true);
+    
+    setTopicGroups(currentGroups => 
+      currentGroups.map(group => ({
+        ...group,
+        isCollapsed: true,
+        isOld: true
+      }))
+    );
+    
+    if (isStaging) {
+      setIsStaging(false);
+      clearStagingArea();
+      setStagingTopicGroups([]);
+    }
+    
+    const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
+    await generateSentencesFromConversation(conversation, apiKey);
+  };
+  
   const handleSentenceSelect = (sentence: string) => {
     const newMessage: ConversationItem = {
       id: uuidv4(),
@@ -513,6 +544,8 @@ const Index: React.FC = () => {
   };
 
   const activeTopicGroups = isStaging ? stagingTopicGroups : topicGroups;
+  
+  const hasUserMessages = conversation.some(item => item.isUser);
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center px-4 py-4 sm:py-6">
@@ -581,7 +614,26 @@ const Index: React.FC = () => {
           isLoading={isGeneratingSentences}
           onSelectSentence={handleSentenceSelect}
           onCancel={handleCancelSentences}
+          onGenerateMore={handleGenerateSentencesFromConversation}
         />
+      )}
+      
+      {hasUserMessages && !showingSentences && (
+        <div className="w-full max-w-3xl mx-auto flex justify-center mt-2 mb-2">
+          <Button
+            variant="outline"
+            onClick={handleGenerateSentencesFromConversation}
+            disabled={isGeneratingSentences || conversation.length === 0}
+            className="gap-2 rtl:flex-row-reverse"
+          >
+            {isGeneratingSentences ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <MessageSquare className="h-4 w-4" />
+            )}
+            <span>יצירת משפטים מהשיחה</span>
+          </Button>
+        </div>
       )}
       
       {isStaging && !showingSentences && (
@@ -597,49 +649,51 @@ const Index: React.FC = () => {
             ) : (
               <MessageSquare className="h-4 w-4" />
             )}
-            <span>יצירת משפטים</span>
+            <span>יצירת משפטים מהמילים הנבחרות</span>
           </Button>
         </div>
       )}
 
-      <motion.div 
-        className="w-full max-w-3xl mx-auto grid gap-2 sm:gap-3 mt-2 mb-2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-      >
-        {isLoading && activeTopicGroups.length === 0 ? (
-          <div className="flex justify-center items-center py-6">
-            <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full">
-              {activeTopicGroups.map((group, index) => (
-                <TopicGroup
-                  key={`${group.category}-${index}-${isStaging ? 'staging' : 'main'}`}
-                  category={group.category}
-                  words={group.words}
-                  onWordSelect={handleWordSelect}
-                  isCollapsed={group.isCollapsed}
-                  isOld={group.isOld}
-                  isStaging={isStaging}
-                />
-              ))}
+      {!showingSentences && (
+        <motion.div 
+          className="w-full max-w-3xl mx-auto grid gap-2 sm:gap-3 mt-2 mb-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          {isLoading && activeTopicGroups.length === 0 ? (
+            <div className="flex justify-center items-center py-6">
+              <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
             </div>
-            {isStreaming && (
-              <div className="flex justify-center items-center py-2">
-                <Loader2 className="h-6 w-6 animate-spin text-primary/70" />
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full">
+                {activeTopicGroups.map((group, index) => (
+                  <TopicGroup
+                    key={`${group.category}-${index}-${isStaging ? 'staging' : 'main'}`}
+                    category={group.category}
+                    words={group.words}
+                    onWordSelect={handleWordSelect}
+                    isCollapsed={group.isCollapsed}
+                    isOld={group.isOld}
+                    isStaging={isStaging}
+                  />
+                ))}
               </div>
-            )}
-            {!isStreaming && activeTopicGroups.length > 0 && activeTopicGroups.some(group => !group.isCollapsed) && (
-              <div className="text-center text-xs text-muted-foreground py-1">
-                ⤴ קבוצות חדשות | קבוצות קודמות ⤵
-              </div>
-            )}
-          </>
-        )}
-      </motion.div>
+              {isStreaming && (
+                <div className="flex justify-center items-center py-2">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary/70" />
+                </div>
+              )}
+              {!isStreaming && activeTopicGroups.length > 0 && activeTopicGroups.some(group => !group.isCollapsed) && (
+                <div className="text-center text-xs text-muted-foreground py-1">
+                  ⤴ קבוצות חדשות | קבוצות קודמות ⤵
+                </div>
+              )}
+            </>
+          )}
+        </motion.div>
+      )}
 
       <motion.div 
         className="w-full sticky bottom-2 px-2"
@@ -649,7 +703,7 @@ const Index: React.FC = () => {
       >
         <TopicInput 
           onSubmit={handleSubmitTopic} 
-          isLoading={isLoading || isStaging} 
+          isLoading={isLoading || isStaging || showingSentences} 
           apiKey={openAIKey}
         />
       </motion.div>
@@ -658,4 +712,3 @@ const Index: React.FC = () => {
 };
 
 export default Index;
-

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { generateSentences } from '@/utils/openaiService';
+import { ConversationItem } from '@/components/ConversationHistory';
 
 export function useSentenceGenerator() {
   const [sentences, setSentences] = useState<string[]>([]);
@@ -36,6 +37,40 @@ export function useSentenceGenerator() {
     }
   };
   
+  const generateSentencesFromConversation = async (conversation: ConversationItem[], apiKey: string) => {
+    if (conversation.length === 0) {
+      toast({
+        title: "אין מילים בשיחה",
+        description: "יש להוסיף מילים לשיחה לפני יצירת משפטים",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsGeneratingSentences(true);
+    setSentences([]);
+    
+    try {
+      // Extract all user words from the conversation
+      const userWords = conversation
+        .filter(item => item.isUser)
+        .map(item => item.text)
+        .join(' ');
+      
+      const generatedSentences = await generateSentences(userWords, apiKey);
+      setSentences(generatedSentences);
+    } catch (error) {
+      console.error('Error generating sentences from conversation:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בעת יצירת המשפטים. אנא נסה שוב.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingSentences(false);
+    }
+  };
+  
   const clearSentences = () => {
     setSentences([]);
   };
@@ -44,6 +79,7 @@ export function useSentenceGenerator() {
     sentences,
     isGeneratingSentences,
     generateSentencesFromWords,
+    generateSentencesFromConversation,
     clearSentences
   };
 }
