@@ -9,6 +9,12 @@ import type { TopicCategory } from '../types/models';
 export const defaultSystemPrompt = systemPromptMd;
 export const defaultSentencePrompt = sentencePromptMd;
 
+// Define storage keys
+export const SYSTEM_PROMPT_STORAGE_KEY = 'system_prompt';
+export const SENTENCE_PROMPT_STORAGE_KEY = 'sentence_prompt';
+export const CATEGORIES_COUNT_KEY = 'categories_count';
+export const WORDS_PER_CATEGORY_KEY = 'words_per_category';
+
 export const defaultSystemJsonInstruction = `
 ===== System Instructions =====
 IMPORTANT:
@@ -43,28 +49,32 @@ example:
 
 // Initialize system prompt and settings in localStorage if not present
 export const initializeSystemPrompt = (): void => {
-  if (!localStorage.getItem('system_prompt')) {
-    localStorage.setItem('system_prompt', defaultSystemPrompt);
+  if (!localStorage.getItem(SYSTEM_PROMPT_STORAGE_KEY)) {
+    localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, defaultSystemPrompt);
   }
   
-  if (!localStorage.getItem('categories_count')) {
-    localStorage.setItem('categories_count', '4');
+  if (!localStorage.getItem(SENTENCE_PROMPT_STORAGE_KEY)) {
+    localStorage.setItem(SENTENCE_PROMPT_STORAGE_KEY, defaultSentencePrompt);
   }
   
-  if (!localStorage.getItem('words_per_category')) {
-    localStorage.setItem('words_per_category', '10');
+  if (!localStorage.getItem(CATEGORIES_COUNT_KEY)) {
+    localStorage.setItem(CATEGORIES_COUNT_KEY, '4');
+  }
+  
+  if (!localStorage.getItem(WORDS_PER_CATEGORY_KEY)) {
+    localStorage.setItem(WORDS_PER_CATEGORY_KEY, '10');
   }
 };
 
 // Get system prompt from localStorage or use default
 export const getSystemPrompt = (): string => {
-  const prompt = localStorage.getItem('system_prompt') || defaultSystemPrompt;
+  const prompt = localStorage.getItem(SYSTEM_PROMPT_STORAGE_KEY) || defaultSystemPrompt;
   return replacePromptPlaceholders(prompt);
 };
 
-// Get sentence prompt
+// Get sentence prompt from localStorage or use default
 export const getSentencePrompt = (): string => {
-  return defaultSentencePrompt;
+  return localStorage.getItem(SENTENCE_PROMPT_STORAGE_KEY) || defaultSentencePrompt;
 };
 
 // This is kept for fallback or testing purposes
@@ -199,8 +209,8 @@ export const getModelResponse = async (
 };
 
 export const replacePromptPlaceholders = (prompt: string): string => {
-  const categoriesCount = localStorage.getItem('categories_count') || '4';
-  const wordsPerCategory = localStorage.getItem('words_per_category') || '10';
+  const categoriesCount = localStorage.getItem(CATEGORIES_COUNT_KEY) || '4';
+  const wordsPerCategory = localStorage.getItem(WORDS_PER_CATEGORY_KEY) || '10';
   
   return prompt
     .replace(/{categoriesCount}/g, categoriesCount)

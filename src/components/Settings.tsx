@@ -13,15 +13,21 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose
 } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from '@/hooks/use-toast';
-import { defaultSystemPrompt, replacePromptPlaceholders } from '@/utils/modelPrompt';
+import { 
+  defaultSystemPrompt, 
+  defaultSentencePrompt,
+  replacePromptPlaceholders, 
+  SYSTEM_PROMPT_STORAGE_KEY,
+  SENTENCE_PROMPT_STORAGE_KEY,
+  CATEGORIES_COUNT_KEY,
+  WORDS_PER_CATEGORY_KEY
+} from '@/utils/modelPrompt';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
-
-const SYSTEM_PROMPT_STORAGE_KEY = 'system_prompt';
-const CATEGORIES_COUNT_KEY = 'categories_count';
-const WORDS_PER_CATEGORY_KEY = 'words_per_category';
 
 interface SettingsProps {
   onSystemPromptChange: (newPrompt: string) => void;
@@ -29,17 +35,20 @@ interface SettingsProps {
 
 interface SettingsFormValues {
   systemPrompt: string;
+  sentencePrompt: string;
   categoriesCount: number;
   wordsPerCategory: number;
 }
 
 const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('general');
   const { toast } = useToast();
   
   const form = useForm<SettingsFormValues>({
     defaultValues: {
       systemPrompt: '',
+      sentencePrompt: '',
       categoriesCount: 4,
       wordsPerCategory: 10
     }
@@ -48,11 +57,13 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
   // Load saved settings from localStorage or use defaults
   useEffect(() => {
     const savedPrompt = localStorage.getItem(SYSTEM_PROMPT_STORAGE_KEY);
+    const savedSentencePrompt = localStorage.getItem(SENTENCE_PROMPT_STORAGE_KEY);
     const savedCategoriesCount = localStorage.getItem(CATEGORIES_COUNT_KEY);
     const savedWordsPerCategory = localStorage.getItem(WORDS_PER_CATEGORY_KEY);
     
     const values = {
       systemPrompt: savedPrompt || defaultSystemPrompt,
+      sentencePrompt: savedSentencePrompt || defaultSentencePrompt,
       categoriesCount: savedCategoriesCount ? parseInt(savedCategoriesCount) : 4,
       wordsPerCategory: savedWordsPerCategory ? parseInt(savedWordsPerCategory) : 10
     };
@@ -65,7 +76,8 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     const currentValues = form.getValues();
     
     // Save all values to localStorage
-    localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, currentValues.systemPrompt); // Save original prompt with placeholders
+    localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, currentValues.systemPrompt);
+    localStorage.setItem(SENTENCE_PROMPT_STORAGE_KEY, currentValues.sentencePrompt);
     localStorage.setItem(CATEGORIES_COUNT_KEY, currentValues.categoriesCount.toString());
     localStorage.setItem(WORDS_PER_CATEGORY_KEY, currentValues.wordsPerCategory.toString());
     
@@ -89,6 +101,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
   const handleResetToDefault = () => {
     const defaultValues = {
       systemPrompt: defaultSystemPrompt,
+      sentencePrompt: defaultSentencePrompt,
       categoriesCount: 4,
       wordsPerCategory: 10
     };
@@ -97,6 +110,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     
     // Save default values to localStorage
     localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, defaultValues.systemPrompt);
+    localStorage.setItem(SENTENCE_PROMPT_STORAGE_KEY, defaultValues.sentencePrompt);
     localStorage.setItem(CATEGORIES_COUNT_KEY, defaultValues.categoriesCount.toString());
     localStorage.setItem(WORDS_PER_CATEGORY_KEY, defaultValues.wordsPerCategory.toString());
     
@@ -108,6 +122,10 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
       title: "איפוס בוצע",
       description: "הגדרות המערכת אופסו לברירת המחדל",
     });
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
   };
 
   return (
@@ -133,71 +151,98 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">
-            <div className="space-y-4">
-              <FormField
-                control={form.control}
-                name="categoriesCount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>מספר קטגוריות</FormLabel>
-                    <div className="flex flex-col space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Slider
-                          value={[field.value]}
-                          min={2}
-                          max={8}
-                          step={1}
-                          onValueChange={(value) => field.onChange(value[0])}
-                          className="w-full"
-                        />
-                        <span className="text-sm font-medium mr-4 w-8 text-center">{field.value}</span>
-                      </div>
-                    </div>
-                  </FormItem>
-                )}
-              />
+            <Tabs value={activeTab} onValueChange={handleTabChange}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="general">הגדרות כלליות</TabsTrigger>
+                <TabsTrigger value="prompts">פרומפטים</TabsTrigger>
+              </TabsList>
               
-              <FormField
-                control={form.control}
-                name="wordsPerCategory"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>מספר מילים בכל קטגוריה</FormLabel>
-                    <div className="flex flex-col space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Slider
-                          value={[field.value]}
-                          min={2}
-                          max={20}
-                          step={1}
-                          onValueChange={(value) => field.onChange(value[0])}
-                          className="w-full"
-                        />
-                        <span className="text-sm font-medium mr-4 w-8 text-center">{field.value}</span>
+              <TabsContent value="general" className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="categoriesCount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>מספר קטגוריות</FormLabel>
+                      <div className="flex flex-col space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Slider
+                            value={[field.value]}
+                            min={2}
+                            max={8}
+                            step={1}
+                            onValueChange={(value) => field.onChange(value[0])}
+                            className="w-full"
+                          />
+                          <span className="text-sm font-medium mr-4 w-8 text-center">{field.value}</span>
+                        </div>
                       </div>
-                    </div>
-                  </FormItem>
-                )}
-              />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="wordsPerCategory"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>מספר מילים בכל קטגוריה</FormLabel>
+                      <div className="flex flex-col space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Slider
+                            value={[field.value]}
+                            min={2}
+                            max={20}
+                            step={1}
+                            onValueChange={(value) => field.onChange(value[0])}
+                            className="w-full"
+                          />
+                          <span className="text-sm font-medium mr-4 w-8 text-center">{field.value}</span>
+                        </div>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
               
-              <FormField
-                control={form.control}
-                name="systemPrompt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>הודעת מערכת</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        rows={12}
-                        className="font-mono text-xs rtl text-right"
-                        dir="rtl"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
+              <TabsContent value="prompts" className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="systemPrompt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>פרומפט מערכת (עבור קטגוריות מילים)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          rows={12}
+                          className="font-mono text-xs rtl text-right"
+                          dir="rtl"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="sentencePrompt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>פרומפט יצירת משפטים</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          rows={12}
+                          className="font-mono text-xs rtl text-right"
+                          dir="rtl"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+            </Tabs>
             
             <DialogFooter className="flex justify-between sm:justify-between">
               <Button

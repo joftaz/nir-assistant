@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { defaultSystemPrompt, defaultSystemJsonInstruction, getMockResponse, replacePromptPlaceholders, getSentencePrompt } from "./modelPrompt";
+import { defaultSystemPrompt, defaultSystemJsonInstruction, getMockResponse, replacePromptPlaceholders, getSentencePrompt, SYSTEM_PROMPT_STORAGE_KEY, CATEGORIES_COUNT_KEY, WORDS_PER_CATEGORY_KEY } from "./modelPrompt";
 import type { TopicCategory } from '../types/models';
 
 // Initialize OpenAI - this will use the API key from OPENAI_API_KEY environment variable
@@ -181,9 +181,9 @@ export const getOpenAIStreamingResponse = async (
   apiKey: string,
   onPartialResponse?: (group: TopicCategory) => void
 ): Promise<TopicCategory[]> => {
-  const systemPrompt = localStorage.getItem('system_prompt') || defaultSystemPrompt;
-  const categoriesCount = localStorage.getItem('categories_count') || '4';
-  const wordsPerCategory = localStorage.getItem('words_per_category') || '10';
+  const systemPrompt = localStorage.getItem(SYSTEM_PROMPT_STORAGE_KEY) || defaultSystemPrompt;
+  const categoriesCount = localStorage.getItem(CATEGORIES_COUNT_KEY) || '4';
+  const wordsPerCategory = localStorage.getItem(WORDS_PER_CATEGORY_KEY) || '10';
   
   console.log('API call with settings:', { categoriesCount, wordsPerCategory });
   
