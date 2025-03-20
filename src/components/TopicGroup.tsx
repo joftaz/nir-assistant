@@ -97,7 +97,7 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
                     ? 'bg-muted/70 hover:bg-primary/15' 
                     : isStaging
                       ? 'bg-primary/10 hover:bg-primary/20'
-                      : 'bg-muted/50 hover:bg-primary/10'
+                      : 'bg-primary/20 hover:bg-primary/10'
                 } py-1 px-1.5 rounded-md transition-colors ${isStaging ? 'staging-word' : ''}`}
                 onClick={() => onWordSelect(word)}
                 dir="rtl"
