@@ -601,3 +601,85 @@ export const transcribeAudio = async (audioBlob: Blob, apiKey: string): Promise<
     throw error;
   }
 };
+
+// Add this new function for generating sentences
+export const generateSentences = async (
+  wordsString: string,
+  apiKey: string
+): Promise<string[]> => {
+  try {
+    // Initialize OpenAI with the provided API key
+    initializeOpenAI(apiKey);
+    
+    console.log("Generating sentences from words:", wordsString);
+    
+    // Create a system prompt specific for sentence generation
+    const sentenceGenerationPrompt = `
+      אתה עוזר שיוצר משפטים קוהרנטיים ומשמעותיים מרשימת מילים.
+      
+      הנה ההוראות שלך:
+      1. קבל סדרה של מילים.
+      2. צור 5 משפטים שונים שמשלבים את המילים בצורה טבעית ומשמעותית.
+      3. המשפטים צריכים להיות הגיוניים וקוהרנטיים, לא רק אוסף מילים.
+      4. הניסוח צריך להיות ברור וטבעי, כאי��ו אדם היה אומר אותם.
+      5. ההקשר והמשמעות של המשפטים צריכים להיות קשורים לנושא של המילים.
+      6. שמור על אורך סביר של משפט (לא ארוך מדי).
+      7. אל תוסיף פירוש, הסבר או כל טקסט נוסף.
+      
+      חזור אך ורק רשימה של 5 משפטים שונים, כל אחד בשורה נפרדת.
+    `;
+    
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+          { role: 'system', content: sentenceGenerationPrompt },
+          { role: 'user', content: wordsString }
+        ],
+        temperature: 0.7,
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error calling OpenAI API: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices[0]?.message?.content;
+    
+    if (!content) {
+      throw new Error("No response content from OpenAI");
+    }
+    
+    // Parse the sentences from the response
+    // Split by new lines and filter out any empty lines
+    const sentences = content
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line)
+      // Remove any numbering or bullet points at the beginning of the line
+      .map(line => line.replace(/^\d+\.\s*|\-\s*/, ''));
+    
+    console.log("Generated sentences:", sentences);
+    
+    return sentences;
+  } catch (error) {
+    console.error('Error generating sentences from OpenAI:', error);
+    
+    // Return mock data for testing or when API fails
+    console.log('Falling back to mock sentences');
+    return [
+      "אני אוהב לטייל בפארק עם המשפחה שלי.",
+      "בכל בוקר אני שותה קפה ואוכל לחם.",
+      "הספר החדש שקראתי היה מרתק ומעניין.",
+      "אתמול ביקרנו במסעדה ואכלנו ארוחה טעימה.",
+      "המוזיקה החדשה שגיליתי השבוע מרגיעה אותי מאוד."
+    ];
+  }
+};

@@ -5,16 +5,18 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import TopicInput from '@/components/TopicInput';
 import TopicGroup from '@/components/TopicGroup';
 import StagingArea from '@/components/StagingArea';
+import SentencesDisplay from '@/components/SentencesDisplay';
 import ConversationHistory, { ConversationItem } from '@/components/ConversationHistory';
 import ApiKeyInput from '@/components/ApiKeyInput';
 import Settings from '@/components/Settings';
 import { getModelResponse, initializeSystemPrompt } from '@/utils/modelPrompt';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, RefreshCw, History as HistoryIcon } from 'lucide-react';
+import { Loader2, RefreshCw, History as HistoryIcon, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { saveHistory, getHistoryById } from '@/utils/conversationManager';
 import { TopicCategory } from '@/types/models';
 import { useStagingArea } from '@/hooks/use-staging-area';
+import { useSentenceGenerator } from '@/hooks/use-sentence-generator';
 
 const Index: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -36,6 +38,15 @@ const Index: React.FC = () => {
     clearStagingArea,
     createMessageFromStaged
   } = useStagingArea();
+  
+  const {
+    sentences,
+    isGeneratingSentences,
+    generateSentencesFromWords,
+    clearSentences
+  } = useSentenceGenerator();
+  
+  const [showingSentences, setShowingSentences] = useState(false);
   
   useEffect(() => {
     const envApiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
@@ -102,13 +113,11 @@ const Index: React.FC = () => {
         `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
       ).join('\n');
       
-      // Get all user words from the conversation to avoid repeating them
       const updatedConversation = [...conversation, userMessage];
       const allUserWords = updatedConversation
         .filter(item => item.isUser)
         .map(item => item.text);
       
-      // Create a prompt that includes the topic and instructs the model not to repeat words already used
       const prompt = conversationHistory 
         ? `${conversationHistory}\nמשתמש: ${topic}\n\nהערה למודל: המילים הבאות כבר נבחרו, אנא הצע מילים חדשות שקשורות לנושא אך שונות מאלו: ${allUserWords.join(', ')}`
         : `משתמש: ${topic}`;
@@ -126,7 +135,6 @@ const Index: React.FC = () => {
           if (!categoryReceived.has(partialResponse.category)) {
             categoryReceived.add(partialResponse.category);
             
-            // Filter out any words that are already in the conversation
             const filteredWords = partialResponse.words.filter(
               suggestedWord => !allUserWords.includes(suggestedWord)
             );
@@ -165,15 +173,12 @@ const Index: React.FC = () => {
   };
 
   const handleWordSelect = (word: string) => {
-    // Always add the word to staging area
     addWordToStaging(word);
     
-    // If not already in staging mode, set it
     if (!isStaging) {
       setIsStaging(true);
     }
     
-    // Clear existing staging topic groups to ensure fresh categories
     setStagingTopicGroups([]);
     
     setIsLoading(true);
@@ -181,15 +186,12 @@ const Index: React.FC = () => {
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
     
-    // Create conversation history including all staged words
     const conversationHistory = conversation.map(item => 
       `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
     ).join('\n');
     
-    // Include all staged words in the prompt
     const allStagedWords = [...stagedWords, word];
     
-    // Create a prompt that includes the staged words and instructs the model not to repeat them
     const prompt = `${conversationHistory}\nמשתמש: ${allStagedWords.join(' ')}\n\nהערה למודל: המילים הבאות כבר נבחרו, אנא הצע מילים חדשות שקשורות לנושא אך שונות מאלו: ${allStagedWords.join(', ')}`;
     
     console.log(prompt);
@@ -207,13 +209,11 @@ const Index: React.FC = () => {
         if (!categoryReceived.has(partialResponse.category)) {
           categoryReceived.add(partialResponse.category);
           
-          // Filter out any words that are already in the staging area
           const filteredWords = partialResponse.words.filter(
             suggestedWord => !allStagedWords.includes(suggestedWord)
           );
           
           setStagingTopicGroups(currentGroups => {
-            // Don't preserve old groups, always show fresh categories
             return [
               ...currentGroups.filter(group => !group.isOld),
               {
@@ -241,7 +241,6 @@ const Index: React.FC = () => {
   };
 
   const handleStagingWordSelect = (word: string) => {
-    // Add the selected word to the conversation
     const newMessage: ConversationItem = {
       id: uuidv4(),
       text: word,
@@ -251,22 +250,18 @@ const Index: React.FC = () => {
     
     setConversation(prev => [...prev, newMessage]);
     
-    // Clear the staging area
     setIsStaging(false);
     clearStagingArea();
     setStagingTopicGroups([]);
     
-    // Show toast notification
     toast({
       title: "נוספה מילה",
       description: `המילה "${word}" נוספה לשיחה בהצלחה`,
     });
     
-    // Regenerate categories based on the updated conversation
     setIsLoading(true);
     setIsStreaming(true);
     
-    // Mark existing topic groups as old
     setTopicGroups(currentGroups => 
       currentGroups.map(group => ({
         ...group,
@@ -277,18 +272,15 @@ const Index: React.FC = () => {
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
     
-    // Create updated conversation history including the newly added word
     const updatedConversation = [...conversation, newMessage];
     const conversationHistory = updatedConversation.map(item => 
       `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
     ).join('\n');
     
-    // Get all user words from the conversation to avoid repeating them
     const allUserWords = updatedConversation
       .filter(item => item.isUser)
       .map(item => item.text);
     
-    // Create a prompt that instructs the model not to repeat words already used
     const prompt = `${conversationHistory}\n\nהערה למודל: המילים הבאות כבר נבחרו, אנא הצע מילים חדשות שקשורות לנושא אך שונות מאלו: ${allUserWords.join(', ')}`;
     
     console.log("Regenerating categories after staging word selection:", prompt);
@@ -305,7 +297,6 @@ const Index: React.FC = () => {
         if (!categoryReceived.has(partialResponse.category)) {
           categoryReceived.add(partialResponse.category);
           
-          // Filter out any words that are already in the conversation
           const filteredWords = partialResponse.words.filter(
             suggestedWord => !allUserWords.includes(suggestedWord)
           );
@@ -379,6 +370,9 @@ const Index: React.FC = () => {
   };
 
   const handleReset = () => {
+    clearSentences();
+    setShowingSentences(false);
+    
     setConversation([]);
     setTopicGroups([]);
     setConversationId(uuidv4());
@@ -402,6 +396,120 @@ const Index: React.FC = () => {
         description: "ההודעה הוסרה בהצלחה",
       });
     }
+  };
+  
+  const handleGenerateSentences = async () => {
+    if (stagedWords.length === 0) {
+      toast({
+        title: "אין מילים נבחרות",
+        description: "יש לבחור מילים לפני יצירת משפטים",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setShowingSentences(true);
+    
+    const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
+    await generateSentencesFromWords(stagedWords, apiKey);
+  };
+  
+  const handleSentenceSelect = (sentence: string) => {
+    const newMessage: ConversationItem = {
+      id: uuidv4(),
+      text: sentence,
+      isUser: true,
+      timestamp: new Date()
+    };
+    
+    setConversation(prev => [...prev, newMessage]);
+    
+    setIsStaging(false);
+    clearStagingArea();
+    clearSentences();
+    setShowingSentences(false);
+    setStagingTopicGroups([]);
+    
+    toast({
+      title: "נוסף משפט",
+      description: `המשפט נוסף לשיחה בהצלחה`,
+    });
+    
+    setIsLoading(true);
+    setIsStreaming(true);
+    
+    setTopicGroups(currentGroups => 
+      currentGroups.map(group => ({
+        ...group,
+        isCollapsed: true,
+        isOld: true
+      }))
+    );
+    
+    const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
+    
+    const updatedConversation = [...conversation, newMessage];
+    const conversationHistory = updatedConversation.map(item => 
+      `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
+    ).join('\n');
+    
+    const allUserWords = updatedConversation
+      .filter(item => item.isUser)
+      .map(item => item.text);
+    
+    const prompt = `${conversationHistory}\n\nהערה למודל: המילים הבאות כבר נבחרו, אנא הצע מילים חדשות שקשורות לנושא אך שונות מאלו: ${allUserWords.join(', ')}`;
+    
+    console.log("Regenerating categories after sentence selection:", prompt);
+    
+    const categoryReceived = new Set<string>();
+    
+    getModelResponse(
+      prompt, 
+      !!apiKey, 
+      apiKey, 
+      (partialResponse) => {
+        console.log("Received partial response for regeneration:", partialResponse);
+        
+        if (!categoryReceived.has(partialResponse.category)) {
+          categoryReceived.add(partialResponse.category);
+          
+          const filteredWords = partialResponse.words.filter(
+            suggestedWord => !allUserWords.includes(suggestedWord)
+          );
+          
+          setTopicGroups(currentGroups => {
+            const oldGroups = currentGroups.filter(group => group.isOld);
+            const newGroups = currentGroups.filter(group => !group.isOld);
+            
+            return [
+              ...newGroups,
+              {
+                ...partialResponse, 
+                words: filteredWords,
+                isCollapsed: false, 
+                isOld: false
+              },
+              ...oldGroups
+            ];
+          });
+        }
+      }
+    ).catch(error => {
+      console.error('Error fetching response:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בקבלת תשובה. אנא נסה שוב.",
+        variant: "destructive",
+      });
+    }).finally(() => {
+      setIsLoading(false);
+      setIsStreaming(false);
+    });
+  };
+  
+  const handleCancelSentences = () => {
+    clearSentences();
+    setShowingSentences(false);
   };
 
   const activeTopicGroups = isStaging ? stagingTopicGroups : topicGroups;
@@ -466,6 +574,33 @@ const Index: React.FC = () => {
           onCancel={handleStagingCancel}
         />
       )}
+      
+      {showingSentences && (
+        <SentencesDisplay
+          sentences={sentences}
+          isLoading={isGeneratingSentences}
+          onSelectSentence={handleSentenceSelect}
+          onCancel={handleCancelSentences}
+        />
+      )}
+      
+      {isStaging && !showingSentences && (
+        <div className="w-full max-w-3xl mx-auto flex justify-center mt-2">
+          <Button
+            variant="secondary"
+            onClick={handleGenerateSentences}
+            disabled={isGeneratingSentences || stagedWords.length === 0}
+            className="gap-2 rtl:flex-row-reverse"
+          >
+            {isGeneratingSentences ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <MessageSquare className="h-4 w-4" />
+            )}
+            <span>יצירת משפטים</span>
+          </Button>
+        </div>
+      )}
 
       <motion.div 
         className="w-full max-w-3xl mx-auto grid gap-2 sm:gap-3 mt-2 mb-2"
@@ -523,3 +658,4 @@ const Index: React.FC = () => {
 };
 
 export default Index;
+
