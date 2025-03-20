@@ -87,11 +87,22 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
   };
 
   const handleResetToDefault = () => {
-    form.reset({
+    const defaultValues = {
       systemPrompt: defaultSystemPrompt,
       categoriesCount: 4,
       wordsPerCategory: 10
-    });
+    };
+    
+    form.reset(defaultValues);
+    
+    // Save default values to localStorage
+    localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, defaultValues.systemPrompt);
+    localStorage.setItem(CATEGORIES_COUNT_KEY, defaultValues.categoriesCount.toString());
+    localStorage.setItem(WORDS_PER_CATEGORY_KEY, defaultValues.wordsPerCategory.toString());
+    
+    // Update parent component with default values
+    const updatedPrompt = replacePromptPlaceholders(defaultValues.systemPrompt);
+    onSystemPromptChange(updatedPrompt);
     
     toast({
       title: "איפוס בוצע",
