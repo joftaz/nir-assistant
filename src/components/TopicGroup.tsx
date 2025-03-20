@@ -1,14 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 
 interface TopicGroupProps {
   category: string;
   words: string[];
   onWordSelect: (word: string) => void;
-  onCreateSentences?: (words: string[]) => void;
   isCollapsed?: boolean;
   isOld?: boolean;
   isStaging?: boolean;
@@ -18,7 +15,6 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
   category, 
   words, 
   onWordSelect, 
-  onCreateSentences,
   isCollapsed = false, 
   isOld = false,
   isStaging = false
@@ -52,12 +48,6 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
 
   const wordTextSize = getWordTextSize();
 
-  const handleCreateSentences = () => {
-    if (onCreateSentences) {
-      onCreateSentences(words);
-    }
-  };
-
   return (
     <div 
       className={`topic-group w-full border ${
@@ -66,11 +56,12 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
       dir="rtl"
     >
       <div 
-        className={`topic-group-header py-1.5 px-2 flex justify-between items-center ${
+        className={`topic-group-header py-1.5 px-2 flex justify-between items-center cursor-pointer ${
           isOld ? 'hover:bg-muted/60 text-muted-foreground' : 'hover:bg-muted/50'
         } transition-colors`}
+        onClick={toggleExpanded}
       >
-        <div className="flex items-center gap-1.5 cursor-pointer" onClick={toggleExpanded}>
+        <div className="flex items-center gap-1.5">
           <h3 className={`font-medium ${getCategoryTextSize()}`}>{category}</h3>
           {isOld && (
             <span className="text-xs px-1 py-0.5 bg-muted-foreground/20 rounded text-muted-foreground">
@@ -83,25 +74,9 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1">
-          {onCreateSentences && !isOld && !isStaging && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="p-1 h-7 w-7 rounded-full" 
-              onClick={handleCreateSentences}
-              title="צור משפטים מהמילים"
-            >
-              <MessageSquare size={14} />
-            </Button>
-          )}
-          <button 
-            className="p-1 rounded-full hover:bg-muted transition-colors"
-            onClick={toggleExpanded}
-          >
-            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </button>
-        </div>
+        <button className="p-1 rounded-full hover:bg-muted transition-colors">
+          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
       </div>
       
       <AnimatePresence>

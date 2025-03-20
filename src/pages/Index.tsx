@@ -8,7 +8,6 @@ import StagingArea from '@/components/StagingArea';
 import ConversationHistory, { ConversationItem } from '@/components/ConversationHistory';
 import ApiKeyInput from '@/components/ApiKeyInput';
 import Settings from '@/components/Settings';
-import SentencesDisplay from '@/components/SentencesDisplay';
 import { getModelResponse, initializeSystemPrompt } from '@/utils/modelPrompt';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, RefreshCw, History as HistoryIcon } from 'lucide-react';
@@ -26,12 +25,6 @@ const Index: React.FC = () => {
   const [openAIKey, setOpenAIKey] = useState<string>('');
   const [conversationId, setConversationId] = useState<string>(uuidv4());
   const [isStaging, setIsStaging] = useState(false);
-  
-  // Add new state for sentences
-  const [sentences, setSentences] = useState<string[]>([]);
-  const [isSentenceMode, setIsSentenceMode] = useState(false);
-  const [sentenceSourceWords, setSentenceSourceWords] = useState<string[]>([]);
-  
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -83,12 +76,6 @@ const Index: React.FC = () => {
   }, [conversation, topicGroups, conversationId]);
 
   const handleSubmitTopic = async (topic: string) => {
-    // If we're in sentence mode, cancel it when submitting a new topic
-    if (isSentenceMode) {
-      setIsSentenceMode(false);
-      setSentences([]);
-    }
-    
     const userMessage: ConversationItem = {
       id: uuidv4(),
       text: topic,
@@ -178,12 +165,6 @@ const Index: React.FC = () => {
   };
 
   const handleWordSelect = (word: string) => {
-    // If we're in sentence mode, cancel it when selecting a word
-    if (isSentenceMode) {
-      setIsSentenceMode(false);
-      setSentences([]);
-    }
-    
     // Always add the word to staging area
     addWordToStaging(word);
     
@@ -257,97 +238,6 @@ const Index: React.FC = () => {
       setIsLoading(false);
       setIsStreaming(false);
     });
-  };
-
-  // New function to handle creating sentences from words
-  const handleCreateSentences = async (words: string[]) => {
-    // Don't allow sentence creation if already in sentence mode
-    if (isSentenceMode) return;
-    
-    setIsSentenceMode(true);
-    setSentenceSourceWords(words);
-    setIsLoading(true);
-    
-    const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-    
-    try {
-      // Create a specific prompt for generating sentences
-      const sentencePrompt = `יצירת משפטים עם המילים הבאות: ${words.join(', ')}. 
-      אנא צור 5 משפטים מגוונים וקצרים (3-5 מילים) בעברית שמשלבים את המילים האלה בדרכים שונות. 
-      כל משפט צריך להיות קצר, ברור ומועיל למטופל שמתקשה בדיבור. סגנון המשפטים צריך להיות יומיומי.`;
-      
-      // Call OpenAI to generate sentences
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: 'system', content: 'אתה עוזר ליצירת משפטים פשוטים וברורים בעברית. המשפטים צריכים להיות קצרים, פשוטים ושימושיים למטופל שמתקשה בדיבור.' },
-            { role: 'user', content: sentencePrompt }
-          ],
-          temperature: 0.7,
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      const content = data.choices[0]?.message?.content || '';
-      
-      // Parse sentences from the response
-      // Usually the model will return numbered sentences
-      const sentenceLines = content.split('\n')
-        .filter(line => line.trim())
-        .map(line => line.replace(/^\d+[\.\)\-]\s*/, '').trim())
-        .filter(sentence => sentence.length > 0);
-      
-      setSentences(sentenceLines);
-      
-    } catch (error) {
-      console.error('Error generating sentences:', error);
-      toast({
-        title: "שגיאה",
-        description: "אירעה שגיאה ביצירת המשפטים. אנא נסה שוב.",
-        variant: "destructive",
-      });
-      setIsSentenceMode(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // New function to handle sentence selection
-  const handleSentenceSelect = (sentence: string) => {
-    // Add the selected sentence as a user message
-    const newMessage: ConversationItem = {
-      id: uuidv4(),
-      text: sentence,
-      isUser: true,
-      timestamp: new Date()
-    };
-    
-    setConversation(prev => [...prev, newMessage]);
-    
-    // Clear sentence mode
-    setIsSentenceMode(false);
-    setSentences([]);
-    
-    toast({
-      title: "נוסף משפט",
-      description: `המשפט "${sentence}" נוסף לשיחה בהצלחה`,
-    });
-  };
-
-  // Function to cancel sentence mode
-  const handleCancelSentences = () => {
-    setIsSentenceMode(false);
-    setSentences([]);
   };
 
   const handleStagingWordSelect = (word: string) => {
@@ -495,8 +385,6 @@ const Index: React.FC = () => {
     setIsStaging(false);
     clearStagingArea();
     setStagingTopicGroups([]);
-    setIsSentenceMode(false);
-    setSentences([]);
     toast({
       title: "השיחה אופסה",
       description: "השיחה אופסה בהצלחה",
@@ -570,14 +458,6 @@ const Index: React.FC = () => {
         onRemoveMessage={handleRemoveMessage}
       />
 
-      {isSentenceMode && (
-        <SentencesDisplay 
-          sentences={sentences} 
-          onSentenceSelect={handleSentenceSelect}
-          onCancel={handleCancelSentences}
-        />
-      )}
-
       {isStaging && (
         <StagingArea
           stagedWords={stagedWords}
@@ -606,7 +486,6 @@ const Index: React.FC = () => {
                   category={group.category}
                   words={group.words}
                   onWordSelect={handleWordSelect}
-                  onCreateSentences={!isStaging && !isSentenceMode ? handleCreateSentences : undefined}
                   isCollapsed={group.isCollapsed}
                   isOld={group.isOld}
                   isStaging={isStaging}
@@ -635,7 +514,7 @@ const Index: React.FC = () => {
       >
         <TopicInput 
           onSubmit={handleSubmitTopic} 
-          isLoading={isLoading || isStaging || isSentenceMode} 
+          isLoading={isLoading || isStaging} 
           apiKey={openAIKey}
         />
       </motion.div>
