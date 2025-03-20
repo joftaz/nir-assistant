@@ -194,7 +194,9 @@ const Index: React.FC = () => {
     
     const allStagedWords = [...stagedWords, word];
     
-    const prompt = `${conversationHistory}\nמשתמש: ${allStagedWords.join(' ')}\n\nהערה למודל: המילים הבאות כבר נבחרו, אנא הצע מילים חדשות שקשורות לנושא אך שונות מאלו: ${allStagedWords.join(', ')}`;
+    const prompt = `${conversationHistory}\n\nמשתמש: ${allStagedWords.join(' ')}\n\n
+    הערה למודל: עליך להציע מילים שקשורות לשיחה, אבל שהן בעיקר נרדפות או קרובות מאוד במשמעות למילים הבאות: ${allStagedWords.join(', ')}.
+    נסה להתמקד במילים שנמצאות באותו שדה סמנטי כמו המילים הזמניות האלה ולא רק מילים כלליות הקשורות לנושא.`;
     
     console.log(prompt);
     
@@ -346,6 +348,99 @@ const Index: React.FC = () => {
     toast({
       title: "נוספו מילים",
       description: `המילים נוספו לשיחה בהצלחה: ${stagedWords.join(' ')}`,
+    });
+  };
+  
+  const handleAddAllWords = () => {
+    if (stagedWords.length === 0) return;
+    
+    const newMessage: ConversationItem = {
+      id: uuidv4(),
+      text: stagedWords.join(' '),
+      isUser: true,
+      timestamp: new Date()
+    };
+    
+    setConversation(prev => [...prev, newMessage]);
+    
+    setIsStaging(false);
+    clearStagingArea();
+    setStagingTopicGroups([]);
+    
+    toast({
+      title: "נוספו מילים",
+      description: `המילים נוספו לשיחה בהצלחה: ${stagedWords.join(' ')}`,
+    });
+    
+    setIsLoading(true);
+    setIsStreaming(true);
+    
+    setTopicGroups(currentGroups => 
+      currentGroups.map(group => ({
+        ...group,
+        isCollapsed: true,
+        isOld: true
+      }))
+    );
+    
+    const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
+    
+    const updatedConversation = [...conversation, newMessage];
+    const conversationHistory = updatedConversation.map(item => 
+      `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
+    ).join('\n');
+    
+    const allUserWords = updatedConversation
+      .filter(item => item.isUser)
+      .map(item => item.text);
+    
+    const prompt = `${conversationHistory}\n\nהערה למודל: המילים הבאות כבר נבחרו, אנא הצע מילים חדשות שקשורות לנושא אך שונות מאלו: ${allUserWords.join(', ')}`;
+    
+    console.log("Regenerating categories after adding all words:", prompt);
+    
+    const categoryReceived = new Set<string>();
+    
+    getModelResponse(
+      prompt, 
+      !!apiKey, 
+      apiKey, 
+      (partialResponse) => {
+        console.log("Received partial response for regeneration:", partialResponse);
+        
+        if (!categoryReceived.has(partialResponse.category)) {
+          categoryReceived.add(partialResponse.category);
+          
+          const filteredWords = partialResponse.words.filter(
+            suggestedWord => !allUserWords.includes(suggestedWord)
+          );
+          
+          setTopicGroups(currentGroups => {
+            const oldGroups = currentGroups.filter(group => group.isOld);
+            const newGroups = currentGroups.filter(group => !group.isOld);
+            
+            return [
+              ...newGroups,
+              {
+                ...partialResponse, 
+                words: filteredWords,
+                isCollapsed: false, 
+                isOld: false
+              },
+              ...oldGroups
+            ];
+          });
+        }
+      }
+    ).catch(error => {
+      console.error('Error fetching response:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בקבלת תשובה. אנא נסה שוב.",
+        variant: "destructive",
+      });
+    }).finally(() => {
+      setIsLoading(false);
+      setIsStreaming(false);
     });
   };
   
@@ -606,6 +701,7 @@ const Index: React.FC = () => {
           onRemoveWord={removeWordFromStaging}
           onWordSelect={handleStagingWordSelect}
           onCancel={handleStagingCancel}
+          onAddAllWords={handleAddAllWords}
         />
       )}
       

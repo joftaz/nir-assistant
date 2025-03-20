@@ -1,18 +1,22 @@
+
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
+import { Button } from './ui/button';
 
 interface StagingAreaProps {
   stagedWords: string[];
   onRemoveWord: (word: string) => void;
   onWordSelect: (word: string) => void;
   onCancel: () => void;
+  onAddAllWords: () => void;
 }
 
 const StagingArea: React.FC<StagingAreaProps> = ({
   stagedWords,
   onRemoveWord,
   onWordSelect,
-  onCancel
+  onCancel,
+  onAddAllWords
 }) => {
   if (stagedWords.length === 0) return null;
 
@@ -22,14 +26,26 @@ const StagingArea: React.FC<StagingAreaProps> = ({
         <h3 className="text-sm font-medium text-muted-foreground" dir="rtl">
           מילים זמניות ({stagedWords.length}) <span className="text-xs font-normal">- לחיצה כדי להוסיף לשיחה</span>
         </h3>
-        <button 
-          onClick={onCancel}
-          className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-full hover:bg-muted"
-          aria-label="Cancel staging"
-          title="בטל בחירה"
-        >
-          <X size={16} />
-        </button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-1 text-xs"
+            onClick={onAddAllWords}
+            title="הוסף את כל המילים לשיחה"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>הוסף הכל</span>
+          </Button>
+          <button 
+            onClick={onCancel}
+            className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-full hover:bg-muted"
+            aria-label="Cancel staging"
+            title="בטל בחירה"
+          >
+            <X size={16} />
+          </button>
+        </div>
       </div>
       
       <div className="flex flex-wrap gap-1.5 justify-end" dir="rtl">
@@ -45,7 +61,7 @@ const StagingArea: React.FC<StagingAreaProps> = ({
                 e.stopPropagation();
                 onRemoveWord(word);
               }}
-              className="opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 hover:bg-green-200 dark:hover:bg-green-800/50 rounded-full p-0.5 inline-flex"
+              className="ml-0.5 hover:bg-green-200 dark:hover:bg-green-800/50 rounded-full p-0.5 inline-flex"
               aria-label="Remove word"
             >
               <X size={12} />
