@@ -636,7 +636,7 @@ const Index: React.FC = () => {
         </div>
       )}
       
-      {isStaging && !showingSentences && (
+      {false && isStaging && !showingSentences && (
         <div className="w-full max-w-3xl mx-auto flex justify-center mt-2">
           <Button
             variant="secondary"
