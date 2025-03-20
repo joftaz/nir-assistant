@@ -1,6 +1,7 @@
 import { generateResponse, CategoryResponse, initializeOpenAI, getOpenAIStreamingResponse } from './openaiService';
 import systemPromptMd from './systemPrompt.rtl.md?raw';
 import sentencePromptMd from './sentencePrompt.rtl.md?raw';
+import stagedWordsPromptMd from './stagedWordsPrompt.rtl.md?raw';
 
 // Import or define the TopicCategory type to fix the linter errors
 import type { TopicCategory } from '../types/models';
@@ -8,10 +9,12 @@ import type { TopicCategory } from '../types/models';
 // Use the imported markdown file
 export const defaultSystemPrompt = systemPromptMd;
 export const defaultSentencePrompt = sentencePromptMd;
+export const defaultStagedWordsPrompt = stagedWordsPromptMd;
 
 // Define storage keys
 export const SYSTEM_PROMPT_STORAGE_KEY = 'system_prompt';
 export const SENTENCE_PROMPT_STORAGE_KEY = 'sentence_prompt';
+export const STAGED_WORDS_PROMPT_STORAGE_KEY = 'staged_words_prompt';
 export const CATEGORIES_COUNT_KEY = 'categories_count';
 export const WORDS_PER_CATEGORY_KEY = 'words_per_category';
 
@@ -57,6 +60,10 @@ export const initializeSystemPrompt = (): void => {
     localStorage.setItem(SENTENCE_PROMPT_STORAGE_KEY, defaultSentencePrompt);
   }
   
+  if (!localStorage.getItem(STAGED_WORDS_PROMPT_STORAGE_KEY)) {
+    localStorage.setItem(STAGED_WORDS_PROMPT_STORAGE_KEY, defaultStagedWordsPrompt);
+  }
+  
   if (!localStorage.getItem(CATEGORIES_COUNT_KEY)) {
     localStorage.setItem(CATEGORIES_COUNT_KEY, '4');
   }
@@ -75,6 +82,11 @@ export const getSystemPrompt = (): string => {
 // Get sentence prompt from localStorage or use default
 export const getSentencePrompt = (): string => {
   return localStorage.getItem(SENTENCE_PROMPT_STORAGE_KEY) || defaultSentencePrompt;
+};
+
+// Get staged words prompt from localStorage or use default
+export const getStagedWordsPrompt = (): string => {
+  return localStorage.getItem(STAGED_WORDS_PROMPT_STORAGE_KEY) || defaultStagedWordsPrompt;
 };
 
 // This is kept for fallback or testing purposes

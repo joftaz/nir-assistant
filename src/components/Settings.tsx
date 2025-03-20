@@ -20,9 +20,11 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   defaultSystemPrompt, 
   defaultSentencePrompt,
+  defaultStagedWordsPrompt,
   replacePromptPlaceholders, 
   SYSTEM_PROMPT_STORAGE_KEY,
   SENTENCE_PROMPT_STORAGE_KEY,
+  STAGED_WORDS_PROMPT_STORAGE_KEY,
   CATEGORIES_COUNT_KEY,
   WORDS_PER_CATEGORY_KEY
 } from '@/utils/modelPrompt';
@@ -36,6 +38,7 @@ interface SettingsProps {
 interface SettingsFormValues {
   systemPrompt: string;
   sentencePrompt: string;
+  stagedWordsPrompt: string;
   categoriesCount: number;
   wordsPerCategory: number;
 }
@@ -49,6 +52,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     defaultValues: {
       systemPrompt: '',
       sentencePrompt: '',
+      stagedWordsPrompt: '',
       categoriesCount: 4,
       wordsPerCategory: 10
     }
@@ -58,12 +62,14 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
   useEffect(() => {
     const savedPrompt = localStorage.getItem(SYSTEM_PROMPT_STORAGE_KEY);
     const savedSentencePrompt = localStorage.getItem(SENTENCE_PROMPT_STORAGE_KEY);
+    const savedStagedWordsPrompt = localStorage.getItem(STAGED_WORDS_PROMPT_STORAGE_KEY);
     const savedCategoriesCount = localStorage.getItem(CATEGORIES_COUNT_KEY);
     const savedWordsPerCategory = localStorage.getItem(WORDS_PER_CATEGORY_KEY);
     
     const values = {
       systemPrompt: savedPrompt || defaultSystemPrompt,
       sentencePrompt: savedSentencePrompt || defaultSentencePrompt,
+      stagedWordsPrompt: savedStagedWordsPrompt || defaultStagedWordsPrompt,
       categoriesCount: savedCategoriesCount ? parseInt(savedCategoriesCount) : 4,
       wordsPerCategory: savedWordsPerCategory ? parseInt(savedWordsPerCategory) : 10
     };
@@ -78,6 +84,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     // Save all values to localStorage
     localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, currentValues.systemPrompt);
     localStorage.setItem(SENTENCE_PROMPT_STORAGE_KEY, currentValues.sentencePrompt);
+    localStorage.setItem(STAGED_WORDS_PROMPT_STORAGE_KEY, currentValues.stagedWordsPrompt);
     localStorage.setItem(CATEGORIES_COUNT_KEY, currentValues.categoriesCount.toString());
     localStorage.setItem(WORDS_PER_CATEGORY_KEY, currentValues.wordsPerCategory.toString());
     
@@ -102,6 +109,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     const defaultValues = {
       systemPrompt: defaultSystemPrompt,
       sentencePrompt: defaultSentencePrompt,
+      stagedWordsPrompt: defaultStagedWordsPrompt,
       categoriesCount: 4,
       wordsPerCategory: 10
     };
@@ -111,6 +119,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     // Save default values to localStorage
     localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, defaultValues.systemPrompt);
     localStorage.setItem(SENTENCE_PROMPT_STORAGE_KEY, defaultValues.sentencePrompt);
+    localStorage.setItem(STAGED_WORDS_PROMPT_STORAGE_KEY, defaultValues.stagedWordsPrompt);
     localStorage.setItem(CATEGORIES_COUNT_KEY, defaultValues.categoriesCount.toString());
     localStorage.setItem(WORDS_PER_CATEGORY_KEY, defaultValues.wordsPerCategory.toString());
     
@@ -241,6 +250,24 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
                     </FormItem>
                   )}
                 />
+                
+                <FormField
+                  control={form.control}
+                  name="stagedWordsPrompt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>פרומפט מילים זמניות</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          rows={12}
+                          className="font-mono text-xs rtl text-right"
+                          dir="rtl"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
               </TabsContent>
             </Tabs>
             
@@ -250,9 +277,18 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
                 variant="outline"
                 onClick={handleResetToDefault}
               >
-                שחזר ברירת מחדל
+                אפס להגדרות ברירת מחדל
               </Button>
-              <Button type="submit">שמור</Button>
+              <div className="flex gap-2">
+                <DialogClose asChild>
+                  <Button type="button" variant="secondary">
+                    ביטול
+                  </Button>
+                </DialogClose>
+                <Button type="submit">
+                  שמור
+                </Button>
+              </div>
             </DialogFooter>
           </form>
         </Form>

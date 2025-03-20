@@ -9,7 +9,7 @@ import SentencesDisplay from '@/components/SentencesDisplay';
 import ConversationHistory, { ConversationItem } from '@/components/ConversationHistory';
 import ApiKeyInput from '@/components/ApiKeyInput';
 import Settings from '@/components/Settings';
-import { getModelResponse, initializeSystemPrompt } from '@/utils/modelPrompt';
+import { getModelResponse, initializeSystemPrompt, getStagedWordsPrompt, defaultSystemJsonInstruction, replacePromptPlaceholders } from '@/utils/modelPrompt';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, RefreshCw, History as HistoryIcon, MessageSquare, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -194,9 +194,10 @@ const Index: React.FC = () => {
     
     const allStagedWords = [...stagedWords, word];
     
-    const prompt = `${conversationHistory}\n\nמשתמש: ${allStagedWords.join(' ')}\n\n
-    הערה למודל: עליך להציע מילים שקשורות לשיחה, אבל שהן בעיקר נרדפות או קרובות מאוד במשמעות למילים הבאות: ${allStagedWords.join(', ')}.
-    נסה להתמקד במילים שנמצאות באותו שדה סמנטי כמו המילים הזמניות האלה ולא רק מילים כלליות הקשורות לנושא.`;
+    const stagedWordsPrompt = getStagedWordsPrompt();
+    const systemPrompt = `${stagedWordsPrompt}\n\n## שיחה:\n ${allStagedWords.join(', ')}\n\n${conversationHistory}\n\n### מילים רלוונטיות ליצירת מילים נוספות:\n ${allStagedWords.join(',')}`;
+    
+    const prompt = `${replacePromptPlaceholders(systemPrompt)}\n\n${defaultSystemJsonInstruction}`;
     
     console.log(prompt);
     
