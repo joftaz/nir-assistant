@@ -1,12 +1,13 @@
-
 import { generateResponse, CategoryResponse, initializeOpenAI, getOpenAIStreamingResponse } from './openaiService';
 import systemPromptMd from './systemPrompt.rtl.md?raw';
+import sentencePromptMd from './sentencePrompt.rtl.md?raw';
 
 // Import or define the TopicCategory type to fix the linter errors
 import type { TopicCategory } from '../types/models';
 
 // Use the imported markdown file
 export const defaultSystemPrompt = systemPromptMd;
+export const defaultSentencePrompt = sentencePromptMd;
 
 export const defaultSystemJsonInstruction = `
 ===== System Instructions =====
@@ -59,6 +60,11 @@ export const initializeSystemPrompt = (): void => {
 export const getSystemPrompt = (): string => {
   const prompt = localStorage.getItem('system_prompt') || defaultSystemPrompt;
   return replacePromptPlaceholders(prompt);
+};
+
+// Get sentence prompt
+export const getSentencePrompt = (): string => {
+  return defaultSentencePrompt;
 };
 
 // This is kept for fallback or testing purposes

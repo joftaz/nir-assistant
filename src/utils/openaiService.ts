@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { defaultSystemPrompt, defaultSystemJsonInstruction, getMockResponse, replacePromptPlaceholders } from "./modelPrompt";
+import { defaultSystemPrompt, defaultSystemJsonInstruction, getMockResponse, replacePromptPlaceholders, getSentencePrompt } from "./modelPrompt";
 import type { TopicCategory } from '../types/models';
 
 // Initialize OpenAI - this will use the API key from OPENAI_API_KEY environment variable
@@ -614,21 +614,8 @@ export const generateSentences = async (
     
     console.log("Generating sentences from words:", wordsString);
     
-    // Create a system prompt specific for sentence generation
-    const sentenceGenerationPrompt = `
-      אתה עוזר שיוצר משפטים קוהרנטיים ומשמעותיים מרשימת מילים.
-      
-      הנה ההוראות שלך:
-      1. קבל סדרה של מילים.
-      2. צור 5 משפטים שונים שמשלבים את המילים בצורה טבעית ומשמעותית.
-      3. המשפטים צריכים להיות הגיוניים וקוהרנטיים, לא רק אוסף מילים.
-      4. הניסוח צריך להיות ברור וטבעי, כאילו אדם היה אומר אותם.
-      5. ההקשר והמשמעות של המשפטים צריכים להיות קשורים לנושא של המילים.
-      6. שמור על אורך סביר של משפט (לא ארוך מדי).
-      7. אל תוסיף פירוש, הסבר או כל טקסט נוסף.
-      
-      חזור אך ורק רשימה של 5 משפטים שונים, כל אחד בשורה נפרדת.
-    `;
+    // Use the getSentencePrompt function
+    const sentenceGenerationPrompt = getSentencePrompt();
 
     // If streaming is requested, use streaming implementation
     if (onPartialSentence) {
