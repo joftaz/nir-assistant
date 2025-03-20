@@ -45,28 +45,38 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     }
   });
 
+  // Load saved settings from localStorage or use defaults
   useEffect(() => {
-    // Load saved settings from localStorage or use defaults
     const savedPrompt = localStorage.getItem(SYSTEM_PROMPT_STORAGE_KEY);
     const savedCategoriesCount = localStorage.getItem(CATEGORIES_COUNT_KEY);
     const savedWordsPerCategory = localStorage.getItem(WORDS_PER_CATEGORY_KEY);
     
-    form.reset({
+    const values = {
       systemPrompt: savedPrompt || defaultSystemPrompt,
       categoriesCount: savedCategoriesCount ? parseInt(savedCategoriesCount) : 4,
       wordsPerCategory: savedWordsPerCategory ? parseInt(savedWordsPerCategory) : 10
-    });
+    };
+    
+    form.reset(values);
   }, [form]);
 
-  const handleSave = (values: SettingsFormValues) => {
-    // Update prompt with the new values
-    let updatedPrompt = replacePromptPlaceholders(values.systemPrompt);
+  const handleSave = async (values: SettingsFormValues) => {
+    // Ensure we have the latest values
+    const currentValues = form.getValues();
     
     // Save all values to localStorage
-    localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, updatedPrompt);
-    localStorage.setItem(CATEGORIES_COUNT_KEY, values.categoriesCount.toString());
-    localStorage.setItem(WORDS_PER_CATEGORY_KEY, values.wordsPerCategory.toString());
+    localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, currentValues.systemPrompt); // Save original prompt with placeholders
+    localStorage.setItem(CATEGORIES_COUNT_KEY, currentValues.categoriesCount.toString());
+    localStorage.setItem(WORDS_PER_CATEGORY_KEY, currentValues.wordsPerCategory.toString());
     
+    // Log what was saved to localStorage
+    console.log('Settings saved:', {
+      categoriesCount: currentValues.categoriesCount,
+      wordsPerCategory: currentValues.wordsPerCategory
+    });
+    
+    // Only replace placeholders when sending to parent component
+    const updatedPrompt = replacePromptPlaceholders(currentValues.systemPrompt);
     onSystemPromptChange(updatedPrompt);
     setIsOpen(false);
     
@@ -122,7 +132,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
                     <div className="flex flex-col space-y-2">
                       <div className="flex items-center justify-between">
                         <Slider
-                          defaultValue={[field.value]}
+                          value={[field.value]}
                           min={2}
                           max={8}
                           step={1}
@@ -145,7 +155,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
                     <div className="flex flex-col space-y-2">
                       <div className="flex items-center justify-between">
                         <Slider
-                          defaultValue={[field.value]}
+                          value={[field.value]}
                           min={2}
                           max={20}
                           step={1}

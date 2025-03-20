@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { defaultSystemPrompt, defaultSystemJsonInstruction, getMockResponse } from "./modelPrompt";
+import { defaultSystemPrompt, defaultSystemJsonInstruction, getMockResponse, replacePromptPlaceholders } from "./modelPrompt";
 import type { TopicCategory } from '../types/models';
 
 // Initialize OpenAI - this will use the API key from OPENAI_API_KEY environment variable
@@ -182,6 +182,13 @@ export const getOpenAIStreamingResponse = async (
   onPartialResponse?: (group: TopicCategory) => void
 ): Promise<TopicCategory[]> => {
   const systemPrompt = localStorage.getItem('system_prompt') || defaultSystemPrompt;
+  const categoriesCount = localStorage.getItem('categories_count') || '4';
+  const wordsPerCategory = localStorage.getItem('words_per_category') || '10';
+  
+  console.log('API call with settings:', { categoriesCount, wordsPerCategory });
+  
+  // Construct the message with the system prompt + JSON instruction
+  const fullSystemPrompt = `${replacePromptPlaceholders(systemPrompt)}\n\n${defaultSystemJsonInstruction}`;
   
   const results: TopicCategory[] = [];
   const processedCategories = new Set<string>();
@@ -227,9 +234,8 @@ export const getOpenAIStreamingResponse = async (
         return null;
       }
     };
-    
-    // Construct the message with the system prompt + JSON instruction
-    const fullSystemPrompt = `${systemPrompt}\n\n${defaultSystemJsonInstruction}`;
+  
+
     
     // Make the API call with streaming
     console.log("Calling OpenAI API with streaming...");
