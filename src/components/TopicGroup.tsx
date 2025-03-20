@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,11 +32,11 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
   // Calculate text size based on the number of words
   const getWordTextSize = () => {
     const wordCount = words.length;
-    if (wordCount <= 2) return 'text-base'; // Larger text for very few words
-    if (wordCount <= 4) return 'text-sm';
-    if (wordCount <= 10) return 'text-xs';
-    if (wordCount <= 15) return 'text-xs';
-    return 'text-[10px]';
+    if (wordCount <= 2) return 'text-lg';
+    if (wordCount <= 4) return 'text-base';
+    if (wordCount <= 10) return 'text-sm';
+    if (wordCount <= 15) return 'text-sm';
+    return 'text-xs';
   };
 
   const getCategoryTextSize = () => {
