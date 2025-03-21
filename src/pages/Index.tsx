@@ -49,7 +49,8 @@ const Index: React.FC = () => {
   } = useSentenceGenerator();
   
   const [showingSentences, setShowingSentences] = useState(false);
-  
+  const [autoGenerateStagingWords, setAutoGenerateStagingWords] = useState(false);
+
   useEffect(() => {
     const envApiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
     if (envApiKey) {
@@ -456,6 +457,71 @@ const Index: React.FC = () => {
     });
   };
 
+  const handleRefreshStagingWords = () => {
+    if (stagedWords.length === 0) return;
+    
+    setIsLoading(true);
+    setIsStreaming(true);
+    
+    setStagingTopicGroups([]);
+    
+    const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
+    
+    const conversationHistory = conversation.map(item => 
+      `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
+    ).join('\n');
+    
+    const allStagedWords = [...stagedWords];
+    
+    const stagedWordsPrompt = getStagedWordsPrompt();
+    const systemPrompt = `${stagedWordsPrompt}\n\n## שיחה:\n ${allStagedWords.join(', ')}\n\n${conversationHistory}\n\n### מילים רלוונטיות ליצירת מילים נוספות:\n ${allStagedWords.join(',')}`;
+    
+    const prompt = `${replacePromptPlaceholders(systemPrompt)}\n\n${defaultSystemJsonInstruction}`;
+    
+    console.log("Starting streaming request for staging refresh...");
+    const categoryReceived = new Set<string>();
+    
+    getModelResponse(
+      prompt, 
+      !!apiKey, 
+      apiKey, 
+      (partialResponse) => {
+        console.log("Received partial response for staging:", partialResponse);
+        
+        if (!categoryReceived.has(partialResponse.category)) {
+          categoryReceived.add(partialResponse.category);
+          
+          const filteredWords = partialResponse.words.filter(
+            suggestedWord => !allStagedWords.includes(suggestedWord)
+          );
+          
+          setStagingTopicGroups(currentGroups => {
+            return [
+              ...currentGroups.filter(group => !group.isOld),
+              {
+                ...partialResponse, 
+                words: filteredWords,
+                isCollapsed: false, 
+                isOld: false, 
+                isStaging: true
+              }
+            ];
+          });
+        }
+      }
+    ).catch(error => {
+      console.error('Error fetching response:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בקבלת תשובה. אנא נסה שוב.",
+        variant: "destructive",
+      });
+    }).finally(() => {
+      setIsLoading(false);
+      setIsStreaming(false);
+    });
+  };
+
   const handleSaveApiKey = (apiKey: string) => {
     setOpenAIKey(apiKey);
   };
@@ -703,6 +769,7 @@ const Index: React.FC = () => {
           onWordSelect={handleStagingWordSelect}
           onCancel={handleStagingCancel}
           onAddAllWords={handleAddAllWords}
+          onRefresh={handleRefreshStagingWords}
         />
       )}
       
@@ -811,3 +878,4 @@ const Index: React.FC = () => {
 };
 
 export default Index;
+

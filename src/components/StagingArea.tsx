@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
 
 interface StagingAreaProps {
@@ -9,6 +9,7 @@ interface StagingAreaProps {
   onWordSelect: (word: string) => void;
   onCancel: () => void;
   onAddAllWords: () => void;
+  onRefresh: () => void;
 }
 
 const StagingArea: React.FC<StagingAreaProps> = ({
@@ -16,7 +17,8 @@ const StagingArea: React.FC<StagingAreaProps> = ({
   onRemoveWord,
   onWordSelect,
   onCancel,
-  onAddAllWords
+  onAddAllWords,
+  onRefresh
 }) => {
   if (stagedWords.length === 0) return null;
 
@@ -27,6 +29,16 @@ const StagingArea: React.FC<StagingAreaProps> = ({
           מילים זמניות ({stagedWords.length}) <span className="text-xs font-normal">- לחיצה כדי להוסיף לשיחה</span>
         </h3>
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-1 text-xs"
+            onClick={onRefresh}
+            title="רענן מילים מוצעות"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            <span>רענן</span>
+          </Button>
           <Button 
             variant="outline" 
             size="sm" 
