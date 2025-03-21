@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { X, Plus, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
@@ -10,6 +9,7 @@ interface StagingAreaProps {
   onCancel: () => void;
   onAddAllWords: () => void;
   onRefresh: () => void;
+  isLoading?: boolean;
 }
 
 const StagingArea: React.FC<StagingAreaProps> = ({
@@ -18,7 +18,8 @@ const StagingArea: React.FC<StagingAreaProps> = ({
   onWordSelect,
   onCancel,
   onAddAllWords,
-  onRefresh
+  onRefresh,
+  isLoading = false
 }) => {
   if (stagedWords.length === 0) return null;
 

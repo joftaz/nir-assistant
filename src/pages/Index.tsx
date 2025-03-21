@@ -180,12 +180,22 @@ const Index: React.FC = () => {
     
     if (!isStaging) {
       setIsStaging(true);
+      
+      // Generate words automatically when first entering staging area
+      generateStagingWords([...stagedWords, word]);
     }
     
-    setStagingTopicGroups([]);
+    // No regeneration of words after selection - only happens on refresh button
+  };
+
+  // Helper function to generate staging words
+  const generateStagingWords = (words: string[]) => {
+    if (words.length === 0) return;
     
     setIsLoading(true);
     setIsStreaming(true);
+    
+    setStagingTopicGroups([]);
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
     
@@ -193,16 +203,12 @@ const Index: React.FC = () => {
       `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
     ).join('\n');
     
-    const allStagedWords = [...stagedWords, word];
-    
     const stagedWordsPrompt = getStagedWordsPrompt();
-    const systemPrompt = `${stagedWordsPrompt}\n\n## שיחה:\n ${allStagedWords.join(', ')}\n\n${conversationHistory}\n\n### מילים רלוונטיות ליצירת מילים נוספות:\n ${allStagedWords.join(',')}`;
+    const systemPrompt = `${stagedWordsPrompt}\n\n## שיחה:\n ${words.join(', ')}\n\n${conversationHistory}\n\n### מילים רלוונטיות ליצירת מילים נוספות:\n ${words.join(',')}`;
     
     const prompt = `${replacePromptPlaceholders(systemPrompt)}\n\n${defaultSystemJsonInstruction}`;
     
-    console.log(prompt);
-    
-    console.log("Starting streaming request for staging...");
+    console.log("Starting streaming request for staging words...");
     const categoryReceived = new Set<string>();
     
     getModelResponse(
@@ -216,7 +222,7 @@ const Index: React.FC = () => {
           categoryReceived.add(partialResponse.category);
           
           const filteredWords = partialResponse.words.filter(
-            suggestedWord => !allStagedWords.includes(suggestedWord)
+            suggestedWord => !words.includes(suggestedWord)
           );
           
           setStagingTopicGroups(currentGroups => {
@@ -459,67 +465,7 @@ const Index: React.FC = () => {
 
   const handleRefreshStagingWords = () => {
     if (stagedWords.length === 0) return;
-    
-    setIsLoading(true);
-    setIsStreaming(true);
-    
-    setStagingTopicGroups([]);
-    
-    const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-    
-    const conversationHistory = conversation.map(item => 
-      `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
-    ).join('\n');
-    
-    const allStagedWords = [...stagedWords];
-    
-    const stagedWordsPrompt = getStagedWordsPrompt();
-    const systemPrompt = `${stagedWordsPrompt}\n\n## שיחה:\n ${allStagedWords.join(', ')}\n\n${conversationHistory}\n\n### מילים רלוונטיות ליצירת מילים נוספות:\n ${allStagedWords.join(',')}`;
-    
-    const prompt = `${replacePromptPlaceholders(systemPrompt)}\n\n${defaultSystemJsonInstruction}`;
-    
-    console.log("Starting streaming request for staging refresh...");
-    const categoryReceived = new Set<string>();
-    
-    getModelResponse(
-      prompt, 
-      !!apiKey, 
-      apiKey, 
-      (partialResponse) => {
-        console.log("Received partial response for staging:", partialResponse);
-        
-        if (!categoryReceived.has(partialResponse.category)) {
-          categoryReceived.add(partialResponse.category);
-          
-          const filteredWords = partialResponse.words.filter(
-            suggestedWord => !allStagedWords.includes(suggestedWord)
-          );
-          
-          setStagingTopicGroups(currentGroups => {
-            return [
-              ...currentGroups.filter(group => !group.isOld),
-              {
-                ...partialResponse, 
-                words: filteredWords,
-                isCollapsed: false, 
-                isOld: false, 
-                isStaging: true
-              }
-            ];
-          });
-        }
-      }
-    ).catch(error => {
-      console.error('Error fetching response:', error);
-      toast({
-        title: "שגיאה",
-        description: "אירעה שגיאה בקבלת תשובה. אנא נסה שוב.",
-        variant: "destructive",
-      });
-    }).finally(() => {
-      setIsLoading(false);
-      setIsStreaming(false);
-    });
+    generateStagingWords(stagedWords);
   };
 
   const handleSaveApiKey = (apiKey: string) => {
@@ -770,6 +716,7 @@ const Index: React.FC = () => {
           onCancel={handleStagingCancel}
           onAddAllWords={handleAddAllWords}
           onRefresh={handleRefreshStagingWords}
+          isLoading={isLoading}
         />
       )}
       
