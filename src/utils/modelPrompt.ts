@@ -17,6 +17,7 @@ export const SENTENCE_PROMPT_STORAGE_KEY = 'sentence_prompt';
 export const STAGED_WORDS_PROMPT_STORAGE_KEY = 'staged_words_prompt';
 export const CATEGORIES_COUNT_KEY = 'categories_count';
 export const WORDS_PER_CATEGORY_KEY = 'words_per_category';
+export const GENDER_STORAGE_KEY = 'gender';
 
 export const defaultSystemJsonInstruction = `
 ===== System Instructions =====
@@ -70,6 +71,10 @@ export const initializeSystemPrompt = (): void => {
   
   if (!localStorage.getItem(WORDS_PER_CATEGORY_KEY)) {
     localStorage.setItem(WORDS_PER_CATEGORY_KEY, '10');
+  }
+  
+  if (!localStorage.getItem(GENDER_STORAGE_KEY)) {
+    localStorage.setItem(GENDER_STORAGE_KEY, 'זכר');
   }
 };
 
@@ -223,8 +228,10 @@ export const getModelResponse = async (
 export const replacePromptPlaceholders = (prompt: string): string => {
   const categoriesCount = localStorage.getItem(CATEGORIES_COUNT_KEY) || '4';
   const wordsPerCategory = localStorage.getItem(WORDS_PER_CATEGORY_KEY) || '10';
+  const gender = localStorage.getItem(GENDER_STORAGE_KEY) || 'זכר';
   
   return prompt
     .replace(/{categoriesCount}/g, categoriesCount)
-    .replace(/{wordsPerCategory}/g, wordsPerCategory);
+    .replace(/{wordsPerCategory}/g, wordsPerCategory)
+    .replace(/{gender}/g, gender);
 };

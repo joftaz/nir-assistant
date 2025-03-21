@@ -615,7 +615,7 @@ export const generateSentences = async (
     console.log("Generating sentences from words:", wordsString);
     
     // Use the getSentencePrompt function
-    const sentenceGenerationPrompt = getSentencePrompt();
+    const sentenceGenerationPrompt = replacePromptPlaceholders(getSentencePrompt());
 
     // If streaming is requested, use streaming implementation
     if (onPartialSentence) {

@@ -26,10 +26,12 @@ import {
   SENTENCE_PROMPT_STORAGE_KEY,
   STAGED_WORDS_PROMPT_STORAGE_KEY,
   CATEGORIES_COUNT_KEY,
-  WORDS_PER_CATEGORY_KEY
+  WORDS_PER_CATEGORY_KEY,
+  GENDER_STORAGE_KEY
 } from '@/utils/modelPrompt';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface SettingsProps {
   onSystemPromptChange: (newPrompt: string) => void;
@@ -41,6 +43,7 @@ interface SettingsFormValues {
   stagedWordsPrompt: string;
   categoriesCount: number;
   wordsPerCategory: number;
+  gender: string;
 }
 
 const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
@@ -54,7 +57,8 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
       sentencePrompt: '',
       stagedWordsPrompt: '',
       categoriesCount: 4,
-      wordsPerCategory: 10
+      wordsPerCategory: 10,
+      gender: 'זכר'
     }
   });
 
@@ -65,13 +69,15 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     const savedStagedWordsPrompt = localStorage.getItem(STAGED_WORDS_PROMPT_STORAGE_KEY);
     const savedCategoriesCount = localStorage.getItem(CATEGORIES_COUNT_KEY);
     const savedWordsPerCategory = localStorage.getItem(WORDS_PER_CATEGORY_KEY);
+    const savedGender = localStorage.getItem(GENDER_STORAGE_KEY);
     
     const values = {
       systemPrompt: savedPrompt || defaultSystemPrompt,
       sentencePrompt: savedSentencePrompt || defaultSentencePrompt,
       stagedWordsPrompt: savedStagedWordsPrompt || defaultStagedWordsPrompt,
       categoriesCount: savedCategoriesCount ? parseInt(savedCategoriesCount) : 4,
-      wordsPerCategory: savedWordsPerCategory ? parseInt(savedWordsPerCategory) : 10
+      wordsPerCategory: savedWordsPerCategory ? parseInt(savedWordsPerCategory) : 10,
+      gender: savedGender || 'זכר'
     };
     
     form.reset(values);
@@ -87,11 +93,13 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     localStorage.setItem(STAGED_WORDS_PROMPT_STORAGE_KEY, currentValues.stagedWordsPrompt);
     localStorage.setItem(CATEGORIES_COUNT_KEY, currentValues.categoriesCount.toString());
     localStorage.setItem(WORDS_PER_CATEGORY_KEY, currentValues.wordsPerCategory.toString());
+    localStorage.setItem(GENDER_STORAGE_KEY, currentValues.gender);
     
     // Log what was saved to localStorage
     console.log('Settings saved:', {
       categoriesCount: currentValues.categoriesCount,
-      wordsPerCategory: currentValues.wordsPerCategory
+      wordsPerCategory: currentValues.wordsPerCategory,
+      gender: currentValues.gender
     });
     
     // Only replace placeholders when sending to parent component
@@ -111,7 +119,8 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
       sentencePrompt: defaultSentencePrompt,
       stagedWordsPrompt: defaultStagedWordsPrompt,
       categoriesCount: 4,
-      wordsPerCategory: 10
+      wordsPerCategory: 10,
+      gender: 'זכר'
     };
     
     form.reset(defaultValues);
@@ -122,6 +131,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     localStorage.setItem(STAGED_WORDS_PROMPT_STORAGE_KEY, defaultValues.stagedWordsPrompt);
     localStorage.setItem(CATEGORIES_COUNT_KEY, defaultValues.categoriesCount.toString());
     localStorage.setItem(WORDS_PER_CATEGORY_KEY, defaultValues.wordsPerCategory.toString());
+    localStorage.setItem(GENDER_STORAGE_KEY, defaultValues.gender);
     
     // Update parent component with default values
     const updatedPrompt = replacePromptPlaceholders(defaultValues.systemPrompt);
@@ -209,6 +219,33 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
                           <span className="text-sm font-medium mr-4 w-8 text-center">{field.value}</span>
                         </div>
                       </div>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="gender"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel>מגדר</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex space-x-4 rtl flex-row-reverse"
+                          dir="rtl"
+                        >
+                          <div className="flex items-center space-x-2 space-x-reverse">
+                            <RadioGroupItem value="זכר" id="male" />
+                            <Label htmlFor="male">זכר</Label>
+                          </div>
+                          <div className="flex items-center space-x-2 space-x-reverse">
+                            <RadioGroupItem value="נקבה" id="female" />
+                            <Label htmlFor="female">נקבה</Label>
+                          </div>
+                        </RadioGroup>
+                      </FormControl>
                     </FormItem>
                   )}
                 />
