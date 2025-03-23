@@ -1,5 +1,6 @@
+
 import React, { useRef, useEffect } from 'react';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
@@ -23,6 +24,7 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
   if (sentences.length === 0 && !isLoading) return null;
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const [copiedIndex, setCopiedIndex] = React.useState<number | null>(null);
   
   // Auto-scroll to the bottom when new sentences appear
   useEffect(() => {
@@ -30,6 +32,17 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
   }, [sentences]);
+
+  const handleCopy = (sentence: string, index: number) => {
+    navigator.clipboard.writeText(sentence)
+      .then(() => {
+        setCopiedIndex(index);
+        setTimeout(() => setCopiedIndex(null), 2000);
+      })
+      .catch(err => {
+        console.error('Could not copy text: ', err);
+      });
+  };
 
   const showingLoadingState = isLoading && sentences.length === 0;
   const showingStreamingState = isStreaming && sentences.length > 0;
@@ -72,17 +85,33 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
           <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto" dir="rtl" ref={containerRef}>
             <AnimatePresence>
               {sentences.map((sentence, index) => (
-                <motion.button
+                <motion.div
                   key={`sentence-${index}-${sentence.substring(0, 10)}`}
-                  onClick={() => onSelectSentence(sentence)}
-                  className="p-3 text-right text-sm bg-muted/30 hover:bg-primary/10 rounded-md transition-colors border border-border/50 hover:border-primary/30"
+                  className="flex items-start gap-2 relative group"
                   initial={{ opacity: 0, y: 10, height: 0, padding: 0, margin: 0, overflow: 'hidden' }}
-                  animate={{ opacity: 1, y: 0, height: 'auto', padding: '0.75rem', marginBottom: '0.5rem', overflow: 'visible' }}
+                  animate={{ opacity: 1, y: 0, height: 'auto', padding: '0.75rem 0', marginBottom: '0.5rem', overflow: 'visible' }}
                   exit={{ opacity: 0, height: 0, padding: 0, margin: 0, overflow: 'hidden' }}
                   transition={{ duration: 0.3 }}
                 >
-                  {sentence}
-                </motion.button>
+                  <button
+                    onClick={() => handleCopy(sentence, index)}
+                    className="flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
+                    aria-label="העתק משפט"
+                    title="העתק משפט"
+                  >
+                    {copiedIndex === index ? (
+                      <Check size={16} className="text-green-500" />
+                    ) : (
+                      <Copy size={16} />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => onSelectSentence(sentence)}
+                    className="flex-grow p-3 text-right text-sm bg-muted/30 hover:bg-primary/10 rounded-md transition-colors border border-border/50 hover:border-primary/30 w-full"
+                  >
+                    {sentence}
+                  </button>
+                </motion.div>
               ))}
             </AnimatePresence>
             
