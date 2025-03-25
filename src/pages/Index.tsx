@@ -362,14 +362,16 @@ const Index: React.FC = () => {
   const handleAddAllWords = () => {
     if (stagedWords.length === 0) return;
     
-    const newMessage: ConversationItem = {
-      id: uuidv4(),
-      text: stagedWords.join(' '),
-      isUser: true,
-      timestamp: new Date()
-    };
-    
-    setConversation(prev => [...prev, newMessage]);
+    // Add each word as a separate message
+    stagedWords.forEach(word => {
+      const newMessage: ConversationItem = {
+        id: uuidv4(),
+        text: word,
+        isUser: true,
+        timestamp: new Date()
+      };
+      setConversation(prev => [...prev, newMessage]);
+    });
     
     setIsStaging(false);
     clearStagingArea();
@@ -393,7 +395,12 @@ const Index: React.FC = () => {
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
     
-    const updatedConversation = [...conversation, newMessage];
+    const updatedConversation = [...conversation, ...stagedWords.map(word => ({
+      id: uuidv4(),
+      text: word,
+      isUser: true,
+      timestamp: new Date()
+    }))];
     const conversationHistory = updatedConversation.map(item => 
       `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
     ).join('\n');
