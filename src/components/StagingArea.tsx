@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { X, Plus, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
@@ -65,7 +66,7 @@ const StagingArea: React.FC<StagingAreaProps> = ({
         {stagedWords.map((word, index) => (
           <div
             key={index}
-            className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 text-sm p-1.5 rounded-lg shadow-sm inline-block whitespace-normal relative group cursor-pointer"
+            className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 text-sm p-1.5 rounded-lg shadow-sm inline-block whitespace-normal relative group cursor-pointer flex items-center"
             onClick={() => onWordSelect(word)}
           >
             <span className="inline-block">{word}</span>
@@ -74,10 +75,10 @@ const StagingArea: React.FC<StagingAreaProps> = ({
                 e.stopPropagation();
                 onRemoveWord(word);
               }}
-              className="ml-0.5 hover:bg-green-200 dark:hover:bg-green-800/50 rounded-full p-0.5 inline-flex"
+              className="ml-0.5 bg-green-200 dark:bg-green-800/50 rounded-full p-0.5 inline-flex"
               aria-label="Remove word"
             >
-              <X size={12} />
+              <X size={12} className="text-green-800 dark:text-green-200" />
             </button>
           </div>
         ))}
