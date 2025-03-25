@@ -101,7 +101,7 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
                       e.stopPropagation();
                       handleRemove(item.id);
                     }}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 hover:bg-primary-foreground/20 rounded-full p-0.5 inline-flex"
+                    className="ml-0.5 hover:bg-primary-foreground/20 rounded-full p-0.5 inline-flex"
                     aria-label="Remove message"
                   >
                     <X size={12} />
