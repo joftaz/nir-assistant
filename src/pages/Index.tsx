@@ -11,7 +11,7 @@ import ApiKeyInput from '@/components/ApiKeyInput';
 import Settings from '@/components/Settings';
 import { getModelResponse, initializeSystemPrompt, getStagedWordsPrompt, defaultSystemJsonInstruction, replacePromptPlaceholders } from '@/utils/modelPrompt';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, RefreshCw, History as HistoryIcon, MessageSquare, Plus } from 'lucide-react';
+import { Loader2, RefreshCw, History as HistoryIcon, MessageSquare, Plus, Speech } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { saveHistory, getHistoryById } from '@/utils/conversationManager';
 import { TopicCategory } from '@/types/models';
@@ -743,21 +743,6 @@ const Index: React.FC = () => {
       
       {!isStaging && hasUserMessages && !showingSentences && (
         <div className="w-full max-w-3xl mx-auto flex justify-center items-center gap-2 mt-2 mb-2">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm text-muted-foreground">מצב שיחה</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setIsConversationMode(!isConversationMode)}
-            >
-              {isConversationMode ? (
-                <MessageSquare className="h-4 w-4 text-primary" />
-              ) : (
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              )}
-            </Button>
-          </div>
           <Button
             variant="outline"
             onClick={handleGenerateSentencesFromConversation}
@@ -771,6 +756,22 @@ const Index: React.FC = () => {
             )}
             <span>יצירת משפטים מהשיחה</span>
           </Button>
+            <div className="flex items-center gap-1.5">
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setIsConversationMode(!isConversationMode)}
+            >
+              {isConversationMode ? (
+                <Speech className="h-5 w-5 text-primary" />
+              ) : (
+                <Speech className="h-5 w-5" />
+              )}
+            </Button>
+            <span className="text-sm text-muted-foreground">מצב שיחה</span>
+          </div>
         </div>
       )}
       
