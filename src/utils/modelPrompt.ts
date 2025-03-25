@@ -2,6 +2,7 @@ import { generateResponse, CategoryResponse, initializeOpenAI, getOpenAIStreamin
 import systemPromptMd from './systemPrompt.rtl.md?raw';
 import sentencePromptMd from './sentencePrompt.rtl.md?raw';
 import stagedWordsPromptMd from './stagedWordsPrompt.rtl.md?raw';
+import sentence2ndPersonPromptMd from './sentence2ndPersonPrompt.rtl.md?raw';
 
 // Import or define the TopicCategory type to fix the linter errors
 import type { TopicCategory } from '../types/models';
@@ -10,6 +11,7 @@ import type { TopicCategory } from '../types/models';
 export const defaultSystemPrompt = systemPromptMd;
 export const defaultSentencePrompt = sentencePromptMd;
 export const defaultStagedWordsPrompt = stagedWordsPromptMd;
+export const default2ndPersonSentencePrompt = sentence2ndPersonPromptMd;
 
 // Define storage keys
 export const SYSTEM_PROMPT_STORAGE_KEY = 'system_prompt';
@@ -60,6 +62,10 @@ export const initializeSystemPrompt = (): void => {
   
   if (!localStorage.getItem(SENTENCE_PROMPT_STORAGE_KEY)) {
     localStorage.setItem(SENTENCE_PROMPT_STORAGE_KEY, defaultSentencePrompt);
+  }
+  
+  if (!localStorage.getItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY)) {
+    localStorage.setItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY, default2ndPersonSentencePrompt);
   }
   
   if (!localStorage.getItem(STAGED_WORDS_PROMPT_STORAGE_KEY)) {
@@ -237,30 +243,3 @@ export const replacePromptPlaceholders = (prompt: string): string => {
     .replace(/{wordsPerCategory}/g, wordsPerCategory)
     .replace(/{gender}/g, gender);
 };
-
-export const default2ndPersonSentencePrompt = `## תפקידך: יצירת משפטים קוהרנטיים ומשמעותיים בשיחה
-
-אתה עוזר שיוצר משפטים קוהרנטיים ומשמעותיים מרשימת מילים, בדגש על שיחה דו-כיוונית.
-
-## הנה ההוראות שלך:
-
-ליצור 5 משפטים שונים שמתאימים לשיחה דו-כיוונית, תוך שימוש בדיוק בכל המילים הנתונות (עם התאמות הטיה לפי הצורך), בלי להוסיף מילים אחרות.
-
-כל משפט צריך להישמע כמו שיחה יומיומית אמיתית – בגוף שני, ישירה, פשוטה, לא מליצית ולא סיסמתית.
-
-כל המשפטים צריכים להיות חלק משיחה טבעית – שאלות, תשובות, והתייחסויות למה שנאמר.
-
-שלב בין משפטים חיוביים, שליליים ושאלתיים.
-
-השפה צריכה להיות אמינה, מדוברת, בגובה העיניים, לא עממית מדי ולא גבוהה מדי.
-
-מותר להטות את המילים כדי להתאים לתוכן ולשמור על משפט קוהרנטי.
-
-מותר לשנות את סדר המילים ולהוסיף מילות קישור הכרחיות בלבד (כמו "אבל", "כי", "גם כש").
-
-אל תשתמש בביטויים מוגזמים או דרמטיים, אלא שמור על טון שמתאים לדיבור יומיומי אמיתי.
-המגדר לניסוח משפטים (אתה/את): {gender}
-
-## פורמט התשובה
-
-חזור אך ורק רשימה של 5 משפטים שונים, כל אחד בשורה נפרדת.`;
