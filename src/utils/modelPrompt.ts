@@ -14,6 +14,7 @@ export const defaultStagedWordsPrompt = stagedWordsPromptMd;
 // Define storage keys
 export const SYSTEM_PROMPT_STORAGE_KEY = 'system_prompt';
 export const SENTENCE_PROMPT_STORAGE_KEY = 'sentence_prompt';
+export const SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY = 'sentence_2nd_person_prompt';
 export const STAGED_WORDS_PROMPT_STORAGE_KEY = 'staged_words_prompt';
 export const CATEGORIES_COUNT_KEY = 'categories_count';
 export const WORDS_PER_CATEGORY_KEY = 'words_per_category';
@@ -85,8 +86,9 @@ export const getSystemPrompt = (): string => {
 };
 
 // Get sentence prompt from localStorage or use default
-export const getSentencePrompt = (): string => {
-  return localStorage.getItem(SENTENCE_PROMPT_STORAGE_KEY) || defaultSentencePrompt;
+export const getSentencePrompt = (isConversationMode: boolean = false): string => {
+  const storageKey = isConversationMode ? SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY : SENTENCE_PROMPT_STORAGE_KEY;
+  return localStorage.getItem(storageKey) || (isConversationMode ? default2ndPersonSentencePrompt : defaultSentencePrompt);
 };
 
 // Get staged words prompt from localStorage or use default
@@ -235,3 +237,30 @@ export const replacePromptPlaceholders = (prompt: string): string => {
     .replace(/{wordsPerCategory}/g, wordsPerCategory)
     .replace(/{gender}/g, gender);
 };
+
+export const default2ndPersonSentencePrompt = `## תפקידך: יצירת משפטים קוהרנטיים ומשמעותיים בשיחה
+
+אתה עוזר שיוצר משפטים קוהרנטיים ומשמעותיים מרשימת מילים, בדגש על שיחה דו-כיוונית.
+
+## הנה ההוראות שלך:
+
+ליצור 5 משפטים שונים שמתאימים לשיחה דו-כיוונית, תוך שימוש בדיוק בכל המילים הנתונות (עם התאמות הטיה לפי הצורך), בלי להוסיף מילים אחרות.
+
+כל משפט צריך להישמע כמו שיחה יומיומית אמיתית – בגוף שני, ישירה, פשוטה, לא מליצית ולא סיסמתית.
+
+כל המשפטים צריכים להיות חלק משיחה טבעית – שאלות, תשובות, והתייחסויות למה שנאמר.
+
+שלב בין משפטים חיוביים, שליליים ושאלתיים.
+
+השפה צריכה להיות אמינה, מדוברת, בגובה העיניים, לא עממית מדי ולא גבוהה מדי.
+
+מותר להטות את המילים כדי להתאים לתוכן ולשמור על משפט קוהרנטי.
+
+מותר לשנות את סדר המילים ולהוסיף מילות קישור הכרחיות בלבד (כמו "אבל", "כי", "גם כש").
+
+אל תשתמש בביטויים מוגזמים או דרמטיים, אלא שמור על טון שמתאים לדיבור יומיומי אמיתי.
+המגדר לניסוח משפטים (אתה/את): {gender}
+
+## פורמט התשובה
+
+חזור אך ורק רשימה של 5 משפטים שונים, כל אחד בשורה נפרדת.`;

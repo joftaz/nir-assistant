@@ -606,7 +606,8 @@ export const transcribeAudio = async (audioBlob: Blob, apiKey: string): Promise<
 export const generateSentences = async (
   wordsString: string,
   apiKey: string,
-  onPartialSentence?: (sentence: string) => void
+  onPartialSentence?: (sentence: string) => void,
+  isConversationMode: boolean = false
 ): Promise<string[]> => {
   try {
     // Initialize OpenAI with the provided API key
@@ -614,8 +615,8 @@ export const generateSentences = async (
     
     console.log("Generating sentences from words:", wordsString);
     
-    // Use the getSentencePrompt function
-    const sentenceGenerationPrompt = replacePromptPlaceholders(getSentencePrompt());
+    // Use the getSentencePrompt function with conversation mode
+    const sentenceGenerationPrompt = replacePromptPlaceholders(getSentencePrompt(isConversationMode));
 
     // If streaming is requested, use streaming implementation
     if (onPartialSentence) {
