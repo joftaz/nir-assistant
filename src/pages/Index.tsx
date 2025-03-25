@@ -50,6 +50,7 @@ const Index: React.FC = () => {
   
   const [showingSentences, setShowingSentences] = useState(false);
   const [autoGenerateStagingWords, setAutoGenerateStagingWords] = useState(false);
+  const [hasRefreshedStaging, setHasRefreshedStaging] = useState(false);
 
   useEffect(() => {
     const envApiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
@@ -180,12 +181,8 @@ const Index: React.FC = () => {
     
     if (!isStaging) {
       setIsStaging(true);
-      
-      // Generate words automatically when first entering staging area
-      generateStagingWords([...stagedWords, word]);
+      setHasRefreshedStaging(false);
     }
-    
-    // No regeneration of words after selection - only happens on refresh button
   };
 
   // Helper function to generate staging words
@@ -463,6 +460,7 @@ const Index: React.FC = () => {
     setIsStaging(false);
     clearStagingArea();
     setStagingTopicGroups([]);
+    setHasRefreshedStaging(false);
     
     toast({
       title: "בוטלה בחירה",
@@ -472,6 +470,10 @@ const Index: React.FC = () => {
 
   const handleRefreshStagingWords = () => {
     if (stagedWords.length === 0) return;
+    
+    // Clear existing staging groups before generating new ones
+    setStagingTopicGroups([]);
+    setHasRefreshedStaging(true);
     generateStagingWords(stagedWords);
   };
 
@@ -659,7 +661,7 @@ const Index: React.FC = () => {
     setShowingSentences(false);
   };
 
-  const activeTopicGroups = isStaging ? stagingTopicGroups : topicGroups;
+  const activeTopicGroups = isStaging && hasRefreshedStaging ? stagingTopicGroups : topicGroups;
   
   const hasUserMessages = conversation.some(item => item.isUser);
 
@@ -797,6 +799,7 @@ const Index: React.FC = () => {
                     isCollapsed={group.isCollapsed}
                     isOld={group.isOld}
                     isStaging={isStaging}
+                    hasRefreshedStaging={hasRefreshedStaging}
                   />
                 ))}
               </div>

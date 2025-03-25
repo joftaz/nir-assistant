@@ -9,6 +9,7 @@ interface TopicGroupProps {
   isCollapsed?: boolean;
   isOld?: boolean;
   isStaging?: boolean;
+  hasRefreshedStaging?: boolean;
 }
 
 const TopicGroup: React.FC<TopicGroupProps> = ({ 
@@ -17,7 +18,8 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
   onWordSelect, 
   isCollapsed = false, 
   isOld = false,
-  isStaging = false
+  isStaging = false,
+  hasRefreshedStaging = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(!isCollapsed);
   
@@ -68,7 +70,7 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
               קודם
             </span>
           )}
-          {isStaging && (
+          {isStaging && hasRefreshedStaging && (
             <span className="text-xs px-1 py-0.5 bg-primary/20 rounded text-primary">
               זמני
             </span>
