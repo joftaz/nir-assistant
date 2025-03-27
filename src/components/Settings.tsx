@@ -29,11 +29,20 @@ import {
   WORDS_PER_CATEGORY_KEY,
   GENDER_STORAGE_KEY,
   SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY,
-  default2ndPersonSentencePrompt
+  default2ndPersonSentencePrompt,
+  SENTENCE_CHILDREN_PROMPT_STORAGE_KEY,
+  defaultChildrenSentencePrompt
 } from '@/utils/modelPrompt';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface SettingsProps {
   onSystemPromptChange: (newPrompt: string) => void;
@@ -43,6 +52,7 @@ interface SettingsFormValues {
   systemPrompt: string;
   sentencePrompt: string;
   sentence2ndPersonPrompt: string;
+  sentenceChildrenPrompt: string;
   stagedWordsPrompt: string;
   categoriesCount: number;
   wordsPerCategory: number;
@@ -52,6 +62,7 @@ interface SettingsFormValues {
 const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
+  const [selectedPrompt, setSelectedPrompt] = useState('system');
   const { toast } = useToast();
   
   const form = useForm<SettingsFormValues>({
@@ -59,6 +70,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
       systemPrompt: '',
       sentencePrompt: '',
       sentence2ndPersonPrompt: '',
+      sentenceChildrenPrompt: '',
       stagedWordsPrompt: '',
       categoriesCount: 4,
       wordsPerCategory: 10,
@@ -71,6 +83,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     const savedPrompt = localStorage.getItem(SYSTEM_PROMPT_STORAGE_KEY);
     const savedSentencePrompt = localStorage.getItem(SENTENCE_PROMPT_STORAGE_KEY);
     const savedSentence2ndPersonPrompt = localStorage.getItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY);
+    const savedSentenceChildrenPrompt = localStorage.getItem(SENTENCE_CHILDREN_PROMPT_STORAGE_KEY);
     const savedStagedWordsPrompt = localStorage.getItem(STAGED_WORDS_PROMPT_STORAGE_KEY);
     const savedCategoriesCount = localStorage.getItem(CATEGORIES_COUNT_KEY);
     const savedWordsPerCategory = localStorage.getItem(WORDS_PER_CATEGORY_KEY);
@@ -80,6 +93,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
       systemPrompt: savedPrompt || defaultSystemPrompt,
       sentencePrompt: savedSentencePrompt || defaultSentencePrompt,
       sentence2ndPersonPrompt: savedSentence2ndPersonPrompt || default2ndPersonSentencePrompt,
+      sentenceChildrenPrompt: savedSentenceChildrenPrompt || defaultChildrenSentencePrompt,
       stagedWordsPrompt: savedStagedWordsPrompt || defaultStagedWordsPrompt,
       categoriesCount: savedCategoriesCount ? parseInt(savedCategoriesCount) : 4,
       wordsPerCategory: savedWordsPerCategory ? parseInt(savedWordsPerCategory) : 10,
@@ -97,6 +111,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, currentValues.systemPrompt);
     localStorage.setItem(SENTENCE_PROMPT_STORAGE_KEY, currentValues.sentencePrompt);
     localStorage.setItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY, currentValues.sentence2ndPersonPrompt);
+    localStorage.setItem(SENTENCE_CHILDREN_PROMPT_STORAGE_KEY, currentValues.sentenceChildrenPrompt);
     localStorage.setItem(STAGED_WORDS_PROMPT_STORAGE_KEY, currentValues.stagedWordsPrompt);
     localStorage.setItem(CATEGORIES_COUNT_KEY, currentValues.categoriesCount.toString());
     localStorage.setItem(WORDS_PER_CATEGORY_KEY, currentValues.wordsPerCategory.toString());
@@ -125,6 +140,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
       systemPrompt: defaultSystemPrompt,
       sentencePrompt: defaultSentencePrompt,
       sentence2ndPersonPrompt: default2ndPersonSentencePrompt,
+      sentenceChildrenPrompt: defaultChildrenSentencePrompt,
       stagedWordsPrompt: defaultStagedWordsPrompt,
       categoriesCount: 4,
       wordsPerCategory: 10,
@@ -137,6 +153,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, defaultValues.systemPrompt);
     localStorage.setItem(SENTENCE_PROMPT_STORAGE_KEY, defaultValues.sentencePrompt);
     localStorage.setItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY, defaultValues.sentence2ndPersonPrompt);
+    localStorage.setItem(SENTENCE_CHILDREN_PROMPT_STORAGE_KEY, defaultValues.sentenceChildrenPrompt);
     localStorage.setItem(STAGED_WORDS_PROMPT_STORAGE_KEY, defaultValues.stagedWordsPrompt);
     localStorage.setItem(CATEGORIES_COUNT_KEY, defaultValues.categoriesCount.toString());
     localStorage.setItem(WORDS_PER_CATEGORY_KEY, defaultValues.wordsPerCategory.toString());
@@ -261,94 +278,125 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
               </TabsContent>
               
               <TabsContent value="prompts" className="space-y-4">
-                <Tabs defaultValue="system" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="system">מערכת</TabsTrigger>
-                    <TabsTrigger value="sentence">משפטים</TabsTrigger>
-                    <TabsTrigger value="sentence2nd">משפטים בגוף שני</TabsTrigger>
-                    <TabsTrigger value="staged">מילים זמניות</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="system">
-                    <FormField
-                      control={form.control}
-                      name="systemPrompt"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>פרומפט מערכת (עבור קטגוריות מילים)</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              {...field}
-                              rows={12}
-                              className="font-mono text-xs rtl text-right"
-                              dir="rtl"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="sentence">
-                    <FormField
-                      control={form.control}
-                      name="sentencePrompt"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>פרומפט יצירת משפטים</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              {...field}
-                              rows={12}
-                              className="font-mono text-xs rtl text-right"
-                              dir="rtl"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="sentence2nd">
-                    <FormField
-                      control={form.control}
-                      name="sentence2ndPersonPrompt"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>פרומפט יצירת משפטים בגוף שני</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              {...field}
-                              rows={12}
-                              className="font-mono text-xs rtl text-right"
-                              dir="rtl"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="staged">
-                    <FormField
-                      control={form.control}
-                      name="stagedWordsPrompt"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>פרומפט מילים זמניות</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              {...field}
-                              rows={12}
-                              className="font-mono text-xs rtl text-right"
-                              dir="rtl"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </TabsContent>
-                </Tabs>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Label>בחר פרומפט:</Label>
+                    <Select value={selectedPrompt} onValueChange={setSelectedPrompt}>
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="בחר פרומפט" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="system">פרומפט מערכת</SelectItem>
+                        <SelectItem value="sentence">פרומפט משפטי הצהרה</SelectItem>
+                        <SelectItem value="sentence2nd">פרומפט משפטים בשיחה</SelectItem>
+                        <SelectItem value="sentenceChildren">פרומפט משפטים לילדים</SelectItem>
+                        <SelectItem value="staged">פרומפט מילים זמניות</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="mt-4">
+                    {selectedPrompt === 'system' && (
+                      <FormField
+                        control={form.control}
+                        name="systemPrompt"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>פרומפט מערכת (עבור קטגוריות מילים)</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                rows={12}
+                                className="font-mono text-xs rtl text-right"
+                                dir="rtl"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {selectedPrompt === 'sentence' && (
+                      <FormField
+                        control={form.control}
+                        name="sentencePrompt"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>פרומפט יצירת משפטים</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                rows={12}
+                                className="font-mono text-xs rtl text-right"
+                                dir="rtl"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {selectedPrompt === 'sentence2nd' && (
+                      <FormField
+                        control={form.control}
+                        name="sentence2ndPersonPrompt"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>פרומפט יצירת משפטים בגוף שני</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                rows={12}
+                                className="font-mono text-xs rtl text-right"
+                                dir="rtl"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {selectedPrompt === 'sentenceChildren' && (
+                      <FormField
+                        control={form.control}
+                        name="sentenceChildrenPrompt"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>פרומפט יצירת משפטים לילדים</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                rows={12}
+                                className="font-mono text-xs rtl text-right"
+                                dir="rtl"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {selectedPrompt === 'staged' && (
+                      <FormField
+                        control={form.control}
+                        name="stagedWordsPrompt"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>פרומפט מילים זמניות</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                rows={12}
+                                className="font-mono text-xs rtl text-right"
+                                dir="rtl"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                  </div>
+                </div>
               </TabsContent>
             </Tabs>
             
