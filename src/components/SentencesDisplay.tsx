@@ -1,11 +1,11 @@
-
 import React, { useRef, useEffect } from 'react';
-import { X, Plus, Copy, Check } from 'lucide-react';
+import { X, Plus, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
 interface SentencesDisplayProps {
   sentences: string[];
+  oldSentences?: string[];
   isLoading: boolean;
   isStreaming?: boolean;
   onSelectSentence: (sentence: string) => void;
@@ -15,16 +15,18 @@ interface SentencesDisplayProps {
 
 const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
   sentences,
+  oldSentences = [],
   isLoading,
   isStreaming = false,
   onSelectSentence,
   onCancel,
   onGenerateMore
 }) => {
-  if (sentences.length === 0 && !isLoading) return null;
+  if (sentences.length === 0 && oldSentences.length === 0 && !isLoading) return null;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [copiedIndex, setCopiedIndex] = React.useState<number | null>(null);
+  const [oldSentencesExpanded, setOldSentencesExpanded] = React.useState(false);
   
   // Auto-scroll to the bottom when new sentences appear
   useEffect(() => {
@@ -44,7 +46,11 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
       });
   };
 
-  const showingLoadingState = isLoading && sentences.length === 0;
+  const toggleOldSentences = () => {
+    setOldSentencesExpanded(!oldSentencesExpanded);
+  };
+
+  const showingLoadingState = isLoading && sentences.length === 0 && oldSentences.length === 0;
   const showingStreamingState = isStreaming && sentences.length > 0;
 
   return (
@@ -59,7 +65,7 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
           משפטים מוצעים 
           {showingLoadingState ? ' (טוען...)' : 
            showingStreamingState ? ' (ממשיך לייצר...)' : 
-           `(${sentences.length})`}
+           `(${sentences.length}${oldSentences.length > 0 ? ` + ${oldSentences.length} קודמים` : ''})`}
         </h3>
         <button 
           onClick={onCancel}
@@ -80,16 +86,16 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col">
           {/* Sentences scrollable container */}
-          <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto" dir="rtl" ref={containerRef}>
+          <div className="flex flex-col gap-0 max-h-[300px] overflow-y-auto" dir="rtl" ref={containerRef}>
             <AnimatePresence>
               {sentences.map((sentence, index) => (
                 <motion.div
                   key={`sentence-${index}-${sentence.substring(0, 10)}`}
                   className="flex items-start gap-2 relative group"
                   initial={{ opacity: 0, y: 10, height: 0, padding: 0, margin: 0, overflow: 'hidden' }}
-                  animate={{ opacity: 1, y: 0, height: 'auto', padding: '0.75rem 0', marginBottom: '0.5rem', overflow: 'visible' }}
+                  animate={{ opacity: 1, y: 0, height: 'auto', padding: '0.25rem 0', marginBottom: '0', overflow: 'visible' }}
                   exit={{ opacity: 0, height: 0, padding: 0, margin: 0, overflow: 'hidden' }}
                   transition={{ duration: 0.3 }}
                 >
@@ -107,7 +113,7 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
                   </button>
                   <button
                     onClick={() => onSelectSentence(sentence)}
-                    className="flex-grow p-3 text-right text-sm bg-muted/30 hover:bg-primary/10 rounded-md transition-colors border border-border/50 hover:border-primary/30 w-full"
+                    className="flex-grow p-2 text-right text-sm bg-muted/30 hover:bg-primary/10 rounded-md transition-colors border border-border/50 hover:border-primary/30 w-full"
                   >
                     {sentence}
                   </button>
@@ -117,11 +123,66 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
             
             {isStreaming && (
               <motion.div 
-                className="h-10 animate-pulse bg-muted/30 rounded-md w-full"
+                className="h-10 animate-pulse bg-muted/30 rounded-md w-full mt-2"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
               />
+            )}
+
+            {/* Old sentences section with collapsible behavior */}
+            {oldSentences.length > 0 && (
+              <div className="mt-2 mb-1">
+                <button
+                  onClick={toggleOldSentences}
+                  className="flex justify-between items-center w-full p-2 bg-muted/40 hover:bg-muted/60 rounded-md transition-colors text-sm font-medium"
+                >
+                  <span className="flex items-center gap-1">
+                    {oldSentencesExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    משפטים קודמים ({oldSentences.length})
+                  </span>
+                </button>
+                <AnimatePresence>
+                  {oldSentencesExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="mt-1 flex flex-col gap-0"
+                    >
+                      {oldSentences.map((sentence, index) => (
+                        <motion.div
+                          key={`old-sentence-${index}-${sentence.substring(0, 10)}`}
+                          className="flex items-start gap-2 relative group"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.2, delay: index * 0.05 }}
+                        >
+                          <button
+                            onClick={() => handleCopy(sentence, index + 1000)} // Using offset to differentiate from new sentences
+                            className="flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
+                            aria-label="העתק משפט"
+                            title="העתק משפט"
+                          >
+                            {copiedIndex === index + 1000 ? (
+                              <Check size={16} className="text-green-500" />
+                            ) : (
+                              <Copy size={16} />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => onSelectSentence(sentence)}
+                            className="flex-grow p-2 text-right text-sm bg-muted/20 hover:bg-primary/10 rounded-md transition-colors border border-border/30 hover:border-primary/30 w-full text-muted-foreground"
+                          >
+                            {sentence}
+                          </button>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             )}
           </div>
           

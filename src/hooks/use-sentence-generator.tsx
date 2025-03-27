@@ -5,6 +5,7 @@ import { ConversationItem } from '@/components/ConversationHistory';
 
 export function useSentenceGenerator() {
   const [sentences, setSentences] = useState<string[]>([]);
+  const [oldSentences, setOldSentences] = useState<string[]>([]);
   const [isGeneratingSentences, setIsGeneratingSentences] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const { toast } = useToast();
@@ -34,6 +35,9 @@ export function useSentenceGenerator() {
       });
       return;
     }
+    
+    // Move current sentences to old sentences
+    setOldSentences(prev => [...prev, ...sentences]);
     
     setIsGeneratingSentences(true);
     setIsStreaming(true);
@@ -83,6 +87,9 @@ export function useSentenceGenerator() {
       return;
     }
     
+    // Move current sentences to old sentences
+    setOldSentences(prev => [...prev, ...sentences]);
+    
     setIsGeneratingSentences(true);
     setIsStreaming(true);
     setSentences([]);
@@ -127,12 +134,18 @@ export function useSentenceGenerator() {
     }
   };
   
-  const clearSentences = () => {
+  const clearSentences = (keepHistory = false) => {
+    if (keepHistory) {
+      setOldSentences(prev => [...prev, ...sentences]);
+    } else {
+      setOldSentences([]);
+    }
     setSentences([]);
   };
   
   return {
     sentences,
+    oldSentences,
     isGeneratingSentences,
     isStreaming,
     generateSentencesFromWords,
