@@ -11,7 +11,7 @@ import ApiKeyInput from '@/components/ApiKeyInput';
 import Settings from '@/components/Settings';
 import { getModelResponse, initializeSystemPrompt, getStagedWordsPrompt, defaultSystemJsonInstruction, replacePromptPlaceholders } from '@/utils/modelPrompt';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, RefreshCw, History as HistoryIcon, MessageSquare, Plus, Speech } from 'lucide-react';
+import { Loader2, RefreshCw, History as HistoryIcon, MessageSquare, Plus, Speech, Baby } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { saveHistory, getHistoryById } from '@/utils/conversationManager';
 import { TopicCategory } from '@/types/models';
@@ -52,6 +52,7 @@ const Index: React.FC = () => {
   const [autoGenerateStagingWords, setAutoGenerateStagingWords] = useState(false);
   const [hasRefreshedStaging, setHasRefreshedStaging] = useState(false);
   const [isConversationMode, setIsConversationMode] = useState(false);
+  const [isChildrenMode, setIsChildrenMode] = useState(false);
 
   useEffect(() => {
     const envApiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
@@ -561,7 +562,7 @@ const Index: React.FC = () => {
     }
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-    await generateSentencesFromConversation(conversation, apiKey, isConversationMode);
+    await generateSentencesFromConversation(conversation, apiKey, isConversationMode, isChildrenMode);
   };
   
   const handleSentenceSelect = (sentence: string) => {
@@ -662,6 +663,20 @@ const Index: React.FC = () => {
     setShowingSentences(false);
   };
 
+  const handleConversationModeToggle = () => {
+    setIsConversationMode(!isConversationMode);
+    if (!isConversationMode && isChildrenMode) {
+      setIsChildrenMode(false);
+    }
+  };
+
+  const handleChildrenModeToggle = () => {
+    setIsChildrenMode(!isChildrenMode);
+    if (!isChildrenMode && isConversationMode) {
+      setIsConversationMode(false);
+    }
+  };
+
   const activeTopicGroups = isStaging && hasRefreshedStaging ? stagingTopicGroups : topicGroups;
   
   const hasUserMessages = conversation.some(item => item.isUser);
@@ -756,13 +771,12 @@ const Index: React.FC = () => {
             )}
             <span>יצירת משפטים מהשיחה</span>
           </Button>
-            <div className="flex items-center gap-1.5">
-            
+          <div className="flex items-center gap-1.5">
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => setIsConversationMode(!isConversationMode)}
+              onClick={handleConversationModeToggle}
             >
               {isConversationMode ? (
                 <Speech className="h-5 w-5 text-primary" />
@@ -771,6 +785,20 @@ const Index: React.FC = () => {
               )}
             </Button>
             <span className="text-sm text-muted-foreground">מצב שיחה</span>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleChildrenModeToggle}
+            >
+              {isChildrenMode ? (
+                <Baby className="h-5 w-5 text-primary" />
+              ) : (
+                <Baby className="h-5 w-5" />
+              )}
+            </Button>
+            <span className="text-sm text-muted-foreground">מצב ילדים</span>
           </div>
         </div>
       )}

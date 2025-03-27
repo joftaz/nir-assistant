@@ -3,6 +3,7 @@ import systemPromptMd from './systemPrompt.rtl.md?raw';
 import sentencePromptMd from './sentencePrompt.rtl.md?raw';
 import stagedWordsPromptMd from './stagedWordsPrompt.rtl.md?raw';
 import sentence2ndPersonPromptMd from './sentence2ndPersonPrompt.rtl.md?raw';
+import sentenceChildrenPromptMd from './sentenceChildrenPrompt.rtl.md?raw';
 
 // Import or define the TopicCategory type to fix the linter errors
 import type { TopicCategory } from '../types/models';
@@ -12,11 +13,13 @@ export const defaultSystemPrompt = systemPromptMd;
 export const defaultSentencePrompt = sentencePromptMd;
 export const defaultStagedWordsPrompt = stagedWordsPromptMd;
 export const default2ndPersonSentencePrompt = sentence2ndPersonPromptMd;
+export const defaultChildrenSentencePrompt = sentenceChildrenPromptMd;
 
 // Define storage keys
 export const SYSTEM_PROMPT_STORAGE_KEY = 'system_prompt';
 export const SENTENCE_PROMPT_STORAGE_KEY = 'sentence_prompt';
 export const SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY = 'sentence_2nd_person_prompt';
+export const SENTENCE_CHILDREN_PROMPT_STORAGE_KEY = 'sentence_children_prompt';
 export const STAGED_WORDS_PROMPT_STORAGE_KEY = 'staged_words_prompt';
 export const CATEGORIES_COUNT_KEY = 'categories_count';
 export const WORDS_PER_CATEGORY_KEY = 'words_per_category';
@@ -68,6 +71,10 @@ export const initializeSystemPrompt = (): void => {
     localStorage.setItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY, default2ndPersonSentencePrompt);
   }
   
+  if (!localStorage.getItem(SENTENCE_CHILDREN_PROMPT_STORAGE_KEY)) {
+    localStorage.setItem(SENTENCE_CHILDREN_PROMPT_STORAGE_KEY, defaultChildrenSentencePrompt);
+  }
+  
   if (!localStorage.getItem(STAGED_WORDS_PROMPT_STORAGE_KEY)) {
     localStorage.setItem(STAGED_WORDS_PROMPT_STORAGE_KEY, defaultStagedWordsPrompt);
   }
@@ -92,9 +99,19 @@ export const getSystemPrompt = (): string => {
 };
 
 // Get sentence prompt from localStorage or use default
-export const getSentencePrompt = (isConversationMode: boolean = false): string => {
-  const storageKey = isConversationMode ? SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY : SENTENCE_PROMPT_STORAGE_KEY;
-  return localStorage.getItem(storageKey) || (isConversationMode ? default2ndPersonSentencePrompt : defaultSentencePrompt);
+export const getSentencePrompt = (isConversationMode: boolean = false, isChildrenMode: boolean = false): string => {
+  let storageKey = SENTENCE_PROMPT_STORAGE_KEY;
+  let defaultPrompt = defaultSentencePrompt;
+  
+  if (isChildrenMode) {
+    storageKey = SENTENCE_CHILDREN_PROMPT_STORAGE_KEY;
+    defaultPrompt = defaultChildrenSentencePrompt;
+  } else if (isConversationMode) {
+    storageKey = SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY;
+    defaultPrompt = default2ndPersonSentencePrompt;
+  }
+  
+  return localStorage.getItem(storageKey) || defaultPrompt;
 };
 
 // Get staged words prompt from localStorage or use default

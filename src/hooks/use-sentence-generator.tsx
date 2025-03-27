@@ -25,7 +25,7 @@ export function useSentenceGenerator() {
     });
   };
   
-  const generateSentencesFromWords = async (words: string[], apiKey: string, isConversationMode: boolean = false) => {
+  const generateSentencesFromWords = async (words: string[], apiKey: string, isConversationMode: boolean = false, isChildrenMode: boolean = false) => {
     if (words.length === 0) {
       toast({
         title: "אין מילים נבחרות",
@@ -47,7 +47,8 @@ export function useSentenceGenerator() {
         (partialSentence) => {
           addSentence(partialSentence);
         },
-        isConversationMode
+        isConversationMode,
+        isChildrenMode
       );
       
       // Ensure all sentences from the final list are included
@@ -72,7 +73,7 @@ export function useSentenceGenerator() {
     }
   };
   
-  const generateSentencesFromConversation = async (conversation: ConversationItem[], apiKey: string, isConversationMode: boolean = false) => {
+  const generateSentencesFromConversation = async (conversation: ConversationItem[], apiKey: string, isConversationMode: boolean = false, isChildrenMode: boolean = false) => {
     if (conversation.length === 0) {
       toast({
         title: "אין מילים בשיחה",
@@ -100,7 +101,8 @@ export function useSentenceGenerator() {
         (partialSentence) => {
           addSentence(partialSentence);
         },
-        isConversationMode
+        isConversationMode,
+        isChildrenMode
       );
       
       // Ensure all sentences from the final list are included

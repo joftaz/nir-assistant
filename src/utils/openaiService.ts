@@ -607,7 +607,8 @@ export const generateSentences = async (
   wordsString: string,
   apiKey: string,
   onPartialSentence?: (sentence: string) => void,
-  isConversationMode: boolean = false
+  isConversationMode: boolean = false,
+  isChildrenMode: boolean = false
 ): Promise<string[]> => {
   try {
     // Initialize OpenAI with the provided API key
@@ -615,8 +616,8 @@ export const generateSentences = async (
     
     console.log("Generating sentences from words:", wordsString);
     
-    // Use the getSentencePrompt function with conversation mode
-    const sentenceGenerationPrompt = replacePromptPlaceholders(getSentencePrompt(isConversationMode));
+    // Use the getSentencePrompt function with conversation mode and children mode
+    const sentenceGenerationPrompt = replacePromptPlaceholders(getSentencePrompt(isConversationMode, isChildrenMode));
 
     // If streaming is requested, use streaming implementation
     if (onPartialSentence) {
