@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -88,7 +89,7 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="p-1.5 pt-0 flex flex-wrap gap-1.5 justify-start"
+            className="p-1 pt-0 flex flex-wrap gap-1 justify-start"
             dir="rtl"
           >
             {words.map((word, index) => (
@@ -100,7 +101,7 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
                     : isStaging
                       ? 'bg-primary/10 hover:bg-primary/20'
                       : 'bg-primary/20 hover:bg-primary/10'
-                } py-1 px-1.5 rounded-md transition-colors ${isStaging ? 'staging-word' : ''}`}
+                } py-0.5 px-1 rounded-md transition-colors ${isStaging ? 'staging-word' : ''}`}
                 onClick={() => onWordSelect(word)}
                 dir="rtl"
               >
