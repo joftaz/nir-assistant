@@ -89,7 +89,7 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="p-1 pt-0 flex flex-wrap gap-1 justify-start"
+            className="p-0.5 pt-0 flex flex-wrap gap-0.5 justify-start"
             dir="rtl"
           >
             {words.map((word, index) => (

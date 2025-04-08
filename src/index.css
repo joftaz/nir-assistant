@@ -129,8 +129,8 @@ html {
 /* Mobile enhancements */
 @media (max-width: 640px) {
   .word-chip {
-    padding: 0.2rem 0.4rem !important;
-    margin: 0.1rem !important;
+    padding: 0.15rem 0.3rem !important;
+    margin: 0.05rem !important;
     /* Reduce bottom padding for mobile conversation words */
     margin-bottom: 0 !important;
   }
