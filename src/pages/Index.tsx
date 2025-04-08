@@ -677,26 +677,37 @@ const Index: React.FC = () => {
     }
   };
 
-  const handlePlaySpeech = async (text: string) => {
-    if (isPlayingAudio) return;
+  const handlePlaySpeech = (text: string) => {
+    if (isPlayingAudio) return { 
+      loading: Promise.reject(new Error('Already playing')),
+      playing: Promise.reject(new Error('Already playing'))
+    };
     
     setIsPlayingAudio(true);
-    try {
-      await playSpeech(text, openAIKey);
-      toast({
-        title: "הקראה הושלמה",
-        description: "הטקסט הוקרא בהצלחה",
+    
+    const audioPromises = playSpeech(text, openAIKey);
+    
+    // When playing finishes, reset the state
+    audioPromises.playing
+      .then(() => {
+        toast({
+          title: "הקראה הושלמה",
+          description: "הטקסט הוקרא בהצלחה",
+        });
+      })
+      .catch((error) => {
+        console.error('Error playing speech:', error);
+        toast({
+          title: "שגיאה",
+          description: "אירעה שגיאה בהקראת הטקסט. אנא בדוק את מפתח ה-API.",
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        setIsPlayingAudio(false);
       });
-    } catch (error) {
-      console.error('Error playing speech:', error);
-      toast({
-        title: "שגיאה",
-        description: "אירעה שגיאה בהקראת הטקסט. אנא בדוק את מפתח ה-API.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsPlayingAudio(false);
-    }
+    
+    return audioPromises;
   };
 
   const activeTopicGroups = isStaging && hasRefreshedStaging ? stagingTopicGroups : topicGroups;
@@ -773,6 +784,7 @@ const Index: React.FC = () => {
           oldSentences={oldSentences}
           isLoading={isGeneratingSentences}
           isStreaming={sentenceIsStreaming}
+          isPlayingAudio={isPlayingAudio}
           onSelectSentence={handleSentenceSelect}
           onCancel={handleCancelSentences}
           onGenerateMore={handleGenerateSentencesFromConversation}

@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { X, Plus, Copy, Check, ChevronDown, ChevronUp, Volume2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,10 +8,11 @@ interface SentencesDisplayProps {
   oldSentences?: string[];
   isLoading: boolean;
   isStreaming?: boolean;
+  isPlayingAudio?: boolean;
   onSelectSentence: (sentence: string) => void;
   onCancel: () => void;
   onGenerateMore?: () => void;
-  onPlaySpeech?: (text: string) => void;
+  onPlaySpeech?: (text: string) => { loading: Promise<void>; playing: Promise<void> };
 }
 
 const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
@@ -20,6 +20,7 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
   oldSentences = [],
   isLoading,
   isStreaming = false,
+  isPlayingAudio = false,
   onSelectSentence,
   onCancel,
   onGenerateMore,
@@ -30,7 +31,8 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [copiedIndex, setCopiedIndex] = React.useState<number | null>(null);
   const [oldSentencesExpanded, setOldSentencesExpanded] = React.useState(false);
-  const [playingSentenceIndex, setPlayingSentenceIndex] = React.useState<number | null>(null);
+  const [loadingSentenceIndex, setLoadingSentenceIndex] = React.useState<number | null>(null);
+  const [activeSentenceIndex, setActiveSentenceIndex] = React.useState<number | null>(null);
   
   // Auto-scroll to the bottom when new sentences appear
   useEffect(() => {
@@ -51,13 +53,30 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
   };
 
   const handlePlaySpeech = async (sentence: string, index: number) => {
-    if (playingSentenceIndex !== null || !onPlaySpeech) return;
+    if (loadingSentenceIndex !== null || activeSentenceIndex !== null || !onPlaySpeech) return;
     
-    setPlayingSentenceIndex(index);
+    // Set loading state first
+    setLoadingSentenceIndex(index);
+    
     try {
-      await onPlaySpeech(sentence);
+      // Call speech service which now returns separate promises
+      const audioPromises = onPlaySpeech(sentence);
+      
+      // Wait for audio to load
+      await audioPromises.loading;
+      
+      // When loaded, switch to active state
+      setLoadingSentenceIndex(null);
+      setActiveSentenceIndex(index);
+      
+      // Wait for audio to finish playing
+      await audioPromises.playing;
+    } catch (error) {
+      console.error('Error playing speech:', error);
     } finally {
-      setPlayingSentenceIndex(null);
+      // Audio finished playing or encountered an error
+      setLoadingSentenceIndex(null);
+      setActiveSentenceIndex(null);
     }
   };
 
@@ -130,13 +149,19 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
                     {onPlaySpeech && (
                       <button
                         onClick={() => handlePlaySpeech(sentence, index)}
-                        disabled={playingSentenceIndex !== null}
-                        className="flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
+                        disabled={loadingSentenceIndex !== null || activeSentenceIndex !== null}
+                        className={`flex-shrink-0 p-1.5 transition-colors rounded-full hover:bg-muted ${
+                          loadingSentenceIndex === index 
+                            ? "text-primary" 
+                            : activeSentenceIndex === index 
+                              ? "text-green-500" 
+                              : "text-muted-foreground hover:text-foreground"
+                        }`}
                         aria-label="הקרא משפט"
                         title="הקרא משפט"
                       >
-                        {playingSentenceIndex === index ? (
-                          <Loader2 size={16} className="animate-spin text-primary" />
+                        {loadingSentenceIndex === index ? (
+                          <Loader2 size={16} className="animate-spin" />
                         ) : (
                           <Volume2 size={16} />
                         )}
@@ -207,13 +232,19 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
                             {onPlaySpeech && (
                               <button
                                 onClick={() => handlePlaySpeech(sentence, index + 1000)}
-                                disabled={playingSentenceIndex !== null}
-                                className="flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
+                                disabled={loadingSentenceIndex !== null || activeSentenceIndex !== null}
+                                className={`flex-shrink-0 p-1.5 transition-colors rounded-full hover:bg-muted ${
+                                  loadingSentenceIndex === index + 1000 
+                                    ? "text-primary" 
+                                    : activeSentenceIndex === index + 1000 
+                                      ? "text-green-500" 
+                                      : "text-muted-foreground hover:text-foreground"
+                                }`}
                                 aria-label="הקרא משפט"
                                 title="הקרא משפט"
                               >
-                                {playingSentenceIndex === index + 1000 ? (
-                                  <Loader2 size={16} className="animate-spin text-primary" />
+                                {loadingSentenceIndex === index + 1000 ? (
+                                  <Loader2 size={16} className="animate-spin" />
                                 ) : (
                                   <Volume2 size={16} />
                                 )}
