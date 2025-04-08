@@ -129,9 +129,8 @@ html {
 /* Mobile enhancements */
 @media (max-width: 640px) {
   .word-chip {
-    padding: 0.15rem 0.3rem !important;
+    padding: 0.3rem 0.3rem !important;
     margin: 0.05rem !important;
-    /* Reduce bottom padding for mobile conversation words */
     margin-bottom: 0 !important;
   }
   
@@ -145,7 +144,7 @@ html {
   
   /* Better touch targets for mobile */
   button, .button {
-    @apply min-h-9 min-w-9;
+    @apply min-h-5 min-w-9;
   }
   
   /* Mode toggle buttons on mobile */

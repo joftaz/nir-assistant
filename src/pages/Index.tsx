@@ -793,7 +793,7 @@ const Index: React.FC = () => {
             ) : (
               <MessageSquare className="h-4 w-4" />
             )}
-            <span>יצירת משפטים מהשיחה</span>
+            <span>יצירת משפטים </span>
           </Button>
           <Button
             variant={isConversationMode ? "default" : "ghost"}
