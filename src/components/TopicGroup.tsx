@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,6 +12,7 @@ interface TopicGroupProps {
   isStaging?: boolean;
   hasRefreshedStaging?: boolean;
   readOnlyMode?: boolean;
+  activeWord?: string | null;
 }
 
 const TopicGroup: React.FC<TopicGroupProps> = ({ 
@@ -24,7 +24,8 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
   isOld = false,
   isStaging = false,
   hasRefreshedStaging = false,
-  readOnlyMode = false
+  readOnlyMode = false,
+  activeWord = null
 }) => {
   const [isExpanded, setIsExpanded] = useState(!isCollapsed);
   
@@ -108,11 +109,13 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
               <button
                 key={index}
                 className={`word-chip ${wordTextSize} ${
-                  isOld 
-                    ? 'bg-muted/70 hover:bg-primary/15' 
-                    : isStaging
-                      ? 'bg-primary/10 hover:bg-primary/20'
-                      : 'bg-primary/20 hover:bg-primary/10'
+                  activeWord === word
+                    ? 'bg-green-500 text-white hover:bg-green-600' 
+                    : isOld 
+                      ? 'bg-muted/70 hover:bg-primary/15' 
+                      : isStaging
+                        ? 'bg-primary/10 hover:bg-primary/20'
+                        : 'bg-primary/20 hover:bg-primary/10'
                 } py-0.5 px-1 rounded-md transition-colors ${isStaging ? 'staging-word' : ''} ${
                   readOnlyMode ? 'cursor-default hover:ring-2 hover:ring-primary' : ''
                 }`}

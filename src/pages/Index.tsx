@@ -58,6 +58,7 @@ const Index: React.FC = () => {
   const [isChildrenMode, setIsChildrenMode] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [readOnlyMode, setReadOnlyMode] = useState(false);
+  const [activeWord, setActiveWord] = useState<string | null>(null);
 
   useEffect(() => {
     const envApiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
@@ -208,6 +209,7 @@ const Index: React.FC = () => {
     }
     
     setIsPlayingAudio(true);
+    setActiveWord(word);
     
     const audioPromises = playSpeech(word, apiKey);
     
@@ -225,6 +227,7 @@ const Index: React.FC = () => {
       })
       .finally(() => {
         setIsPlayingAudio(false);
+        setActiveWord(null);
       });
   };
 
@@ -926,6 +929,7 @@ const Index: React.FC = () => {
                     isStaging={isStaging}
                     hasRefreshedStaging={hasRefreshedStaging}
                     readOnlyMode={readOnlyMode}
+                    activeWord={activeWord}
                   />
                 ))}
               </div>
