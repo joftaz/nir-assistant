@@ -781,7 +781,7 @@ const Index: React.FC = () => {
       )}
       
       {!isStaging && hasUserMessages && !showingSentences && (
-        <div className="w-full max-w-3xl mx-auto flex flex-wrap justify-center items-center gap-2 mt-2 mb-2">
+        <div className="w-full max-w-3xl mx-auto mobile-sentence-controls mt-2 mb-2">
           <Button
             variant="outline"
             onClick={handleGenerateSentencesFromConversation}
@@ -795,27 +795,25 @@ const Index: React.FC = () => {
             )}
             <span>יצירת משפטים מהשיחה</span>
           </Button>
-          <div className="flex items-center gap-1.5 mt-2 sm:mt-0">
-            <Button
-              variant={isConversationMode ? "default" : "ghost"}
-              size="sm"
-              className={`h-8 ${isConversationMode ? "bg-primary" : ""}`}
-              onClick={handleConversationModeToggle}
-            >
-              <Speech className={`h-5 w-5 ${isConversationMode ? "text-primary-foreground" : ""} mr-1`} />
-              <span>מצב שיחה</span>
-            </Button>
-            
-            <Button
-              variant={isChildrenMode ? "default" : "ghost"}
-              size="sm"
-              className={`h-8 ${isChildrenMode ? "bg-primary" : ""}`}
-              onClick={handleChildrenModeToggle}
-            >
-              <Baby className={`h-5 w-5 ${isChildrenMode ? "text-primary-foreground" : ""} mr-1`} />
-              <span>מצב ילדים</span>
-            </Button>
-          </div>
+          <Button
+            variant={isConversationMode ? "default" : "ghost"}
+            size="sm"
+            className={`h-8 ${isConversationMode ? "bg-primary" : ""}`}
+            onClick={handleConversationModeToggle}
+          >
+            <Speech className={`h-5 w-5 ${isConversationMode ? "text-primary-foreground" : ""} mr-1`} />
+            <span>מצב שיחה</span>
+          </Button>
+          
+          <Button
+            variant={isChildrenMode ? "default" : "ghost"}
+            size="sm"
+            className={`h-8 ${isChildrenMode ? "bg-primary" : ""}`}
+            onClick={handleChildrenModeToggle}
+          >
+            <Baby className={`h-5 w-5 ${isChildrenMode ? "text-primary-foreground" : ""} mr-1`} />
+            <span>מצב ילדים</span>
+          </Button>
         </div>
       )}
       

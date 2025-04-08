@@ -1,6 +1,6 @@
 
 import React, { useRef, useEffect } from 'react';
-import { X, Plus, Copy, Check, ChevronDown, ChevronUp, Volume2 } from 'lucide-react';
+import { X, Plus, Copy, Check, ChevronDown, ChevronUp, Volume2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
@@ -30,6 +30,7 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [copiedIndex, setCopiedIndex] = React.useState<number | null>(null);
   const [oldSentencesExpanded, setOldSentencesExpanded] = React.useState(false);
+  const [playingSentenceIndex, setPlayingSentenceIndex] = React.useState<number | null>(null);
   
   // Auto-scroll to the bottom when new sentences appear
   useEffect(() => {
@@ -47,6 +48,17 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
       .catch(err => {
         console.error('Could not copy text: ', err);
       });
+  };
+
+  const handlePlaySpeech = async (sentence: string, index: number) => {
+    if (playingSentenceIndex !== null || !onPlaySpeech) return;
+    
+    setPlayingSentenceIndex(index);
+    try {
+      await onPlaySpeech(sentence);
+    } finally {
+      setPlayingSentenceIndex(null);
+    }
   };
 
   const toggleOldSentences = () => {
@@ -117,12 +129,17 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
                     </button>
                     {onPlaySpeech && (
                       <button
-                        onClick={() => onPlaySpeech(sentence)}
+                        onClick={() => handlePlaySpeech(sentence, index)}
+                        disabled={playingSentenceIndex !== null}
                         className="flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
                         aria-label="הקרא משפט"
                         title="הקרא משפט"
                       >
-                        <Volume2 size={16} />
+                        {playingSentenceIndex === index ? (
+                          <Loader2 size={16} className="animate-spin text-primary" />
+                        ) : (
+                          <Volume2 size={16} />
+                        )}
                       </button>
                     )}
                   </div>
@@ -189,12 +206,17 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
                             </button>
                             {onPlaySpeech && (
                               <button
-                                onClick={() => onPlaySpeech(sentence)}
+                                onClick={() => handlePlaySpeech(sentence, index + 1000)}
+                                disabled={playingSentenceIndex !== null}
                                 className="flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
                                 aria-label="הקרא משפט"
                                 title="הקרא משפט"
                               >
-                                <Volume2 size={16} />
+                                {playingSentenceIndex === index + 1000 ? (
+                                  <Loader2 size={16} className="animate-spin text-primary" />
+                                ) : (
+                                  <Volume2 size={16} />
+                                )}
                               </button>
                             )}
                           </div>
