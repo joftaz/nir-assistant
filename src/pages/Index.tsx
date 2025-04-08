@@ -11,13 +11,14 @@ import ApiKeyInput from '@/components/ApiKeyInput';
 import Settings from '@/components/Settings';
 import { getModelResponse, initializeSystemPrompt, getStagedWordsPrompt, defaultSystemJsonInstruction, replacePromptPlaceholders } from '@/utils/modelPrompt';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, RefreshCw, History as HistoryIcon, MessageSquare, Plus, Speech, Baby } from 'lucide-react';
+import { Loader2, RefreshCw, History as HistoryIcon, MessageSquare, Plus, Speech, Baby, VolumeX, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { saveHistory, getHistoryById } from '@/utils/conversationManager';
 import { TopicCategory } from '@/types/models';
 import { useStagingArea } from '@/hooks/use-staging-area';
 import { useSentenceGenerator } from '@/hooks/use-sentence-generator';
 import { playSpeech } from '@/utils/speechService';
+import { Switch } from '@/components/ui/switch';
 
 const Index: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -56,6 +57,7 @@ const Index: React.FC = () => {
   const [isConversationMode, setIsConversationMode] = useState(false);
   const [isChildrenMode, setIsChildrenMode] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [readOnlyMode, setReadOnlyMode] = useState(false);
 
   useEffect(() => {
     const envApiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
@@ -182,12 +184,48 @@ const Index: React.FC = () => {
   };
 
   const handleWordSelect = (word: string) => {
+    if (readOnlyMode) return;
+    
     addWordToStaging(word);
     
     if (!isStaging) {
       setIsStaging(true);
       setHasRefreshedStaging(false);
     }
+  };
+
+  const handleWordRead = (word: string) => {
+    if (!readOnlyMode) return;
+    
+    const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
+    if (!apiKey) {
+      toast({
+        title: "שגיאה",
+        description: "חסר מפתח API להקראת טקסט",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsPlayingAudio(true);
+    
+    const audioPromises = playSpeech(word, apiKey);
+    
+    audioPromises.playing
+      .then(() => {
+        console.log("Word read completed:", word);
+      })
+      .catch((error) => {
+        console.error('Error playing speech:', error);
+        toast({
+          title: "שגיאה",
+          description: "אירעה שגיאה בהקראת המילה. אנא בדוק את מפתח ה-API.",
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        setIsPlayingAudio(false);
+      });
   };
 
   const generateStagingWords = (words: string[]) => {
@@ -687,7 +725,6 @@ const Index: React.FC = () => {
     
     const audioPromises = playSpeech(text, openAIKey);
     
-    // When playing finishes, reset the state
     audioPromises.playing
       .then(() => {
         toast({
@@ -708,6 +745,21 @@ const Index: React.FC = () => {
       });
     
     return audioPromises;
+  };
+
+  const toggleReadOnlyMode = () => {
+    setReadOnlyMode(!readOnlyMode);
+    if (!readOnlyMode) {
+      toast({
+        title: "מצב הקראה פעיל",
+        description: "לחיצה על מילים תקריא אותן במקום להוסיף אותן",
+      });
+    } else {
+      toast({
+        title: "מצב הקראה כבוי",
+        description: "לחיצה על מילים תוסיף אותן לבחירה",
+      });
+    }
   };
 
   const activeTopicGroups = isStaging && hasRefreshedStaging ? stagingTopicGroups : topicGroups;
@@ -829,23 +881,23 @@ const Index: React.FC = () => {
         </div>
       )}
       
-      {false && isStaging && !showingSentences && (
-        <div className="w-full max-w-3xl mx-auto flex justify-center mt-2">
-          <Button
-            variant="secondary"
-            onClick={handleGenerateSentences}
-            disabled={isGeneratingSentences || stagedWords.length === 0}
-            className="gap-2 rtl:flex-row-reverse"
-          >
-            {isGeneratingSentences ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <MessageSquare className="h-4 w-4" />
-            )}
-            <span>יצירת משפטים מהמילים הנבחרות</span>
-          </Button>
+      <div className="w-full max-w-3xl mx-auto flex justify-end mb-2">
+        <div className="flex items-center gap-2">
+          {readOnlyMode ? (
+            <Volume2 className="h-5 w-5 text-primary" />
+          ) : (
+            <VolumeX className="h-5 w-5" />
+          )}
+          <div className="flex items-center">
+            <span className="text-sm ml-2">הקראת מילים</span>
+            <Switch 
+              checked={readOnlyMode} 
+              onCheckedChange={toggleReadOnlyMode} 
+              className="mx-1"
+            />
+          </div>
         </div>
-      )}
+      </div>
 
       {!showingSentences && (
         <motion.div 
@@ -867,10 +919,12 @@ const Index: React.FC = () => {
                     category={group.category}
                     words={group.words}
                     onWordSelect={handleWordSelect}
+                    onWordRead={handleWordRead}
                     isCollapsed={group.isCollapsed}
                     isOld={group.isOld}
                     isStaging={isStaging}
                     hasRefreshedStaging={hasRefreshedStaging}
+                    readOnlyMode={readOnlyMode}
                   />
                 ))}
               </div>

@@ -7,20 +7,24 @@ interface TopicGroupProps {
   category: string;
   words: string[];
   onWordSelect: (word: string) => void;
+  onWordRead?: (word: string) => void;
   isCollapsed?: boolean;
   isOld?: boolean;
   isStaging?: boolean;
   hasRefreshedStaging?: boolean;
+  readOnlyMode?: boolean;
 }
 
 const TopicGroup: React.FC<TopicGroupProps> = ({ 
   category, 
   words, 
   onWordSelect, 
+  onWordRead,
   isCollapsed = false, 
   isOld = false,
   isStaging = false,
-  hasRefreshedStaging = false
+  hasRefreshedStaging = false,
+  readOnlyMode = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(!isCollapsed);
   
@@ -50,6 +54,14 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
   };
 
   const wordTextSize = getWordTextSize();
+
+  const handleWordClick = (word: string) => {
+    if (readOnlyMode && onWordRead) {
+      onWordRead(word);
+    } else {
+      onWordSelect(word);
+    }
+  };
 
   return (
     <div 
@@ -101,8 +113,10 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
                     : isStaging
                       ? 'bg-primary/10 hover:bg-primary/20'
                       : 'bg-primary/20 hover:bg-primary/10'
-                } py-0.5 px-1 rounded-md transition-colors ${isStaging ? 'staging-word' : ''}`}
-                onClick={() => onWordSelect(word)}
+                } py-0.5 px-1 rounded-md transition-colors ${isStaging ? 'staging-word' : ''} ${
+                  readOnlyMode ? 'cursor-default hover:ring-2 hover:ring-primary' : ''
+                }`}
+                onClick={() => handleWordClick(word)}
                 dir="rtl"
               >
                 {word}
