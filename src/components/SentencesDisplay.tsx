@@ -1,5 +1,6 @@
+
 import React, { useRef, useEffect } from 'react';
-import { X, Plus, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Plus, Copy, Check, ChevronDown, ChevronUp, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
@@ -11,6 +12,7 @@ interface SentencesDisplayProps {
   onSelectSentence: (sentence: string) => void;
   onCancel: () => void;
   onGenerateMore?: () => void;
+  onPlaySpeech?: (text: string) => void;
 }
 
 const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
@@ -20,7 +22,8 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
   isStreaming = false,
   onSelectSentence,
   onCancel,
-  onGenerateMore
+  onGenerateMore,
+  onPlaySpeech
 }) => {
   if (sentences.length === 0 && oldSentences.length === 0 && !isLoading) return null;
 
@@ -99,18 +102,30 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
                   exit={{ opacity: 0, height: 0, padding: 0, margin: 0, overflow: 'hidden' }}
                   transition={{ duration: 0.3 }}
                 >
-                  <button
-                    onClick={() => handleCopy(sentence, index)}
-                    className="flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
-                    aria-label="העתק משפט"
-                    title="העתק משפט"
-                  >
-                    {copiedIndex === index ? (
-                      <Check size={16} className="text-green-500" />
-                    ) : (
-                      <Copy size={16} />
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => handleCopy(sentence, index)}
+                      className="flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
+                      aria-label="העתק משפט"
+                      title="העתק משפט"
+                    >
+                      {copiedIndex === index ? (
+                        <Check size={16} className="text-green-500" />
+                      ) : (
+                        <Copy size={16} />
+                      )}
+                    </button>
+                    {onPlaySpeech && (
+                      <button
+                        onClick={() => onPlaySpeech(sentence)}
+                        className="flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
+                        aria-label="הקרא משפט"
+                        title="הקרא משפט"
+                      >
+                        <Volume2 size={16} />
+                      </button>
                     )}
-                  </button>
+                  </div>
                   <button
                     onClick={() => onSelectSentence(sentence)}
                     className="flex-grow p-2 text-right text-sm bg-muted/30 hover:bg-primary/10 rounded-md transition-colors border border-border/50 hover:border-primary/30 w-full"
@@ -159,18 +174,30 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.2, delay: index * 0.05 }}
                         >
-                          <button
-                            onClick={() => handleCopy(sentence, index + 1000)} // Using offset to differentiate from new sentences
-                            className="flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
-                            aria-label="העתק משפט"
-                            title="העתק משפט"
-                          >
-                            {copiedIndex === index + 1000 ? (
-                              <Check size={16} className="text-green-500" />
-                            ) : (
-                              <Copy size={16} />
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => handleCopy(sentence, index + 1000)} // Using offset to differentiate from new sentences
+                              className="flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
+                              aria-label="העתק משפט"
+                              title="העתק משפט"
+                            >
+                              {copiedIndex === index + 1000 ? (
+                                <Check size={16} className="text-green-500" />
+                              ) : (
+                                <Copy size={16} />
+                              )}
+                            </button>
+                            {onPlaySpeech && (
+                              <button
+                                onClick={() => onPlaySpeech(sentence)}
+                                className="flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
+                                aria-label="הקרא משפט"
+                                title="הקרא משפט"
+                              >
+                                <Volume2 size={16} />
+                              </button>
                             )}
-                          </button>
+                          </div>
                           <button
                             onClick={() => onSelectSentence(sentence)}
                             className="flex-grow p-2 text-right text-sm bg-muted/20 hover:bg-primary/10 rounded-md transition-colors border border-border/30 hover:border-primary/30 w-full text-muted-foreground"

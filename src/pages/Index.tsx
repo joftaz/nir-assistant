@@ -17,6 +17,7 @@ import { saveHistory, getHistoryById } from '@/utils/conversationManager';
 import { TopicCategory } from '@/types/models';
 import { useStagingArea } from '@/hooks/use-staging-area';
 import { useSentenceGenerator } from '@/hooks/use-sentence-generator';
+import { playSpeech } from '@/utils/speechService';
 
 const Index: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -54,6 +55,7 @@ const Index: React.FC = () => {
   const [hasRefreshedStaging, setHasRefreshedStaging] = useState(false);
   const [isConversationMode, setIsConversationMode] = useState(false);
   const [isChildrenMode, setIsChildrenMode] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
   useEffect(() => {
     const envApiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
@@ -188,7 +190,6 @@ const Index: React.FC = () => {
     }
   };
 
-  // Helper function to generate staging words
   const generateStagingWords = (words: string[]) => {
     if (words.length === 0) return;
     
@@ -362,7 +363,6 @@ const Index: React.FC = () => {
   const handleAddAllWords = () => {
     if (stagedWords.length === 0) return;
     
-    // Add each word as a separate message
     stagedWords.forEach(word => {
       const newMessage: ConversationItem = {
         id: uuidv4(),
@@ -474,7 +474,6 @@ const Index: React.FC = () => {
   const handleRefreshStagingWords = () => {
     if (stagedWords.length === 0) return;
     
-    // Clear existing staging groups before generating new ones
     setStagingTopicGroups([]);
     setHasRefreshedStaging(true);
     generateStagingWords(stagedWords);
@@ -678,12 +677,34 @@ const Index: React.FC = () => {
     }
   };
 
+  const handlePlaySpeech = async (text: string) => {
+    if (isPlayingAudio) return;
+    
+    setIsPlayingAudio(true);
+    try {
+      await playSpeech(text, openAIKey);
+      toast({
+        title: "הקראה הושלמה",
+        description: "הטקסט הוקרא בהצלחה",
+      });
+    } catch (error) {
+      console.error('Error playing speech:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בהקראת הטקסט. אנא בדוק את מפתח ה-API.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPlayingAudio(false);
+    }
+  };
+
   const activeTopicGroups = isStaging && hasRefreshedStaging ? stagingTopicGroups : topicGroups;
   
   const hasUserMessages = conversation.some(item => item.isUser);
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center px-4 py-4 sm:py-6">
+    <div className="min-h-screen w-full flex flex-col items-center px-2 sm:px-4 py-4 sm:py-6">
       <header className="w-full max-w-3xl mx-auto mb-2 text-center relative">
         <div className="absolute top-0 right-0">
           <Settings onSystemPromptChange={handleSystemPromptChange} />
@@ -755,11 +776,12 @@ const Index: React.FC = () => {
           onSelectSentence={handleSentenceSelect}
           onCancel={handleCancelSentences}
           onGenerateMore={handleGenerateSentencesFromConversation}
+          onPlaySpeech={handlePlaySpeech}
         />
       )}
       
       {!isStaging && hasUserMessages && !showingSentences && (
-        <div className="w-full max-w-3xl mx-auto flex justify-center items-center gap-2 mt-2 mb-2">
+        <div className="w-full max-w-3xl mx-auto flex flex-wrap justify-center items-center gap-2 mt-2 mb-2">
           <Button
             variant="outline"
             onClick={handleGenerateSentencesFromConversation}
@@ -773,34 +795,26 @@ const Index: React.FC = () => {
             )}
             <span>יצירת משפטים מהשיחה</span>
           </Button>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 mt-2 sm:mt-0">
             <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
+              variant={isConversationMode ? "default" : "ghost"}
+              size="sm"
+              className={`h-8 ${isConversationMode ? "bg-primary" : ""}`}
               onClick={handleConversationModeToggle}
             >
-              {isConversationMode ? (
-                <Speech className="h-5 w-5 text-primary" />
-              ) : (
-                <Speech className="h-5 w-5" />
-              )}
+              <Speech className={`h-5 w-5 ${isConversationMode ? "text-primary-foreground" : ""} mr-1`} />
+              <span>מצב שיחה</span>
             </Button>
-            <span className="text-sm text-muted-foreground">מצב שיחה</span>
             
             <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
+              variant={isChildrenMode ? "default" : "ghost"}
+              size="sm"
+              className={`h-8 ${isChildrenMode ? "bg-primary" : ""}`}
               onClick={handleChildrenModeToggle}
             >
-              {isChildrenMode ? (
-                <Baby className="h-5 w-5 text-primary" />
-              ) : (
-                <Baby className="h-5 w-5" />
-              )}
+              <Baby className={`h-5 w-5 ${isChildrenMode ? "text-primary-foreground" : ""} mr-1`} />
+              <span>מצב ילדים</span>
             </Button>
-            <span className="text-sm text-muted-foreground">מצב ילדים</span>
           </div>
         </div>
       )}
@@ -882,4 +896,3 @@ const Index: React.FC = () => {
 };
 
 export default Index;
-

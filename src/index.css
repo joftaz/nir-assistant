@@ -85,19 +85,18 @@ html {
   text-align: right;
 }
 
-/* Responsive text sizing for topic groups and words */
-@media (max-width: 640px) {
-  .topic-category {
-    @apply text-sm font-medium;
-  }
-  .topic-word {
-    @apply text-xs;
-  }
+/* Mobile-first responsive text sizing for topic groups and words */
+.topic-category {
+  @apply text-sm font-medium;
 }
 
-@media (min-width: 641px) {
+.topic-word {
+  @apply text-xs;
+}
+
+@media (min-width: 640px) {
   .topic-category {
-    @apply text-base font-medium;
+    @apply text-base;
   }
   .topic-word {
     @apply text-sm;
@@ -125,4 +124,30 @@ html {
 .word-chip.text-lg {
   padding: 0.5rem 0.8rem;
   margin: 0.25rem;
+}
+
+/* Mobile enhancements */
+@media (max-width: 640px) {
+  .word-chip {
+    padding: 0.25rem 0.5rem;
+    margin: 0.15rem;
+  }
+  
+  h1, h2, h3 {
+    @apply text-center;
+  }
+  
+  .input-container {
+    @apply px-3 py-1.5;
+  }
+  
+  /* Better touch targets for mobile */
+  button, .button {
+    @apply min-h-9 min-w-9;
+  }
+}
+
+/* Active mode button styling */
+.mode-button-active {
+  @apply bg-primary text-primary-foreground;
 }
