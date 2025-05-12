@@ -282,7 +282,7 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
                       >
                         <Button 
                           variant="outline" 
-                          className="w-full justify-start py-3 px-4 text-right bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-900"
+                          className="w-full justify-start py-3 px-4 text-right bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-900 text-lg"
                           onClick={() => handleSelectSynonym(synonym)}
                         >
                           {synonym}
