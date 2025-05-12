@@ -5,14 +5,15 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 
 interface ApiKeyInputProps {
-  onSave: (apiKey: string) => void;
-  savedKey?: string;
+  onSaveApiKey: (apiKey: string) => void;
+  apiKey?: string;
+  className?: string;
 }
 
 const API_KEY_STORAGE_KEY = 'openai_api_key';
 
-const ApiKeyInput: React.FC<ApiKeyInputProps> = ({ onSave, savedKey }) => {
-  const [apiKey, setApiKey] = useState(savedKey || '');
+const ApiKeyInput: React.FC<ApiKeyInputProps> = ({ onSaveApiKey, apiKey = '', className = '' }) => {
+  const [inputApiKey, setInputApiKey] = useState(apiKey || '');
   const [isVisible, setIsVisible] = useState(false);
   const { toast } = useToast();
 
@@ -20,13 +21,13 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({ onSave, savedKey }) => {
     // Try to load from localStorage on mount
     const storedKey = localStorage.getItem(API_KEY_STORAGE_KEY);
     if (storedKey) {
-      setApiKey(storedKey);
-      onSave(storedKey);
+      setInputApiKey(storedKey);
+      onSaveApiKey(storedKey);
     }
-  }, [onSave]);
+  }, [onSaveApiKey]);
 
   const handleSave = () => {
-    if (!apiKey.trim()) {
+    if (!inputApiKey.trim()) {
       toast({
         title: "שגיאה",
         description: "אנא הזן מפתח API תקף",
@@ -36,8 +37,8 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({ onSave, savedKey }) => {
     }
 
     // Save to localStorage
-    localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
-    onSave(apiKey);
+    localStorage.setItem(API_KEY_STORAGE_KEY, inputApiKey);
+    onSaveApiKey(inputApiKey);
     setIsVisible(false);
     
     toast({
@@ -47,14 +48,14 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({ onSave, savedKey }) => {
   };
 
   return (
-    <div className="w-full max-w-xs mx-auto mb-6">
+    <div className={`w-full max-w-xs mx-auto mb-6 ${className}`}>
       {isVisible ? (
         <div className="flex flex-col gap-2 p-4 border rounded-lg shadow-sm bg-white dark:bg-gray-900">
           <div className="text-sm font-medium mb-1 text-right">OpenAI API Key</div>
           <Input
             type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
+            value={inputApiKey}
+            onChange={(e) => setInputApiKey(e.target.value)}
             placeholder="sk-..."
             className="text-right"
             dir="ltr"

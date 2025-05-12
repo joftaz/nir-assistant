@@ -189,7 +189,7 @@ const Index: React.FC = () => {
     }
   };
 
-  // Update the word click handler to open the drawer
+  // Handle word click to open the drawer
   const handleWordClick = (word: string) => {
     setSelectedWord(word);
     setIsDrawerOpen(true);
@@ -986,8 +986,9 @@ const Index: React.FC = () => {
         <TopicInput 
           onSubmit={handleSubmitTopic} 
           isLoading={isLoading}
-          isStreaming={isStreaming}
+          apiKey={openAIKey}
           placeholder="הקלד נושא או מילה..."
+          isStreaming={isStreaming}
         />
       </div>
 
@@ -1011,8 +1012,8 @@ const Index: React.FC = () => {
       </div>
 
       <ApiKeyInput 
-        apiKey={openAIKey} 
         onSaveApiKey={handleSaveApiKey} 
+        apiKey={openAIKey}
         className="mt-6"
       />
       

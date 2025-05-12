@@ -9,9 +9,17 @@ interface TopicInputProps {
   onSubmit: (topic: string) => void;
   isLoading: boolean;
   apiKey?: string;
+  placeholder?: string;
+  isStreaming?: boolean;
 }
 
-const TopicInput: React.FC<TopicInputProps> = ({ onSubmit, isLoading, apiKey = '' }) => {
+const TopicInput: React.FC<TopicInputProps> = ({ 
+  onSubmit, 
+  isLoading, 
+  apiKey = '',
+  placeholder = 'נושא או מילת מפתח...',
+  isStreaming
+}) => {
   const [topic, setTopic] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -65,7 +73,7 @@ const TopicInput: React.FC<TopicInputProps> = ({ onSubmit, isLoading, apiKey = '
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="נושא או מילת מפתח..."
+          placeholder={placeholder}
           className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 px-2 text-base rtl:text-right"
           dir="rtl"
           disabled={isLoading}
