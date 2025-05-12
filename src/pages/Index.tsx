@@ -11,14 +11,14 @@ import ApiKeyInput from '@/components/ApiKeyInput';
 import Settings from '@/components/Settings';
 import { getModelResponse, initializeSystemPrompt, getStagedWordsPrompt, defaultSystemJsonInstruction, replacePromptPlaceholders } from '@/utils/modelPrompt';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, RefreshCw, History as HistoryIcon, MessageSquare, Plus, Speech, Baby, VolumeX, Volume2 } from 'lucide-react';
+import { Loader2, RefreshCw, History as HistoryIcon, MessageSquare, Plus, Speech, Baby } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { saveHistory, getHistoryById } from '@/utils/conversationManager';
 import { TopicCategory } from '@/types/models';
 import { useStagingArea } from '@/hooks/use-staging-area';
 import { useSentenceGenerator } from '@/hooks/use-sentence-generator';
 import { playSpeech } from '@/utils/speechService';
-import { Switch } from '@/components/ui/switch';
+import WordActionDrawer from '@/components/WordActionDrawer';
 
 const Index: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -56,9 +56,14 @@ const Index: React.FC = () => {
   const [hasRefreshedStaging, setHasRefreshedStaging] = useState(false);
   const [isConversationMode, setIsConversationMode] = useState(false);
   const [isChildrenMode, setIsChildrenMode] = useState(false);
+
+  // Add new state variables for the drawer
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const [readOnlyMode, setReadOnlyMode] = useState(false);
   const [activeWord, setActiveWord] = useState<string | null>(null);
+  
+  // Remove readOnlyMode state since we're replacing it with the drawer
 
   useEffect(() => {
     const envApiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
@@ -184,19 +189,103 @@ const Index: React.FC = () => {
     }
   };
 
-  const handleWordSelect = (word: string) => {
-    if (readOnlyMode) return;
-    
-    addWordToStaging(word);
-    
-    if (!isStaging) {
-      setIsStaging(true);
-      setHasRefreshedStaging(false);
-    }
+  // Update the word click handler to open the drawer
+  const handleWordClick = (word: string) => {
+    setSelectedWord(word);
+    setIsDrawerOpen(true);
   };
 
-  const handleWordRead = (word: string) => {
-    if (!readOnlyMode) return;
+  // Handle adding a word directly from the drawer
+  const handleAddWordDirectly = (word: string) => {
+    const newMessage: ConversationItem = {
+      id: uuidv4(),
+      text: word,
+      isUser: true,
+      timestamp: new Date()
+    };
+    
+    setConversation(prev => [...prev, newMessage]);
+    
+    toast({
+      title: "נוספה מילה",
+      description: `המילה "${word}" נוספה לשיחה בהצלחה`,
+    });
+    
+    setIsLoading(true);
+    setIsStreaming(true);
+    
+    setTopicGroups(currentGroups => 
+      currentGroups.map(group => ({
+        ...group,
+        isCollapsed: true,
+        isOld: true
+      }))
+    );
+    
+    const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
+    
+    const updatedConversation = [...conversation, newMessage];
+    const conversationHistory = updatedConversation.map(item => 
+      `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
+    ).join('\n');
+    
+    const allUserWords = updatedConversation
+      .filter(item => item.isUser)
+      .map(item => item.text);
+    
+    const prompt = `${conversationHistory}\n\nהערה למודל: המילים הבאות כבר נבחרו, אנא הצע מילים חדשות שקשורות לנושא אך שונות מאלו: ${allUserWords.join(', ')}`;
+    
+    console.log("Regenerating categories after word selection:", prompt);
+    
+    const categoryReceived = new Set<string>();
+    
+    getModelResponse(
+      prompt, 
+      !!apiKey, 
+      apiKey, 
+      (partialResponse) => {
+        console.log("Received partial response for regeneration:", partialResponse);
+        
+        if (!categoryReceived.has(partialResponse.category)) {
+          categoryReceived.add(partialResponse.category);
+          
+          const filteredWords = partialResponse.words.filter(
+            suggestedWord => !allUserWords.includes(suggestedWord)
+          );
+          
+          setTopicGroups(currentGroups => {
+            const oldGroups = currentGroups.filter(group => group.isOld);
+            const newGroups = currentGroups.filter(group => !group.isOld);
+            
+            return [
+              ...newGroups,
+              {
+                ...partialResponse, 
+                words: filteredWords,
+                isCollapsed: false, 
+                isOld: false
+              },
+              ...oldGroups
+            ];
+          });
+        }
+      }
+    ).catch(error => {
+      console.error('Error fetching response:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בקבלת תשובה. אנא נסה שוב.",
+        variant: "destructive",
+      });
+    }).finally(() => {
+      setIsLoading(false);
+      setIsStreaming(false);
+    });
+  };
+  
+  // Handle speaking a word
+  const handleSpeakWord = (word: string) => {
+    if (isPlayingAudio) return;
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
     if (!apiKey) {
@@ -229,6 +318,30 @@ const Index: React.FC = () => {
         setIsPlayingAudio(false);
         setActiveWord(null);
       });
+  };
+  
+  // Handle finding synonyms
+  const handleFindSynonyms = (word: string) => {
+    // First add the original word to conversation
+    handleAddWordDirectly(word);
+    
+    // Then submit a topic for the synonyms
+    const synonymTopic = `מילים נרדפות ל"${word}"`;
+    handleSubmitTopic(synonymTopic);
+    
+    toast({
+      title: "חיפוש מילים נרדפות",
+      description: `מחפש מילים נרדפות ל"${word}"`,
+    });
+  };
+
+  const handleWordSelect = (word: string) => {
+    addWordToStaging(word);
+    
+    if (!isStaging) {
+      setIsStaging(true);
+      setHasRefreshedStaging(false);
+    }
   };
 
   const generateStagingWords = (words: string[]) => {
@@ -750,21 +863,6 @@ const Index: React.FC = () => {
     return audioPromises;
   };
 
-  const toggleReadOnlyMode = () => {
-    setReadOnlyMode(!readOnlyMode);
-    if (!readOnlyMode) {
-      toast({
-        title: "מצב הקראה פעיל",
-        description: "לחיצה על מילים תקריא אותן במקום להוסיף אותן",
-      });
-    } else {
-      toast({
-        title: "מצב הקראה כבוי",
-        description: "לחיצה על מילים תוסיף אותן לבחירה",
-      });
-    }
-  };
-
   const activeTopicGroups = isStaging && hasRefreshedStaging ? stagingTopicGroups : topicGroups;
   
   const hasUserMessages = conversation.some(item => item.isUser);
@@ -875,93 +973,3 @@ const Index: React.FC = () => {
           <Button
             variant={isChildrenMode ? "default" : "ghost"}
             size="sm"
-            className={`h-8 ${isChildrenMode ? "bg-primary" : ""}`}
-            onClick={handleChildrenModeToggle}
-          >
-            <Baby className={`h-5 w-5 ${isChildrenMode ? "text-primary-foreground" : ""} mr-1`} />
-            <span>מצב ילדים</span>
-          </Button>
-        </div>
-      )}
-      
-      <div className="w-full max-w-3xl mx-auto flex justify-end mb-2">
-        <div className="flex items-center gap-2">
-          {readOnlyMode ? (
-            <Volume2 className="h-5 w-5 text-primary" />
-          ) : (
-            <VolumeX className="h-5 w-5" />
-          )}
-          <div className="flex items-center">
-            <Switch 
-              checked={readOnlyMode} 
-              onCheckedChange={toggleReadOnlyMode} 
-              className="mr-2 rtl"
-              dir="ltr"
-            />
-            <span className="text-sm">הקראת מילים</span>
-          </div>
-        </div>
-      </div>
-
-      {!showingSentences && (
-        <motion.div 
-          className="w-full max-w-3xl mx-auto grid gap-2 sm:gap-3 mt-2 mb-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          {isLoading && activeTopicGroups.length === 0 ? (
-            <div className="flex justify-center items-center py-6">
-              <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full">
-                {activeTopicGroups.map((group, index) => (
-                  <TopicGroup
-                    key={`${group.category}-${index}-${isStaging ? 'staging' : 'main'}`}
-                    category={group.category}
-                    words={group.words}
-                    onWordSelect={handleWordSelect}
-                    onWordRead={handleWordRead}
-                    isCollapsed={group.isCollapsed}
-                    isOld={group.isOld}
-                    isStaging={isStaging}
-                    hasRefreshedStaging={hasRefreshedStaging}
-                    readOnlyMode={readOnlyMode}
-                    activeWord={activeWord}
-                  />
-                ))}
-              </div>
-              {isStreaming && (
-                <div className="flex justify-center items-center py-2">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary/70" />
-                </div>
-              )}
-              {!isStreaming && activeTopicGroups.length > 0 && activeTopicGroups.some(group => !group.isCollapsed) && (
-                <div className="text-center text-xs text-muted-foreground py-1">
-                  ⤴ קבוצות חדשות | קבוצות קודמות ⤵
-                </div>
-              )}
-            </>
-          )}
-        </motion.div>
-      )}
-
-      <motion.div 
-        className="w-full sticky bottom-2 px-2"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-      >
-        <TopicInput 
-          onSubmit={handleSubmitTopic} 
-          isLoading={isLoading || isStaging || showingSentences} 
-          apiKey={openAIKey}
-        />
-      </motion.div>
-    </div>
-  );
-};
-
-export default Index;

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,25 +7,23 @@ interface TopicGroupProps {
   category: string;
   words: string[];
   onWordSelect: (word: string) => void;
-  onWordRead?: (word: string) => void;
+  onWordClick?: (word: string) => void;
   isCollapsed?: boolean;
   isOld?: boolean;
   isStaging?: boolean;
   hasRefreshedStaging?: boolean;
-  readOnlyMode?: boolean;
   activeWord?: string | null;
 }
 
 const TopicGroup: React.FC<TopicGroupProps> = ({ 
   category, 
   words, 
-  onWordSelect, 
-  onWordRead,
+  onWordSelect,
+  onWordClick,
   isCollapsed = false, 
   isOld = false,
   isStaging = false,
   hasRefreshedStaging = false,
-  readOnlyMode = false,
   activeWord = null
 }) => {
   const [isExpanded, setIsExpanded] = useState(!isCollapsed);
@@ -57,8 +56,8 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
   const wordTextSize = getWordTextSize();
 
   const handleWordClick = (word: string) => {
-    if (readOnlyMode && onWordRead) {
-      onWordRead(word);
+    if (onWordClick) {
+      onWordClick(word);
     } else {
       onWordSelect(word);
     }
@@ -116,9 +115,7 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
                       : isStaging
                         ? 'bg-primary/10 hover:bg-primary/20'
                         : 'bg-primary/20 hover:bg-primary/10'
-                } py-0.5 px-1 rounded-md transition-colors ${isStaging ? 'staging-word' : ''} ${
-                  readOnlyMode ? 'cursor-default hover:ring-2 hover:ring-primary' : ''
-                }`}
+                } py-0.5 px-1 rounded-md transition-colors ${isStaging ? 'staging-word' : ''}`}
                 onClick={() => handleWordClick(word)}
                 dir="rtl"
               >

@@ -157,3 +157,28 @@ html {
 .mode-button-active {
   @apply bg-primary text-primary-foreground;
 }
+
+/* Word action drawer styling */
+.word-drawer {
+  @apply fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-lg z-50 rounded-t-xl p-4;
+}
+
+/* Drawer overlay */
+.drawer-overlay {
+  @apply fixed inset-0 bg-black/60 z-40;
+}
+
+/* Fix drawer z-index for mobile */
+.vaul-drawer {
+  z-index: 50 !important;
+}
+
+/* Make drawer overlay darker */
+.vaul-drawer-overlay {
+  @apply bg-black/80 !important;
+}
+
+/* Optimize drawer buttons for mobile */
+.vaul-drawer button {
+  @apply min-h-[48px] !important;
+}
