@@ -29,6 +29,7 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
   const [showingSynonyms, setShowingSynonyms] = useState(false);
   const [synonyms, setSynonyms] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const { toast } = useToast();
   
   // Clear synonyms when drawer closes
@@ -36,6 +37,7 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
     if (!isOpen) {
       setShowingSynonyms(false);
       setSynonyms([]);
+      setIsStreaming(false);
     }
   }, [isOpen]);
   
@@ -52,6 +54,7 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
 
   const handleFindSynonyms = async () => {
     setIsLoading(true);
+    setIsStreaming(true);
     setShowingSynonyms(true);
     setSynonyms([]);
     
@@ -66,6 +69,7 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
           variant: "destructive",
         });
         setIsLoading(false);
+        setIsStreaming(false);
         return;
       }
       
@@ -73,6 +77,7 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
       const synonymsPrompt = getSynonymsPrompt();
       const fullPrompt = replacePromptPlaceholders(synonymsPrompt);
       
+      // Make the API call with streaming
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -86,7 +91,7 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
             { role: 'user', content: `אנא מצא מילים נרדפות למילה: "${word}"` }
           ],
           temperature: 0.7,
-          response_format: { type: "json_object" }
+          stream: true
         })
       });
 
@@ -94,35 +99,99 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
         throw new Error(`Error calling OpenAI API: ${response.status}`);
       }
 
-      const data = await response.json();
-      const content = data.choices[0]?.message?.content;
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('Failed to get response reader');
 
-      if (!content) {
-        throw new Error("No response content");
-      }
-
-      try {
-        const parsedContent = JSON.parse(content);
-        if (parsedContent.synonyms && Array.isArray(parsedContent.synonyms)) {
-          setSynonyms(parsedContent.synonyms);
-        } else {
-          // Fallback just in case API returns the old format
-          // or some other unexpected format
-          const allWords: string[] = [];
-          
-          if (parsedContent.categories && Array.isArray(parsedContent.categories)) {
-            parsedContent.categories.forEach((category: any) => {
-              if (category.words && Array.isArray(category.words)) {
-                allWords.push(...category.words);
-              }
-            });
+      let accumulatedData = '';
+      const decoder = new TextDecoder();
+      
+      // Function to extract words from partial JSON
+      const extractSynonymsFromText = (text: string): string[] => {
+        try {
+          // Look for patterns like "synonyms": ["word1", "word2", ...]
+          const synonymsMatch = text.match(/"synonyms"\s*:\s*\[(.*?)(?:\]|$)/s);
+          if (synonymsMatch && synonymsMatch[1]) {
+            // Extract individual words from the array
+            const wordsMatches = synonymsMatch[1].match(/"([^"]*)"/g);
+            if (wordsMatches) {
+              return wordsMatches.map(word => word.replace(/"/g, ''));
+            }
           }
-          
-          setSynonyms(allWords.length > 0 ? allWords : ["לא נמצאו מילים נרדפות"]);
+          return [];
+        } catch (e) {
+          console.error("Error extracting synonyms:", e);
+          return [];
         }
-      } catch (error) {
-        console.error('Error parsing OpenAI response:', error);
-        throw new Error("Invalid response format");
+      };
+
+      // Process the stream
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        // Decode the chunk
+        const chunk = decoder.decode(value);
+        
+        // Process complete lines from the SSE format
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+          if (line.trim() === '') continue;
+          
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            
+            if (data === '[DONE]') {
+              console.log("Stream complete");
+              continue;
+            }
+            
+            try {
+              const json = JSON.parse(data);
+              const content = json.choices[0]?.delta?.content || '';
+              
+              if (content) {
+                accumulatedData += content;
+                console.log("Accumulated:", accumulatedData);
+                
+                // Try to extract synonyms
+                const currentSynonyms = extractSynonymsFromText(accumulatedData);
+                if (currentSynonyms.length > 0) {
+                  console.log("Found synonyms:", currentSynonyms);
+                  setSynonyms(currentSynonyms);
+                }
+              }
+            } catch (e) {
+              // Ignore JSON parse errors in streaming - they're expected
+              console.log("Parse error in streaming (expected):", e.message);
+            }
+          }
+        }
+      }
+      
+      // Process the complete response
+      try {
+        // Try to find complete JSON in the accumulated data
+        const jsonMatch = accumulatedData.match(/\{.*\}/s);
+        if (jsonMatch) {
+          const parsedJson = JSON.parse(jsonMatch[0]);
+          if (parsedJson.synonyms && Array.isArray(parsedJson.synonyms)) {
+            console.log("Final synonyms:", parsedJson.synonyms);
+            setSynonyms(parsedJson.synonyms);
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing final response:', e);
+        
+        // If we already have some synonyms from streaming, keep them
+        if (synonyms.length === 0) {
+          // Try one more extraction from the accumulated text
+          const extractedSynonyms = extractSynonymsFromText(accumulatedData);
+          if (extractedSynonyms.length > 0) {
+            setSynonyms(extractedSynonyms);
+          } else {
+            throw new Error("Failed to parse response");
+          }
+        }
       }
       
     } catch (error) {
@@ -133,9 +202,12 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
         variant: "destructive",
       });
       // Show something even if there's an error
-      setSynonyms(["לא נמצאו מילים נרדפות"]);
+      if (synonyms.length === 0) {
+        setSynonyms(["לא נמצאו מילים נרדפות"]);
+      }
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
     }
   };
 
@@ -184,45 +256,51 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
                 <span>חזרה</span>
               </Button>
               
-              <div className="text-center mb-3">מילים נרדפות ל-"{word}"</div>
+              <div className="text-center mb-3">
+                מילים נרדפות ל-"{word}"
+                {isStreaming && <span className="ml-2">...</span>}
+              </div>
               
-              {isLoading ? (
+              {isLoading && synonyms.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin mb-2" />
                   <p className="text-center text-muted-foreground">מחפש מילים נרדפות...</p>
                 </div>
               ) : synonyms.length > 0 ? (
-                <motion.div 
-                  className="grid grid-cols-2 gap-2 w-full"
-                  initial="hidden"
-                  animate="visible"
-                  variants={{
-                    visible: {
-                      transition: {
-                        staggerChildren: 0.05
-                      }
-                    },
-                    hidden: {}
-                  }}
-                >
-                  {synonyms.map((synonym, index) => (
-                    <motion.div
-                      key={index}
-                      variants={{
-                        hidden: { opacity: 0, y: 10 },
-                        visible: { opacity: 1, y: 0 }
-                      }}
-                    >
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start py-3 px-4 text-right"
-                        onClick={() => handleSelectSynonym(synonym)}
+                <div className="grid grid-cols-2 gap-2 w-full">
+                  <AnimatePresence>
+                    {synonyms.map((synonym, index) => (
+                      <motion.div
+                        key={`${synonym}-${index}`}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ 
+                          delay: Math.min(0.05 * index, 1),
+                          duration: 0.2
+                        }}
                       >
-                        {synonym}
-                      </Button>
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start py-3 px-4 text-right"
+                          onClick={() => handleSelectSynonym(synonym)}
+                        >
+                          {synonym}
+                        </Button>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  
+                  {isStreaming && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ repeat: Infinity, duration: 1 }}
+                      className="col-span-2 flex justify-center mt-4"
+                    >
+                      <Loader2 className="h-5 w-5 animate-spin" />
                     </motion.div>
-                  ))}
-                </motion.div>
+                  )}
+                </div>
               ) : (
                 <p className="text-center text-muted-foreground">לא נמצאו מילים נרדפות</p>
               )}
