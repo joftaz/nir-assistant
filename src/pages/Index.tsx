@@ -319,21 +319,6 @@ const Index: React.FC = () => {
         setActiveWord(null);
       });
   };
-  
-  // Handle finding synonyms
-  const handleFindSynonyms = (word: string) => {
-    // First add the original word to conversation
-    handleAddWordDirectly(word);
-    
-    // Then submit a topic for the synonyms
-    const synonymTopic = `מילים נרדפות ל"${word}"`;
-    handleSubmitTopic(synonymTopic);
-    
-    toast({
-      title: "חיפוש מילים נרדפות",
-      description: `מחפש מילים נרדפות ל"${word}"`,
-    });
-  };
 
   const handleWordSelect = (word: string) => {
     addWordToStaging(word);
@@ -1024,7 +1009,6 @@ const Index: React.FC = () => {
         word={selectedWord}
         onAddWord={handleAddWordDirectly}
         onSpeakWord={handleSpeakWord}
-        onFindSynonyms={handleFindSynonyms}
       />
     </div>
   );
