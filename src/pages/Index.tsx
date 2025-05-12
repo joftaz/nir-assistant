@@ -993,7 +993,7 @@ const Index: React.FC = () => {
       </div>
 
       <div className="w-full max-w-3xl mx-auto mt-3">
-        <div className="grid gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {activeTopicGroups.map((group, index) => (
             <TopicGroup
               key={`${group.category}-${index}`}
@@ -1011,11 +1011,11 @@ const Index: React.FC = () => {
         </div>
       </div>
 
-      <ApiKeyInput 
+      {/* <ApiKeyInput 
         onSaveApiKey={handleSaveApiKey} 
         apiKey={openAIKey}
         className="mt-6"
-      />
+      /> */}
       
       {/* Word Action Drawer */}
       <WordActionDrawer 
