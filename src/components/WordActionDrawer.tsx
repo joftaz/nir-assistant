@@ -278,10 +278,11 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
                           delay: Math.min(0.05 * index, 1),
                           duration: 0.2
                         }}
+                        className="shadow-sm"
                       >
                         <Button 
                           variant="outline" 
-                          className="w-full justify-start py-3 px-4 text-right"
+                          className="w-full justify-start py-3 px-4 text-right bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-900"
                           onClick={() => handleSelectSynonym(synonym)}
                         >
                           {synonym}
