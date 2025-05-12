@@ -973,3 +973,60 @@ const Index: React.FC = () => {
           <Button
             variant={isChildrenMode ? "default" : "ghost"}
             size="sm"
+            className={`h-8 ${isChildrenMode ? "bg-primary" : ""}`}
+            onClick={handleChildrenModeToggle}
+          >
+            <Baby className={`h-5 w-5 ${isChildrenMode ? "text-primary-foreground" : ""} mr-1`} />
+            <span>מצב ילדים</span>
+          </Button>
+        </div>
+      )}
+
+      <div className="w-full max-w-3xl mx-auto">
+        <TopicInput 
+          onSubmit={handleSubmitTopic} 
+          isLoading={isLoading}
+          isStreaming={isStreaming}
+          placeholder="הקלד נושא או מילה..."
+        />
+      </div>
+
+      <div className="w-full max-w-3xl mx-auto mt-3">
+        <div className="grid gap-3">
+          {activeTopicGroups.map((group, index) => (
+            <TopicGroup
+              key={`${group.category}-${index}`}
+              category={group.category}
+              words={group.words}
+              onWordSelect={handleWordSelect}
+              onWordClick={handleWordClick}
+              isCollapsed={group.isCollapsed}
+              isOld={group.isOld}
+              isStaging={group.isStaging}
+              hasRefreshedStaging={hasRefreshedStaging}
+              activeWord={activeWord}
+            />
+          ))}
+        </div>
+      </div>
+
+      <ApiKeyInput 
+        apiKey={openAIKey} 
+        onSaveApiKey={handleSaveApiKey} 
+        className="mt-6"
+      />
+      
+      {/* Word Action Drawer */}
+      <WordActionDrawer 
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        word={selectedWord}
+        onAddWord={handleAddWordDirectly}
+        onSpeakWord={handleSpeakWord}
+        onFindSynonyms={handleFindSynonyms}
+      />
+    </div>
+  );
+};
+
+export default Index;
