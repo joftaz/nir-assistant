@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { Volume2, Plus, Search, ArrowLeft } from 'lucide-react';
+import { Volume2, Plus, Search, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getSynonymsPrompt, replacePromptPlaceholders } from '@/utils/modelPrompt';
+import { useToast } from '@/hooks/use-toast';
 
 interface WordActionDrawerProps {
   isOpen: boolean;
@@ -15,7 +17,6 @@ interface WordActionDrawerProps {
   word: string | null;
   onAddWord: (word: string) => void;
   onSpeakWord: (word: string) => void;
-  onFindSynonyms: (word: string) => void;
 }
 
 const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
@@ -24,23 +25,20 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
   word,
   onAddWord,
   onSpeakWord
-  
 }) => {
   const [showingSynonyms, setShowingSynonyms] = useState(false);
-  // Dummy synonyms list for demonstration
-  const dummySynonyms = word ? [
-    `דומה ל${word}`,
-    `מקביל ל${word}`,
-    `זהה ל${word}`,
-    `שווה ערך ל${word}`,
-    `באותו סגנון כמו ${word}`,
-    `סוג של ${word}`,
-    `משמעות דומה ל${word}`,
-    `חלופה ל${word}`,
-    `מקביל במשמעות ל${word}`,
-    `תחליף ל${word}`
-  ] : [];
-
+  const [synonyms, setSynonyms] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  
+  // Clear synonyms when drawer closes
+  useEffect(() => {
+    if (!isOpen) {
+      setShowingSynonyms(false);
+      setSynonyms([]);
+    }
+  }, [isOpen]);
+  
   if (!word) return null;
 
   const handleAddWord = () => {
@@ -52,8 +50,93 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
     onSpeakWord(word);
   };
 
-  const handleFindSynonyms = () => {
+  const handleFindSynonyms = async () => {
+    setIsLoading(true);
     setShowingSynonyms(true);
+    setSynonyms([]);
+    
+    try {
+      // Get the API key from env or localStorage
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem('openai_api_key') || '';
+      
+      if (!apiKey) {
+        toast({
+          title: "שגיאה",
+          description: "חסר מפתח API לחיפוש מילים נרדפות",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      // Get the synonyms prompt
+      const synonymsPrompt = getSynonymsPrompt();
+      const fullPrompt = replacePromptPlaceholders(synonymsPrompt);
+      
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [
+            { role: 'system', content: fullPrompt },
+            { role: 'user', content: `אנא מצא מילים נרדפות למילה: "${word}"` }
+          ],
+          temperature: 0.7,
+          response_format: { type: "json_object" }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error calling OpenAI API: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const content = data.choices[0]?.message?.content;
+
+      if (!content) {
+        throw new Error("No response content");
+      }
+
+      try {
+        const parsedContent = JSON.parse(content);
+        if (parsedContent.synonyms && Array.isArray(parsedContent.synonyms)) {
+          setSynonyms(parsedContent.synonyms);
+        } else {
+          // Fallback just in case API returns the old format
+          // or some other unexpected format
+          const allWords: string[] = [];
+          
+          if (parsedContent.categories && Array.isArray(parsedContent.categories)) {
+            parsedContent.categories.forEach((category: any) => {
+              if (category.words && Array.isArray(category.words)) {
+                allWords.push(...category.words);
+              }
+            });
+          }
+          
+          setSynonyms(allWords.length > 0 ? allWords : ["לא נמצאו מילים נרדפות"]);
+        }
+      } catch (error) {
+        console.error('Error parsing OpenAI response:', error);
+        throw new Error("Invalid response format");
+      }
+      
+    } catch (error) {
+      console.error('Error fetching synonyms:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בחיפוש מילים נרדפות",
+        variant: "destructive",
+      });
+      // Show something even if there's an error
+      setSynonyms(["לא נמצאו מילים נרדפות"]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSelectSynonym = (synonym: string) => {
@@ -64,6 +147,7 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
 
   const handleBack = () => {
     setShowingSynonyms(false);
+    setSynonyms([]);
   };
 
   const drawerHeight = showingSynonyms ? "h-[70vh]" : "h-[30vh]";
@@ -72,6 +156,7 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
     <Drawer open={isOpen} onOpenChange={open => {
       if (!open) {
         setShowingSynonyms(false);
+        setSynonyms([]);
         onClose();
       }
     }}>
@@ -101,37 +186,46 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
               
               <div className="text-center mb-3">מילים נרדפות ל-"{word}"</div>
               
-              <motion.div 
-                className="grid grid-cols-2 gap-2 w-full"
-                initial="hidden"
-                animate="visible"
-                variants={{
-                  visible: {
-                    transition: {
-                      staggerChildren: 0.05
-                    }
-                  },
-                  hidden: {}
-                }}
-              >
-                {dummySynonyms.map((synonym, index) => (
-                  <motion.div
-                    key={index}
-                    variants={{
-                      hidden: { opacity: 0, y: 10 },
-                      visible: { opacity: 1, y: 0 }
-                    }}
-                  >
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start py-3 px-4 text-right"
-                      onClick={() => handleSelectSynonym(synonym)}
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin mb-2" />
+                  <p className="text-center text-muted-foreground">מחפש מילים נרדפות...</p>
+                </div>
+              ) : synonyms.length > 0 ? (
+                <motion.div 
+                  className="grid grid-cols-2 gap-2 w-full"
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    visible: {
+                      transition: {
+                        staggerChildren: 0.05
+                      }
+                    },
+                    hidden: {}
+                  }}
+                >
+                  {synonyms.map((synonym, index) => (
+                    <motion.div
+                      key={index}
+                      variants={{
+                        hidden: { opacity: 0, y: 10 },
+                        visible: { opacity: 1, y: 0 }
+                      }}
                     >
-                      {synonym}
-                    </Button>
-                  </motion.div>
-                ))}
-              </motion.div>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start py-3 px-4 text-right"
+                        onClick={() => handleSelectSynonym(synonym)}
+                      >
+                        {synonym}
+                      </Button>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              ) : (
+                <p className="text-center text-muted-foreground">לא נמצאו מילים נרדפות</p>
+              )}
             </motion.div>
           ) : (
             <motion.div 

@@ -23,7 +23,9 @@ export const SENTENCE_CHILDREN_PROMPT_STORAGE_KEY = 'sentence_children_prompt';
 export const STAGED_WORDS_PROMPT_STORAGE_KEY = 'staged_words_prompt';
 export const CATEGORIES_COUNT_KEY = 'categories_count';
 export const WORDS_PER_CATEGORY_KEY = 'words_per_category';
+export const WORDS_COUNT_KEY = 'words_count';
 export const GENDER_STORAGE_KEY = 'gender';
+export const SYNONYMS_PROMPT_STORAGE_KEY = 'synonyms_prompt';
 
 export const defaultSystemJsonInstruction = `
 ===== System Instructions =====
@@ -85,6 +87,10 @@ export const initializeSystemPrompt = (): void => {
   
   if (!localStorage.getItem(WORDS_PER_CATEGORY_KEY)) {
     localStorage.setItem(WORDS_PER_CATEGORY_KEY, '10');
+  }
+  
+  if (!localStorage.getItem(WORDS_COUNT_KEY)) {
+    localStorage.setItem(WORDS_COUNT_KEY, '10');
   }
   
   if (!localStorage.getItem(GENDER_STORAGE_KEY)) {
@@ -253,10 +259,69 @@ export const getModelResponse = async (
 export const replacePromptPlaceholders = (prompt: string): string => {
   const categoriesCount = localStorage.getItem(CATEGORIES_COUNT_KEY) || '4';
   const wordsPerCategory = localStorage.getItem(WORDS_PER_CATEGORY_KEY) || '10';
+  const wordsCount = localStorage.getItem(WORDS_COUNT_KEY) || '10';
   const gender = localStorage.getItem(GENDER_STORAGE_KEY) || 'זכר';
   
   return prompt
     .replace(/{categoriesCount}/g, categoriesCount)
     .replace(/{wordsPerCategory}/g, wordsPerCategory)
+    .replace(/{wordsCount}/g, wordsCount)
     .replace(/{gender}/g, gender);
+};
+
+// Add these new constants
+export const defaultSynonymsPrompt = `## תפקידך:
+
+הצעת מילים נרדפות ומקבילות למילה ספציפית שנבחרה - עם דגש על דיוק, רלוונטיות, והתאמה תרבותית-שפתית.
+
+## מי אתה?
+
+אתה עוזר לשוני מקצועי בעל ידע עמוק באוצר המילים העברי. תפקידך לזהות ולהציע מילים נרדפות, ביטויים דומים, ומקבילות סמנטיות למילה שהמשתמש בחר.
+
+## הנחיות:
+
+1. הצע בדיוק {wordsCount} מילים נרדפות או קשורות למילה המקורית.
+
+2. המילים צריכות להיות מגוונות ולכסות מספר היבטים:
+   - מילים נרדפות מדויקות (סינונימים)
+   - מילים בעלות משמעות דומה אך עם גוון שונה
+   - מילים מאותו שדה סמנטי אך עם דגשים שונים
+   - ביטויים קשורים (כאשר רלוונטי)
+
+3. שמור על רמת שפה מותאמת:
+   - אם המילה המקורית פורמלית - הצע בעיקר חלופות פורמליות
+   - אם המילה יומיומית - הצע בעיקר חלופות שגורות בשפה היומיומית
+   - שלב מילים מרמות שפה שונות לגיוון
+
+4. שים לב למגדר: המילים המוצעות צריכות להתאים למגדר {gender} כאשר רלוונטי.
+
+5. הימנע מ:
+   - חזרות מיותרות
+   - מילים נדירות מדי שאינן בשימוש יומיומי (אלא אם המילה המקורית נדירה בעצמה)
+   - מילים שאינן באמת נרדפות
+
+## מבנה התשובה:
+
+הצג רשימה פשוטה של מילים נרדפות למילה המקורית, בלי קטגוריות.
+וודא שהרשימה תכיל בדיוק {wordsCount} מילים.
+
+## דוגמה למבנה התשובה:
+
+\`\`\`json
+{
+  "synonyms": ["מילה1", "מילה2", "מילה3", "מילה4", "מילה5", "מילה6", "מילה7", "מילה8"]
+}
+\`\`\`
+
+## הנחיות קריטיות:
+
+- חייב להציע בדיוק {wordsCount} מילים נרדפות
+- כל המילים המוצעות חייבות להיות בעברית תקנית
+- יש להתאים את המילים למגדר {gender} כאשר רלוונטי
+- הצג תשובה בפורמט JSON תקין בלבד`;
+
+// Add this new function to get the synonyms prompt
+export const getSynonymsPrompt = (): string => {
+  const savedPrompt = localStorage.getItem(SYNONYMS_PROMPT_STORAGE_KEY);
+  return savedPrompt || defaultSynonymsPrompt;
 };

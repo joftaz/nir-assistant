@@ -21,12 +21,15 @@ import {
   defaultSystemPrompt, 
   defaultSentencePrompt,
   defaultStagedWordsPrompt,
+  defaultSynonymsPrompt,
   replacePromptPlaceholders, 
   SYSTEM_PROMPT_STORAGE_KEY,
   SENTENCE_PROMPT_STORAGE_KEY,
   STAGED_WORDS_PROMPT_STORAGE_KEY,
+  SYNONYMS_PROMPT_STORAGE_KEY,
   CATEGORIES_COUNT_KEY,
   WORDS_PER_CATEGORY_KEY,
+  WORDS_COUNT_KEY,
   GENDER_STORAGE_KEY,
   SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY,
   default2ndPersonSentencePrompt,
@@ -54,8 +57,10 @@ interface SettingsFormValues {
   sentence2ndPersonPrompt: string;
   sentenceChildrenPrompt: string;
   stagedWordsPrompt: string;
+  synonymsPrompt: string;
   categoriesCount: number;
   wordsPerCategory: number;
+  wordsCount: number;
   gender: string;
 }
 
@@ -72,8 +77,10 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
       sentence2ndPersonPrompt: '',
       sentenceChildrenPrompt: '',
       stagedWordsPrompt: '',
+      synonymsPrompt: '',
       categoriesCount: 4,
       wordsPerCategory: 10,
+      wordsCount: 10,
       gender: 'זכר'
     }
   });
@@ -85,8 +92,10 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     const savedSentence2ndPersonPrompt = localStorage.getItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY);
     const savedSentenceChildrenPrompt = localStorage.getItem(SENTENCE_CHILDREN_PROMPT_STORAGE_KEY);
     const savedStagedWordsPrompt = localStorage.getItem(STAGED_WORDS_PROMPT_STORAGE_KEY);
+    const savedSynonymsPrompt = localStorage.getItem(SYNONYMS_PROMPT_STORAGE_KEY);
     const savedCategoriesCount = localStorage.getItem(CATEGORIES_COUNT_KEY);
     const savedWordsPerCategory = localStorage.getItem(WORDS_PER_CATEGORY_KEY);
+    const savedWordsCount = localStorage.getItem(WORDS_COUNT_KEY);
     const savedGender = localStorage.getItem(GENDER_STORAGE_KEY);
     
     const values = {
@@ -95,8 +104,10 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
       sentence2ndPersonPrompt: savedSentence2ndPersonPrompt || default2ndPersonSentencePrompt,
       sentenceChildrenPrompt: savedSentenceChildrenPrompt || defaultChildrenSentencePrompt,
       stagedWordsPrompt: savedStagedWordsPrompt || defaultStagedWordsPrompt,
+      synonymsPrompt: savedSynonymsPrompt || defaultSynonymsPrompt,
       categoriesCount: savedCategoriesCount ? parseInt(savedCategoriesCount) : 4,
       wordsPerCategory: savedWordsPerCategory ? parseInt(savedWordsPerCategory) : 10,
+      wordsCount: savedWordsCount ? parseInt(savedWordsCount) : 10,
       gender: savedGender || 'זכר'
     };
     
@@ -113,14 +124,17 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     localStorage.setItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY, currentValues.sentence2ndPersonPrompt);
     localStorage.setItem(SENTENCE_CHILDREN_PROMPT_STORAGE_KEY, currentValues.sentenceChildrenPrompt);
     localStorage.setItem(STAGED_WORDS_PROMPT_STORAGE_KEY, currentValues.stagedWordsPrompt);
+    localStorage.setItem(SYNONYMS_PROMPT_STORAGE_KEY, currentValues.synonymsPrompt);
     localStorage.setItem(CATEGORIES_COUNT_KEY, currentValues.categoriesCount.toString());
     localStorage.setItem(WORDS_PER_CATEGORY_KEY, currentValues.wordsPerCategory.toString());
+    localStorage.setItem(WORDS_COUNT_KEY, currentValues.wordsCount.toString());
     localStorage.setItem(GENDER_STORAGE_KEY, currentValues.gender);
     
     // Log what was saved to localStorage
     console.log('Settings saved:', {
       categoriesCount: currentValues.categoriesCount,
       wordsPerCategory: currentValues.wordsPerCategory,
+      wordsCount: currentValues.wordsCount,
       gender: currentValues.gender
     });
     
@@ -142,8 +156,10 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
       sentence2ndPersonPrompt: default2ndPersonSentencePrompt,
       sentenceChildrenPrompt: defaultChildrenSentencePrompt,
       stagedWordsPrompt: defaultStagedWordsPrompt,
+      synonymsPrompt: defaultSynonymsPrompt,
       categoriesCount: 4,
       wordsPerCategory: 10,
+      wordsCount: 10,
       gender: 'זכר'
     };
     
@@ -155,8 +171,10 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     localStorage.setItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY, defaultValues.sentence2ndPersonPrompt);
     localStorage.setItem(SENTENCE_CHILDREN_PROMPT_STORAGE_KEY, defaultValues.sentenceChildrenPrompt);
     localStorage.setItem(STAGED_WORDS_PROMPT_STORAGE_KEY, defaultValues.stagedWordsPrompt);
+    localStorage.setItem(SYNONYMS_PROMPT_STORAGE_KEY, defaultValues.synonymsPrompt);
     localStorage.setItem(CATEGORIES_COUNT_KEY, defaultValues.categoriesCount.toString());
     localStorage.setItem(WORDS_PER_CATEGORY_KEY, defaultValues.wordsPerCategory.toString());
+    localStorage.setItem(WORDS_COUNT_KEY, defaultValues.wordsCount.toString());
     localStorage.setItem(GENDER_STORAGE_KEY, defaultValues.gender);
     
     // Update parent component with default values
@@ -251,6 +269,29 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
                 
                 <FormField
                   control={form.control}
+                  name="wordsCount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>מספר מילים נרדפות</FormLabel>
+                      <div className="flex flex-col space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Slider
+                            value={[field.value]}
+                            min={4}
+                            max={20}
+                            step={1}
+                            onValueChange={(value) => field.onChange(value[0])}
+                            className="w-full"
+                          />
+                          <span className="text-sm font-medium mr-4 w-8 text-center">{field.value}</span>
+                        </div>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
                   name="gender"
                   render={({ field }) => (
                     <FormItem className="space-y-2">
@@ -291,6 +332,7 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
                         <SelectItem value="sentence2nd">פרומפט משפטים בשיחה</SelectItem>
                         <SelectItem value="sentenceChildren">פרומפט משפטים לילדים</SelectItem>
                         <SelectItem value="staged">פרומפט מילים זמניות</SelectItem>
+                        <SelectItem value="synonyms">פרומפט מילים נרדפות</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -383,6 +425,26 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>פרומפט מילים זמניות</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                rows={12}
+                                className="font-mono text-xs rtl text-right"
+                                dir="rtl"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {selectedPrompt === 'synonyms' && (
+                      <FormField
+                        control={form.control}
+                        name="synonymsPrompt"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>פרומפט מילים נרדפות</FormLabel>
                             <FormControl>
                               <Textarea
                                 {...field}
