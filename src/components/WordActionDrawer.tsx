@@ -222,7 +222,7 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
     setSynonyms([]);
   };
 
-  const drawerHeight = showingSynonyms ? "h-[70vh]" : "h-[30vh]";
+  const drawerHeight = showingSynonyms ? "h-[80vh]" : "h-[40vh]";
 
   return (
     <Drawer open={isOpen} onOpenChange={open => {
