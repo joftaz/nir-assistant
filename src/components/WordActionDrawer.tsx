@@ -315,15 +315,7 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
               transition={{ duration: 0.3 }}
               className="flex flex-col gap-3 items-center justify-center px-4 py-2"
             >
-              <Button 
-                variant="outline" 
-                className="w-full flex items-center gap-2 justify-center text-lg"
-                onClick={handleSpeakWord}
-              >
-                <Volume2 className="h-5 w-5" />
-                <span>הקרא מילה</span>
-              </Button>
-              
+
               <Button 
                 variant="outline" 
                 className="w-full flex items-center gap-2 justify-center text-lg"
@@ -332,7 +324,16 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
                 <Plus className="h-5 w-5" />
                 <span>הוסף למילים הנבחרות</span>
               </Button>
-              
+
+              <Button 
+                variant="outline" 
+                className="w-full flex items-center gap-2 justify-center text-lg"
+                onClick={handleSpeakWord}
+              >
+                <Volume2 className="h-5 w-5" />
+                <span>הקרא מילה</span>
+              </Button>
+                            
               <Button 
                 variant="outline" 
                 className="w-full flex items-center gap-2 justify-center text-lg"
