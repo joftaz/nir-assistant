@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -63,7 +63,10 @@ const Index: React.FC = () => {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [activeWord, setActiveWord] = useState<string | null>(null);
   
-  // Remove readOnlyMode state since we're replacing it with the drawer
+  // Scroll to top after any conversation update
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [conversation]);
 
   useEffect(() => {
     const envApiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
@@ -211,6 +214,14 @@ const Index: React.FC = () => {
       description: `המילה "${word}" נוספה לשיחה בהצלחה`,
     });
     
+    // Note: Not refreshing categories automatically after adding a word.
+    // User will need to use the refresh button if they want new suggestions.
+  };
+  
+  // New function to refresh the suggested words/categories
+  const handleRefreshSuggestedWords = () => {
+    if (conversation.length === 0) return;
+    
     setIsLoading(true);
     setIsStreaming(true);
     
@@ -224,18 +235,17 @@ const Index: React.FC = () => {
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
     
-    const updatedConversation = [...conversation, newMessage];
-    const conversationHistory = updatedConversation.map(item => 
+    const conversationHistory = conversation.map(item => 
       `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
     ).join('\n');
     
-    const allUserWords = updatedConversation
+    const allUserWords = conversation
       .filter(item => item.isUser)
       .map(item => item.text);
     
     const prompt = `${conversationHistory}\n\nהערה למודל: המילים הבאות כבר נבחרו, אנא הצע מילים חדשות שקשורות לנושא אך שונות מאלו: ${allUserWords.join(', ')}`;
     
-    console.log("Regenerating categories after word selection:", prompt);
+    console.log("Refreshing categories from conversation:", prompt);
     
     const categoryReceived = new Set<string>();
     
@@ -244,7 +254,7 @@ const Index: React.FC = () => {
       !!apiKey, 
       apiKey, 
       (partialResponse) => {
-        console.log("Received partial response for regeneration:", partialResponse);
+        console.log("Received partial response for refresh:", partialResponse);
         
         if (!categoryReceived.has(partialResponse.category)) {
           categoryReceived.add(partialResponse.category);
@@ -964,6 +974,18 @@ const Index: React.FC = () => {
             <Baby className={`h-5 w-5 ${isChildrenMode ? "text-primary-foreground" : ""} mr-1`} />
             <span>מצב ילדים</span>
           </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-sm"
+              onClick={handleRefreshSuggestedWords}
+              disabled={!hasUserMessages || isStreaming || isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              רענן מילים מוצעות
+            </Button>
+
         </div>
       )}
 
