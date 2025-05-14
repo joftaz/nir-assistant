@@ -989,16 +989,6 @@ const Index: React.FC = () => {
         </div>
       )}
 
-      <div className="w-full max-w-3xl mx-auto">
-        <TopicInput 
-          onSubmit={handleSubmitTopic} 
-          isLoading={isLoading}
-          apiKey={openAIKey}
-          placeholder="הקלד נושא או מילה..."
-          isStreaming={isStreaming}
-        />
-      </div>
-
       <div className="w-full max-w-3xl mx-auto mt-3">
         <div className="grid grid-cols-2 gap-3">
           {activeTopicGroups.map((group, index) => (
@@ -1016,6 +1006,17 @@ const Index: React.FC = () => {
             />
           ))}
         </div>
+      </div>
+
+      {/* Moved TopicInput to the bottom with styling for fixed position */}
+      <div className="w-full max-w-3xl mx-auto fixed bottom-0 left-0 right-0 px-2 sm:px-4 pb-6 pt-2 bg-background">
+        <TopicInput 
+          onSubmit={handleSubmitTopic} 
+          isLoading={isLoading}
+          apiKey={openAIKey}
+          placeholder="הקלד נושא או מילה..."
+          isStreaming={isStreaming}
+        />
       </div>
 
       {/* <ApiKeyInput 
