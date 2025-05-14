@@ -940,55 +940,6 @@ const Index: React.FC = () => {
         />
       )}
       
-      {!isStaging && hasUserMessages && !showingSentences && (
-        <div className="w-full max-w-3xl mx-auto mobile-sentence-controls mt-2 mb-2">
-          <Button
-            variant="outline"
-            onClick={handleGenerateSentencesFromConversation}
-            disabled={isGeneratingSentences || conversation.length === 0}
-            className="gap-2 rtl:flex-row-reverse"
-          >
-            {isGeneratingSentences ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <MessageSquare className="h-4 w-4" />
-            )}
-            <span>יצירת משפטים </span>
-          </Button>
-          <Button
-            variant={isConversationMode ? "default" : "ghost"}
-            size="sm"
-            className={`h-8 ${isConversationMode ? "bg-primary" : ""}`}
-            onClick={handleConversationModeToggle}
-          >
-            <Speech className={`h-5 w-5 ${isConversationMode ? "text-primary-foreground" : ""} mr-1`} />
-            <span>מצב שיחה</span>
-          </Button>
-          
-          <Button
-            variant={isChildrenMode ? "default" : "ghost"}
-            size="sm"
-            className={`h-8 ${isChildrenMode ? "bg-primary" : ""}`}
-            onClick={handleChildrenModeToggle}
-          >
-            <Baby className={`h-5 w-5 ${isChildrenMode ? "text-primary-foreground" : ""} mr-1`} />
-            <span>מצב ילדים</span>
-          </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-sm"
-              onClick={handleRefreshSuggestedWords}
-              disabled={!hasUserMessages || isStreaming || isLoading}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              רענן מילים מוצעות
-            </Button>
-
-        </div>
-      )}
-
       <div className="w-full max-w-3xl mx-auto mt-3">
         <div className="grid grid-cols-2 gap-3">
           {activeTopicGroups.map((group, index) => (
@@ -1010,6 +961,53 @@ const Index: React.FC = () => {
 
       {/* Moved TopicInput to the bottom with styling for fixed position */}
       <div className="w-full max-w-3xl mx-auto fixed bottom-0 left-0 right-0 px-2 sm:px-4 pb-6 pt-2 bg-background">
+        {!isStaging && hasUserMessages && !showingSentences && (
+          <div className="w-full mobile-sentence-controls mb-2">
+            <Button
+              variant="outline"
+              onClick={handleGenerateSentencesFromConversation}
+              disabled={isGeneratingSentences || conversation.length === 0}
+              className="gap-2 rtl:flex-row-reverse"
+            >
+              {isGeneratingSentences ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <MessageSquare className="h-4 w-4" />
+              )}
+              <span>יצירת משפטים </span>
+            </Button>
+            <Button
+              variant={isConversationMode ? "default" : "ghost"}
+              size="sm"
+              className={`h-8 ${isConversationMode ? "bg-primary" : ""}`}
+              onClick={handleConversationModeToggle}
+            >
+              <Speech className={`h-5 w-5 ${isConversationMode ? "text-primary-foreground" : ""} mr-1`} />
+              <span>מצב שיחה</span>
+            </Button>
+            
+            <Button
+              variant={isChildrenMode ? "default" : "ghost"}
+              size="sm"
+              className={`h-8 ${isChildrenMode ? "bg-primary" : ""}`}
+              onClick={handleChildrenModeToggle}
+            >
+              <Baby className={`h-5 w-5 ${isChildrenMode ? "text-primary-foreground" : ""} mr-1`} />
+              <span>מצב ילדים</span>
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-sm"
+              onClick={handleRefreshSuggestedWords}
+              disabled={!hasUserMessages || isStreaming || isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              רענן מילים מוצעות
+            </Button>
+          </div>
+        )}
         <TopicInput 
           onSubmit={handleSubmitTopic} 
           isLoading={isLoading}
