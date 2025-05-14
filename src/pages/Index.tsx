@@ -919,22 +919,7 @@ const Index: React.FC = () => {
         </motion.p>
       </header>
 
-      <ConversationHistory 
-        conversation={conversation} 
-        onRemoveMessage={handleRemoveMessage}
-      />
 
-      {isStaging && (
-        <StagingArea
-          stagedWords={stagedWords}
-          onRemoveWord={removeWordFromStaging}
-          onWordSelect={handleStagingWordSelect}
-          onCancel={handleStagingCancel}
-          onAddAllWords={handleAddAllWords}
-          onRefresh={handleRefreshStagingWords}
-          isLoading={isLoading}
-        />
-      )}
       
       {showingSentences && (
         <SentencesDisplay
@@ -971,6 +956,26 @@ const Index: React.FC = () => {
 
       {/* Moved TopicInput to the bottom with styling for fixed position */}
       <div className="w-full max-w-3xl mx-auto fixed bottom-0 left-0 right-0 px-2 sm:px-4 pb-6 pt-2 bg-background">
+        {/* Moved StagingArea to be above the sentence controls */}
+        {isStaging && (
+          <div className="mb-2">
+            <StagingArea
+              stagedWords={stagedWords}
+              onRemoveWord={removeWordFromStaging}
+              onWordSelect={handleStagingWordSelect}
+              onCancel={handleStagingCancel}
+              onAddAllWords={handleAddAllWords}
+              onRefresh={handleRefreshStagingWords}
+              isLoading={isLoading}
+            />
+          </div>
+        )}
+
+      <ConversationHistory 
+        conversation={conversation} 
+        onRemoveMessage={handleRemoveMessage}
+      />
+        
         {!isStaging && hasUserMessages && !showingSentences && (
           <div className="w-full mobile-sentence-controls mb-2">
             <Button
