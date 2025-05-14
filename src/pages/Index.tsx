@@ -956,6 +956,22 @@ const Index: React.FC = () => {
 
       {/* Moved TopicInput to the bottom with styling for fixed position */}
       <div className="w-full max-w-3xl mx-auto fixed bottom-0 left-0 right-0 px-2 sm:px-4 pb-6 pt-2 bg-background">
+        {/* Refresh button moved above selected words */}
+        {!isStaging && hasUserMessages && !showingSentences && (
+          <div className="flex justify-center mb-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-sm"
+              onClick={handleRefreshSuggestedWords}
+              disabled={!hasUserMessages || isStreaming || isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              רענן מילים מוצעות
+            </Button>
+          </div>
+        )}
+        
         {/* Moved StagingArea to be above the sentence controls */}
         {isStaging && (
           <div className="mb-2">
@@ -971,11 +987,11 @@ const Index: React.FC = () => {
           </div>
         )}
 
-      <ConversationHistory 
-        conversation={conversation} 
-        onRemoveMessage={handleRemoveMessage}
-      />
-        
+        <ConversationHistory 
+          conversation={conversation} 
+          onRemoveMessage={handleRemoveMessage}
+        />
+          
         {!isStaging && hasUserMessages && !showingSentences && (
           <div className="w-full mobile-sentence-controls mb-2">
             <Button
@@ -986,17 +1002,6 @@ const Index: React.FC = () => {
             >
               <MessageSquare className="h-4 w-4" />
               <span>יצירת משפטים</span>
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-sm"
-              onClick={handleRefreshSuggestedWords}
-              disabled={!hasUserMessages || isStreaming || isLoading}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              רענן מילים מוצעות
             </Button>
           </div>
         )}
