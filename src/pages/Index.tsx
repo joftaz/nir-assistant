@@ -11,7 +11,7 @@ import ApiKeyInput from '@/components/ApiKeyInput';
 import Settings from '@/components/Settings';
 import { getModelResponse, initializeSystemPrompt, getStagedWordsPrompt, defaultSystemJsonInstruction, replacePromptPlaceholders } from '@/utils/modelPrompt';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, RefreshCw, History as HistoryIcon, MessageSquare, Plus, Speech, Baby } from 'lucide-react';
+import { Loader2, RefreshCw, History as HistoryIcon, MessageSquare, Plus, Speech, Baby, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { saveHistory, getHistoryById } from '@/utils/conversationManager';
 import { TopicCategory } from '@/types/models';
@@ -883,11 +883,11 @@ const Index: React.FC = () => {
             variant="ghost" 
             size="icon" 
             className="rounded-full"
-            title="רענן שיחה"
-            aria-label="רענן שיחה"
+            title="מחק שיחה"
+            aria-label="מחק שיחה"
             onClick={handleReset}
           >
-            <RefreshCw className="h-5 w-5" />
+            <Trash2 className="h-5 w-5" />
           </Button>
           
           <Button 
