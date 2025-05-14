@@ -19,6 +19,7 @@ import { useStagingArea } from '@/hooks/use-staging-area';
 import { useSentenceGenerator } from '@/hooks/use-sentence-generator';
 import { playSpeech } from '@/utils/speechService';
 import WordActionDrawer from '@/components/WordActionDrawer';
+import SentenceOptionsDrawer from '@/components/SentenceOptionsDrawer';
 
 const Index: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -62,6 +63,9 @@ const Index: React.FC = () => {
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [activeWord, setActiveWord] = useState<string | null>(null);
+  
+  // Add state for sentence options drawer
+  const [isSentenceOptionsDrawerOpen, setIsSentenceOptionsDrawerOpen] = useState(false);
   
   // Scroll to top after any conversation update
   useEffect(() => {
@@ -695,6 +699,7 @@ const Index: React.FC = () => {
     }
     
     setShowingSentences(true);
+    setIsSentenceOptionsDrawerOpen(false);
     
     setTopicGroups(currentGroups => 
       currentGroups.map(group => ({
@@ -858,6 +863,11 @@ const Index: React.FC = () => {
     return audioPromises;
   };
 
+  // Handler to open the sentence options drawer
+  const handleOpenSentenceOptionsDrawer = () => {
+    setIsSentenceOptionsDrawerOpen(true);
+  };
+
   const activeTopicGroups = isStaging && hasRefreshedStaging ? stagingTopicGroups : topicGroups;
   
   const hasUserMessages = conversation.some(item => item.isUser);
@@ -965,35 +975,12 @@ const Index: React.FC = () => {
           <div className="w-full mobile-sentence-controls mb-2">
             <Button
               variant="outline"
-              onClick={handleGenerateSentencesFromConversation}
+              onClick={handleOpenSentenceOptionsDrawer}
               disabled={isGeneratingSentences || conversation.length === 0}
               className="gap-2 rtl:flex-row-reverse"
             >
-              {isGeneratingSentences ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <MessageSquare className="h-4 w-4" />
-              )}
-              <span>יצירת משפטים </span>
-            </Button>
-            <Button
-              variant={isConversationMode ? "default" : "ghost"}
-              size="sm"
-              className={`h-8 ${isConversationMode ? "bg-primary" : ""}`}
-              onClick={handleConversationModeToggle}
-            >
-              <Speech className={`h-5 w-5 ${isConversationMode ? "text-primary-foreground" : ""} mr-1`} />
-              <span>מצב שיחה</span>
-            </Button>
-            
-            <Button
-              variant={isChildrenMode ? "default" : "ghost"}
-              size="sm"
-              className={`h-8 ${isChildrenMode ? "bg-primary" : ""}`}
-              onClick={handleChildrenModeToggle}
-            >
-              <Baby className={`h-5 w-5 ${isChildrenMode ? "text-primary-foreground" : ""} mr-1`} />
-              <span>מצב ילדים</span>
+              <MessageSquare className="h-4 w-4" />
+              <span>יצירת משפטים</span>
             </Button>
 
             <Button
@@ -1030,6 +1017,18 @@ const Index: React.FC = () => {
         word={selectedWord}
         onAddWord={handleAddWordDirectly}
         onSpeakWord={handleSpeakWord}
+      />
+      
+      {/* Sentence Options Drawer */}
+      <SentenceOptionsDrawer 
+        isOpen={isSentenceOptionsDrawerOpen}
+        onClose={() => setIsSentenceOptionsDrawerOpen(false)}
+        onGenerateSentences={handleGenerateSentencesFromConversation}
+        isGenerating={isGeneratingSentences}
+        isConversationMode={isConversationMode}
+        isChildrenMode={isChildrenMode}
+        onToggleConversationMode={handleConversationModeToggle}
+        onToggleChildrenMode={handleChildrenModeToggle}
       />
     </div>
   );
