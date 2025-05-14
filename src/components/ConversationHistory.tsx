@@ -80,7 +80,7 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto py-1 flex flex-col gap-1 px-2 max-h-[25vh] overflow-y-auto" dir="rtl">
+    <div className="w-full max-w-3xl mx-auto py-1 flex flex-col gap-1 px-2 max-h-[25vh] overflow-y-auto bg-slate-50 shadow-sm rounded-md p-3 my-2 border border-slate-100" dir="rtl">
       {groupedConversation.map((group, groupIndex) => (
         group.isGroup ? (
           // Render grouped user messages
