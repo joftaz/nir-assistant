@@ -7,7 +7,9 @@ import {
   Clock, 
   MessageSquare, 
   ToggleLeft, 
-  ToggleRight 
+  ToggleRight,
+  Download,
+  FileSpreadsheet
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -30,6 +32,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
+import * as XLSX from 'xlsx';
 
 const History: React.FC = () => {
   const navigate = useNavigate();
@@ -107,6 +110,109 @@ const History: React.FC = () => {
     return firstUserMessage ? firstUserMessage.text : "שיחה ריקה";
   };
 
+  const handleDownloadExcel = () => {
+    if (histories.length === 0) {
+      toast({
+        title: "אין היסטוריה להורדה",
+        description: "אין שיחות שמורות להורדה",
+      });
+      return;
+    }
+
+    // Create data array for Excel file
+    const excelData = histories.map(history => {
+      return {
+        "תאריך": formatDate(history.createdAt),
+        "כותרת": getPreviewText(history),
+        "מילים נבחרו": history.messages && history.messages.length > 0 
+          ? history.messages.map(msg => msg.text).join(";") 
+          : "",
+        "מילים שהוצעו": history.topicGroups && history.topicGroups.length > 0 
+          ? history.topicGroups.flatMap(group => group.words).join(";") 
+          : ""
+      };
+    });
+
+    // Create worksheet
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    
+    // Set RTL direction and adjust column widths
+    worksheet["!cols"] = [
+      { wch: 20 }, // Date column width
+      { wch: 30 }, // Title column width
+      { wch: 50 }, // Selected words column width
+      { wch: 50 }  // Suggested words column width
+    ];
+
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "היסטוריית שיחות");
+    
+    // Generate Excel file and download
+    XLSX.writeFile(workbook, `היסטוריית_שיחות_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+
+    toast({
+      title: "הורדת היסטוריה",
+      description: "היסטוריית השיחות הורדה בהצלחה כקובץ Excel",
+    });
+  };
+
+  const handleDownloadHistory = () => {
+    if (histories.length === 0) {
+      toast({
+        title: "אין היסטוריה להורדה",
+        description: "אין שיחות שמורות להורדה",
+      });
+      return;
+    }
+
+    // Create CSV headers (Hebrew right-to-left support)
+    const csvHeaders = '\uFEFF"תאריך","כותרת","מילים נבחרו","מילים שהוצעו"\n';
+    
+    // Create CSV content
+    const csvContent = histories.reduce((acc, history) => {
+      // Format date
+      const date = formatDate(history.createdAt);
+      
+      // Get first message as title
+      const title = getPreviewText(history);
+      
+      // Get all messages joined by semicolon
+      const selectedWords = history.messages && history.messages.length > 0 
+        ? history.messages.map(msg => msg.text).join(";") 
+        : "";
+      
+      // Get all words from topicGroups
+      const suggestedWords = history.topicGroups && history.topicGroups.length > 0 
+        ? history.topicGroups.flatMap(group => group.words).join(";") 
+        : "";
+      
+      // Escape quotes in all fields
+      const escapedTitle = title.replace(/"/g, '""');
+      const escapedSelectedWords = selectedWords.replace(/"/g, '""');
+      const escapedSuggestedWords = suggestedWords.replace(/"/g, '""');
+      
+      // Add row
+      return acc + `"${date}","${escapedTitle}","${escapedSelectedWords}","${escapedSuggestedWords}"\n`;
+    }, csvHeaders);
+    
+    // Create a Blob and download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `היסטוריית_שיחות_${format(new Date(), "yyyy-MM-dd")}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "הורדת היסטוריה",
+      description: "היסטוריית השיחות הורדה בהצלחה",
+    });
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center px-4 py-8 sm:py-12">
       <header className="w-full max-w-3xl mx-auto mb-8 flex items-center justify-between">
@@ -128,16 +234,40 @@ const History: React.FC = () => {
           היסטוריית שיחות
         </motion.h1>
         
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() => setIsDeleteAllDialogOpen(true)}
-          disabled={histories.length === 0}
-          className="flex items-center gap-2"
-        >
-          <Trash2 className="h-4 w-4" />
-          מחק הכל
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadExcel}
+            disabled={histories.length === 0}
+            className="flex items-center gap-2"
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+            הורד Excel
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadHistory}
+            disabled={histories.length === 0}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            הורד CSV
+          </Button>
+          
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setIsDeleteAllDialogOpen(true)}
+            disabled={histories.length === 0}
+            className="flex items-center gap-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            מחק הכל
+          </Button>
+        </div>
       </header>
       
       <div className="w-full max-w-3xl mx-auto mb-8">
