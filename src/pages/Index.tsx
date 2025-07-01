@@ -20,6 +20,8 @@ import { useSentenceGenerator } from '@/hooks/use-sentence-generator';
 import { playSpeech } from '@/utils/speechService';
 import WordActionDrawer from '@/components/WordActionDrawer';
 import SentenceOptionsDrawer from '@/components/SentenceOptionsDrawer';
+import Menu from './Menu' ;
+
 
 const Index: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -874,53 +876,11 @@ const Index: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center px-2 sm:px-4 py-4 sm:py-6">
-      <header className="w-full max-w-3xl mx-auto mb-2 text-center relative">
-        <div className="absolute top-0 right-0">
-          <Settings onSystemPromptChange={handleSystemPromptChange} />
-        </div>
-        <div className="absolute top-0 left-0 flex gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full"
-            title="מחק שיחה"
-            aria-label="מחק שיחה"
-            onClick={handleReset}
-          >
-            <Trash2 className="h-5 w-5" />
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full"
-            title="היסטוריית שיחות"
-            aria-label="היסטוריית שיחות"
-            onClick={() => navigate('/history')}
-          >
-            <HistoryIcon className="h-5 w-5" />
-          </Button>
-        </div>
-        <motion.h1 
-          className="text-xl sm:text-2xl font-semibold mb-1"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          סיוע בשליפת מילים
-        </motion.h1>
-        <motion.p 
-          className="text-muted-foreground text-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          הקלד נושא או לחץ על מילים מוצעות להמשך השיחה
-        </motion.p>
-      </header>
-
-
       
+      {<Menu/>}
+      
+    
+  
       {showingSentences && (
         <SentencesDisplay
           sentences={sentences}
