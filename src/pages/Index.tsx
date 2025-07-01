@@ -8,10 +8,9 @@ import StagingArea from '@/components/StagingArea';
 import SentencesDisplay from '@/components/SentencesDisplay';
 import ConversationHistory, { ConversationItem } from '@/components/ConversationHistory';
 import ApiKeyInput from '@/components/ApiKeyInput';
-import Settings from '@/components/Settings';
 import { getModelResponse, initializeSystemPrompt, getStagedWordsPrompt, defaultSystemJsonInstruction, replacePromptPlaceholders } from '@/utils/modelPrompt';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, RefreshCw, History as HistoryIcon, MessageSquare, Plus, Speech, Baby, Trash2 } from 'lucide-react';
+import { Loader2, RefreshCw, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { saveHistory, getHistoryById } from '@/utils/conversationManager';
 import { TopicCategory } from '@/types/models';
@@ -20,7 +19,7 @@ import { useSentenceGenerator } from '@/hooks/use-sentence-generator';
 import { playSpeech } from '@/utils/speechService';
 import WordActionDrawer from '@/components/WordActionDrawer';
 import SentenceOptionsDrawer from '@/components/SentenceOptionsDrawer';
-import Menu from './Menu' ;
+import Header from '@/components/Header';
 
 
 const Index: React.FC = () => {
@@ -877,7 +876,7 @@ const Index: React.FC = () => {
   return (
     <div className="min-h-screen w-full flex flex-col items-center px-2 sm:px-4 py-4 sm:py-6">
       
-      {<Menu/>}
+      {<Header/>}
       
     
   

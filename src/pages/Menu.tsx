@@ -1,92 +1,131 @@
-// src/components/Menu.tsx
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import TopDrawerPanel from "@/components/TopDrawerPanel"; // Import your top drawer component
+// src/pages/Menu.tsx
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
+import { ArrowLeft, History, Home, LogOut, User } from 'lucide-react';
+import UserProfile from '@/components/UserProfile';
 
-const default_icon = "/icons/typePerson/type-person-person.svg";
-const default_name = "אדם זר";
-
-const icons_first = [
-  { path: "icons/typePerson/type-person-kid.svg", name: "ילד" },
-  { path: "/icons/typePerson/type-person-close-person.svg", name: "אדם קרוב" },
-  { path: default_icon, name: "אדם זר" }
-];
-
-const icons_second = [
-  { path: "/icons/typePerson/type-person-professional.svg", name: "איש מקצוע" },
-  { path: "/icons/typePerson/type-person-add-new-contact.svg", name: "הוסף איש קשר" }
-];
-
-export default function Menu() {
+const Menu: React.FC = () => {
   const navigate = useNavigate();
-  const [showPanel, setShowPanel] = useState(false);
-  const [currentIcon, setCurrentIcon] = useState(default_icon);
-  const [currentName, setCurrentName] = useState(default_name);
+  const { user, signOut } = useAuth();
 
-  const chooseTypePerson = () => {
-    setShowPanel(true);
-  };
-
-  const closePanel = () => {
-    setShowPanel(false);
-  };
-
-  const change_icon = (iconDetails: { name: string; path: string }) => {
-    setCurrentName(iconDetails.name);
-    setCurrentIcon(iconDetails.path);
-    setShowPanel(false);
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (
-    <>
-      {!showPanel && (
-        <header className="w-full max-w-3xl mx-auto mb-2 text-center relative">
-          {/* Right Side: Profile Icon + Name */}
-          <div className="absolute top-0 right-0 flex items-center gap-2 p-2">
-            <div className="h-11 w-11 rounded-full flex items-center justify-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                title="בחר סוג שיחה"
-                aria-label="בחר סוג שיחה"
-                onClick={chooseTypePerson}
-              >
-                <img
-                  src={currentIcon}
-                  alt="בחר סוג שיחה"
-                  className="h-11 w-11"
-                />
-              </Button>
-            </div>
-            <span>{currentName}</span>
-          </div>
+    <div className="min-h-screen bg-background p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-md mx-auto space-y-6"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/')}
+            className="rounded-full"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-semibold">תפריט</h1>
+          <div className="w-10" /> {/* Spacer */}
+                </div>
 
-          {/* Left Side: Menu Icon */}
-          <div className="absolute top-0 left-0 flex gap-2 p-2">
+        {/* User Profile Section */}
+        {user && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                פרופיל משתמש
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3">
+                <UserProfile />
+                <div>
+                  <p className="font-medium">
+                    {user.user_metadata?.full_name || user.email}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {user.email}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Navigation Options */}
+        <Card>
+          <CardHeader>
+            <CardTitle>ניווט</CardTitle>
+            <CardDescription>
+              עבור בין דפי האפליקציה
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
             <Button
               variant="ghost"
-              size="icon"
-              className="rounded-full"
-              title="תפריט"
-              aria-label="תפריט"
-              onClick={() => navigate("/menu")}
+              className="w-full justify-start"
+              onClick={() => navigate('/')}
             >
-              <img src="/icons/menu.png" alt="תפריט" className="h-5 w-5" />
+              <Home className="mr-2 h-4 w-4" />
+              עמוד ראשי
             </Button>
-          </div>
-        </header>
-      )}
+            
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+              onClick={() => navigate('/history')}
+            >
+              <History className="mr-2 h-4 w-4" />
+              היסטוריית שיחות
+            </Button>
+          </CardContent>
+        </Card>
 
-      {/* New Top Drawer */}
-      <TopDrawerPanel
-        showPanel={showPanel}
-        closePanel={closePanel}
-        icons_first={icons_first}
-        icons_second={icons_second}
-        change_icon={change_icon}
-      />
-
-    </>
+        {/* Authentication Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>חשבון</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {user ? (
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={handleSignOut}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                התנתק
+              </Button>
+            ) : (
+              <Button
+                className="w-full"
+                onClick={() => navigate('/login')}
+              >
+                <User className="mr-2 h-4 w-4" />
+                התחבר
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
   );
-}
+};
+
+export default Menu;
