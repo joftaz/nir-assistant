@@ -1,4 +1,5 @@
 import { generateResponse, CategoryResponse, initializeOpenAI, getOpenAIStreamingResponse } from './openaiService';
+import { supabase, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
 import systemPromptMd from './systemPrompt.rtl.md?raw';
 import sentencePromptMd from './sentencePrompt.rtl.md?raw';
 import stagedWordsPromptMd from './stagedWordsPrompt.rtl.md?raw';
@@ -215,8 +216,147 @@ export const getMockResponse = (input: string): Promise<Array<{category: string;
   });
 };
 
-// New function that determines whether to use mock or real OpenAI responses
+// New function to call the Supabase edge function
+export const getModelResponseFromSupabase = async (
+  prompt: string, 
+  useOpenAI: boolean = true, 
+  apiKey: string = '',
+  onPartialResponse?: (group: TopicCategory) => void
+): Promise<TopicCategory[]> => {
+  try {
+    const systemPrompt = getSystemPrompt();
+    
+    console.log('Calling Supabase edge function:', { useOpenAI, hasApiKey: !!apiKey, isStreaming: !!onPartialResponse });
+    
+    // For streaming requests, use direct fetch to the edge function URL
+    if (onPartialResponse) {
+      console.log('Using streaming fetch to Supabase edge function');
+      
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-model-response`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          prompt,
+          useOpenAI,
+          systemPrompt,
+          isStreaming: true
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No readable stream available');
+      }
+
+      const results: TopicCategory[] = [];
+      let buffer = '';
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          // Convert chunk to text and add to buffer
+          const chunk = new TextDecoder().decode(value);
+          buffer += chunk;
+
+          // Process complete lines
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+          for (const line of lines) {
+            if (line.trim() === '') continue;
+            
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              
+              if (data === '[DONE]') {
+                console.log('Streaming complete');
+                return results;
+              }
+              
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.type === 'category' && parsed.data) {
+                  console.log('Received category via stream:', parsed.data.category);
+                  onPartialResponse(parsed.data);
+                  results.push(parsed.data);
+                }
+              } catch (e) {
+                console.error('Error parsing streaming data:', e);
+              }
+            }
+          }
+        }
+      } catch (streamError) {
+        console.error('Error processing stream:', streamError);
+        throw streamError;
+      }
+
+      return results;
+    } else {
+      // For non-streaming requests, use the regular Supabase client
+      console.log('Using non-streaming Supabase client invoke');
+      
+      const { data, error } = await supabase.functions.invoke('ai-model-response', {
+        body: {
+          prompt,
+          useOpenAI,
+          systemPrompt,
+          isStreaming: false
+        }
+      });
+      
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+      
+      console.log('Processing non-streaming response from Supabase');
+      return data?.categories || [];
+    }
+  } catch (error) {
+    console.error('Error calling Supabase edge function:', error);
+    
+    // Fallback to mock data
+    console.log('Falling back to mock response');
+    const mockData = await getMockResponse(prompt);
+    
+    if (onPartialResponse) {
+      // Simulate streaming for mock data
+      const results: TopicCategory[] = [];
+      for (const group of mockData) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        onPartialResponse(group as TopicCategory);
+        results.push(group as TopicCategory);
+      }
+      return results;
+    }
+    
+    return mockData as TopicCategory[];
+  }
+};
+
+// Replace the current getModelResponse function
 export const getModelResponse = async (
+  prompt: string, 
+  useOpenAI: boolean = true, 
+  apiKey: string = '',
+  onPartialResponse?: (group: TopicCategory) => void
+): Promise<TopicCategory[]> => {
+  // Use the Supabase edge function instead of direct OpenAI calls
+  return await getModelResponseFromSupabase(prompt, useOpenAI, apiKey, onPartialResponse);
+};
+
+// Keep the old implementation as a fallback (renamed)
+export const getModelResponseDirect = async (
   prompt: string, 
   useOpenAI: boolean = true, 
   apiKey: string = '',
