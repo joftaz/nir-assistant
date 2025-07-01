@@ -64,6 +64,10 @@ const Index: React.FC = () => {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [activeWord, setActiveWord] = useState<string | null>(null);
   
+  // Generate a unique user ID if not already set
+  const userId = localStorage.getItem('userId') || uuidv4();
+  localStorage.setItem('userId', userId);
+  
   // Add state for sentence options drawer
   const [isSentenceOptionsDrawerOpen, setIsSentenceOptionsDrawerOpen] = useState(false);
   

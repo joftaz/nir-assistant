@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
 import VoiceRecorder from './VoiceRecorder';
 import { Input } from '@/components/ui/input';
+import mixpanel from '@/lib/analytics';
 
 interface TopicInputProps {
   onSubmit: (topic: string) => void;
@@ -36,6 +37,12 @@ const TopicInput: React.FC<TopicInputProps> = ({
       onSubmit(topic.trim());
       setTopic('');
     }
+      console.log("Tracking event!");
+      mixpanel.track("Button Clicked", {
+        buttonName: "Word Send",
+        location: "Main Page",
+      });
+      setTopic("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
