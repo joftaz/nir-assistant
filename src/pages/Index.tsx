@@ -673,7 +673,7 @@ const Index: React.FC = () => {
     }
   };
   
-  const handleGenerateSentences = async () => {
+  const handleGenerateSentences = async (type: string = "") => {
     if (stagedWords.length === 0) {
       toast({
         title: "אין מילים נבחרות",
@@ -686,10 +686,10 @@ const Index: React.FC = () => {
     setShowingSentences(true);
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-    await generateSentencesFromWords(stagedWords, apiKey);
+    await generateSentencesFromWords(stagedWords, apiKey, false, false, type);
   };
   
-  const handleGenerateSentencesFromConversation = async () => {
+  const handleGenerateSentencesFromConversation = async (type: string = "") => {
     if (conversation.length === 0) {
       toast({
         title: "אין מילים בשיחה",
@@ -717,7 +717,7 @@ const Index: React.FC = () => {
     }
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-    await generateSentencesFromConversation(conversation, apiKey, isConversationMode, isChildrenMode);
+    await generateSentencesFromConversation(conversation, apiKey, isConversationMode, isChildrenMode, type);
   };
   
   const handleSentenceSelect = (sentence: string) => {
