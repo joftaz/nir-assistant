@@ -608,7 +608,8 @@ export const generateSentences = async (
   apiKey: string,
   onPartialSentence?: (sentence: string) => void,
   isConversationMode: boolean = false,
-  isChildrenMode: boolean = false
+  isChildrenMode: boolean = false,
+  type: string = ""
 ): Promise<string[]> => {
   try {
     // Initialize OpenAI with the provided API key
@@ -616,8 +617,14 @@ export const generateSentences = async (
     
     console.log("Generating sentences from words:", wordsString);
     
-    // Use the getSentencePrompt function with conversation mode and children mode
-    const sentenceGenerationPrompt = replacePromptPlaceholders(getSentencePrompt(isConversationMode, isChildrenMode));
+    // Use the getSentencePrompt function with conversation mode, children mode, and intent mode
+    const isIntentMode = type !== "";
+    let sentenceGenerationPrompt = replacePromptPlaceholders(getSentencePrompt(isConversationMode, isChildrenMode, isIntentMode));
+
+    if (isIntentMode) {
+      // Replace sentence type placeholder with the actual type
+      sentenceGenerationPrompt = sentenceGenerationPrompt.replace("{sentences_type_selection}", type);      
+    }
 
     // If streaming is requested, use streaming implementation
     if (onPartialSentence) {
