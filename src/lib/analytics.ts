@@ -11,8 +11,6 @@ if (MIXPANEL_TOKEN) {
 
 mixpanel.identify(localStorage.getItem("userId"));
 
-export default mixpanel;
-
 export function trackEvent(eventName: string, properties: Record<string, any> = {}) {
   mixpanel.track(eventName, {
     ...properties,

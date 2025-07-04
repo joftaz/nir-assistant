@@ -1,5 +1,5 @@
-logging:
-using mixpanel
+This file documents the logging (or logs the logs if you like)
+After comparing Google Analytics and Mixpanel, we decided to use mixpanel for logging
 
 useAutoTrackClicks.ts , analitics.ts
 
@@ -21,4 +21,22 @@ Suggestion word card
     button-name="Word suggestion"
     button-category={category}
     button-word={word}
+```
+
+Record word button
+Event Name: `Text transcripted`
+```
+  {"word":text}
+```
+
+Generated words
+Event Name: `Words generated`
+```
+  {"prompt": prompt, "category": categories+words}
+```
+
+Generated sentences
+Event Name: `Sentences generated`
+```
+  {"prompt": wordsString, "sentences": sentences}
 ```

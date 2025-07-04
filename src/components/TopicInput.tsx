@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
 import VoiceRecorder from './VoiceRecorder';
 import { Input } from '@/components/ui/input';
+import { trackEvent } from '@/lib/analytics';
 
 interface TopicInputProps {
   onSubmit: (topic: string) => void;
@@ -34,7 +35,7 @@ const TopicInput: React.FC<TopicInputProps> = ({
     e.preventDefault();
     if (topic.trim() && !isLoading) {
       onSubmit(topic.trim());
-      setTopic('');
+      setTimeout(() => setTopic(''), 0); // Delay clearing for the mixpanel tracking
     }
       setTopic("");
   };
@@ -53,6 +54,7 @@ const TopicInput: React.FC<TopicInputProps> = ({
     setTopic(text);
     // Auto-submit if there's a transcription
     if (text && !isLoading) {
+      trackEvent('Text transcripted', {"word":text})
       onSubmit(text);
       // Clear after submission
       setTimeout(() => setTopic(''), 100);
