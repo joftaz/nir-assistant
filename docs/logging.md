@@ -28,3 +28,15 @@ Event Name: `Text transcripted`
 ```
   {"word":text}
 ```
+
+Generated words
+Event Name: `Words generated`
+```
+  {"prompt": prompt, "category": categories+words}
+```
+
+Generated sentences
+Event Name: `Sentences generated`
+```
+  {"prompt": wordsString, "sentences": sentences}
+```
