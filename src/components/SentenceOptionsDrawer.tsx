@@ -41,7 +41,7 @@ const SentenceOptionsDrawer: React.FC<SentenceOptionsDrawerProps> = ({
         
         <div className="flex flex-col gap-3 items-center justify-center px-4 py-2">
           <Button
-            data-track-click="Button clicked"
+            data-track-click="Generate sentences clicked"
             data-analytics-button-name="Generate sentences"
             variant="outline" 
             className="w-full flex items-center gap-2 justify-center text-lg"
@@ -53,7 +53,7 @@ const SentenceOptionsDrawer: React.FC<SentenceOptionsDrawerProps> = ({
           </Button>
 
           <Button 
-            data-track-click="Button clicked"
+            data-track-click="Conversation mode clicked"
             data-analytics-button-name="Toggle conversation mode"
             data-analytics-conversation-mode={isConversationMode ? "true" : "false"}
             data-analytics-children-mode={isChildrenMode ? "true" : "false"}
@@ -66,7 +66,7 @@ const SentenceOptionsDrawer: React.FC<SentenceOptionsDrawerProps> = ({
           </Button>
                         
           <Button
-            data-track-click="Button clicked"
+            data-track-click="Children mode clicked"
             data-analytics-button-name="Toggle children mode"
             data-analytics-conversation-mode={isConversationMode ? "true" : "false"}
             data-analytics-children-mode={isChildrenMode ? "true" : "false"}

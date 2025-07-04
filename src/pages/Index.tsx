@@ -20,6 +20,7 @@ import { useSentenceGenerator } from '@/hooks/use-sentence-generator';
 import { playSpeech } from '@/utils/speechService';
 import WordActionDrawer from '@/components/WordActionDrawer';
 import SentenceOptionsDrawer from '@/components/SentenceOptionsDrawer';
+import { title } from 'process';
 
 const Index: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -884,26 +885,26 @@ const Index: React.FC = () => {
         </div>
         <div className="absolute top-0 left-0 flex gap-2">
           <Button 
-            data-track-click="Button clicked"
-            button-name="Delete Conversation"
             variant="ghost" 
             size="icon" 
             className="rounded-full"
             title="מחק שיחה"
             aria-label="מחק שיחה"
             onClick={handleReset}
+            data-track-click="Delete conversation clicked"
+            data-analytics-button-name="Delete Conversation"
           >
             <Trash2 className="h-5 w-5" />
           </Button>
           
           <Button 
-            data-track-click="Button clicked"
-            button-name="Conversation history"
             variant="ghost" 
             size="icon" 
             className="rounded-full"
             title="היסטוריית שיחות"
             aria-label="היסטוריית שיחות"
+            data-track-click="Conversation history clicked"
+            data-analytics-button-name="Conversation History"
             onClick={() => navigate('/history')}
           >
             <HistoryIcon className="h-5 w-5" />
@@ -968,8 +969,8 @@ const Index: React.FC = () => {
         {!isStaging && hasUserMessages && !showingSentences && (
           <div className="flex justify-center mb-2">
             <Button
-              data-track-click="Button clicked"
-              button-name="Refresh Suggested Words"
+              data-track-click="Refresh words clicked"
+              data-analytics-button-name="Refresh Suggested Words"
               variant="ghost"
               size="sm"
               className="text-sm"
@@ -1005,8 +1006,8 @@ const Index: React.FC = () => {
         {!isStaging && hasUserMessages && !showingSentences && (
           <div className="w-full mobile-sentence-controls mb-2">
             <Button
-              data-track-click="Button clicked"
-              button-name="Create Sentences"
+              data-track-click="Create Sentences clicked"
+              data-analytics-button-name="Create Sentences"
               variant="outline"
               onClick={handleOpenSentenceOptionsDrawer}
               disabled={isGeneratingSentences || conversation.length === 0}

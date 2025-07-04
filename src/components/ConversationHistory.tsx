@@ -99,7 +99,7 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
                 <span className="inline-block">{item.text}</span>
                 {onRemoveMessage && (
                   <button
-                    data-track-click="Button clicked"
+                    data-track-click="Remove word clicked"
                     data-analytics-button-name="Remove word"
                     data-analytics-removed-word={item.text}
                     onClick={(e) => {

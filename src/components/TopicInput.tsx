@@ -35,6 +35,7 @@ const TopicInput: React.FC<TopicInputProps> = ({
     e.preventDefault();
     if (topic.trim() && !isLoading) {
       onSubmit(topic.trim());
+      setTopic('');
       setTimeout(() => setTopic(''), 0); // Delay clearing for the mixpanel tracking
     }
       setTopic("");
@@ -84,9 +85,9 @@ const TopicInput: React.FC<TopicInputProps> = ({
         
         <Button 
           type="button" 
-          data-track-click="Button clicked"
+          data-track-click="Send word clicked"
           data-analytics-button-name="Send word"
-          data-analytics-word-sanded={topic.trim() || '""'}
+          data-analitycs-word={topic.trim() || '""'}
           size="icon" 
           className={`rounded-full w-7 h-7 flex items-center justify-center transition-all
                      ${!topic.trim() || isLoading ? 'opacity-50 cursor-not-allowed' : 'opacity-100'}`}

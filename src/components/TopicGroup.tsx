@@ -107,7 +107,7 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
             {words.map((word, index) => (
               <button
                 key={index}
-                data-track-click="Dynamic button clicked"
+                data-track-click="Select suggested word clicked"
                 data-analitycs-button-name="Word suggestion"
                 data-analytics-word-category={category}
                 data-analytics-selected-word={word}
