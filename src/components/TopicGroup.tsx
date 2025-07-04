@@ -108,9 +108,9 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
               <button
                 key={index}
                 data-track-click="Dynamic button clicked"
-                button-name="Word suggestion"
-                button-category={category}
-                button-text={word}
+                data-analitycs-button-name="Word suggestion"
+                data-analytics-word-category={category}
+                data-analytics-selected-word={word}
                 className={`word-chip ${wordTextSize} ${
                   activeWord === word
                     ? 'bg-green-500 text-white hover:bg-green-600' 

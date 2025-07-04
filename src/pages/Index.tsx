@@ -884,6 +884,8 @@ const Index: React.FC = () => {
         </div>
         <div className="absolute top-0 left-0 flex gap-2">
           <Button 
+            data-track-click="Button clicked"
+            button-name="Delete Conversation"
             variant="ghost" 
             size="icon" 
             className="rounded-full"
@@ -895,6 +897,8 @@ const Index: React.FC = () => {
           </Button>
           
           <Button 
+            data-track-click="Button clicked"
+            button-name="Conversation history"
             variant="ghost" 
             size="icon" 
             className="rounded-full"
@@ -964,6 +968,8 @@ const Index: React.FC = () => {
         {!isStaging && hasUserMessages && !showingSentences && (
           <div className="flex justify-center mb-2">
             <Button
+              data-track-click="Button clicked"
+              button-name="Refresh Suggested Words"
               variant="ghost"
               size="sm"
               className="text-sm"
@@ -999,6 +1005,8 @@ const Index: React.FC = () => {
         {!isStaging && hasUserMessages && !showingSentences && (
           <div className="w-full mobile-sentence-controls mb-2">
             <Button
+              data-track-click="Button clicked"
+              button-name="Create Sentences"
               variant="outline"
               onClick={handleOpenSentenceOptionsDrawer}
               disabled={isGeneratingSentences || conversation.length === 0}

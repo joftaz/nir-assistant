@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { InputItems } from 'openai/resources/responses/input-items.mjs';
 
 export interface ConversationItem {
   id: string;
@@ -97,7 +98,10 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({
               >
                 <span className="inline-block">{item.text}</span>
                 {onRemoveMessage && (
-                  <button 
+                  <button
+                    data-track-click="Button clicked"
+                    data-analytics-button-name="Remove word"
+                    data-analytics-removed-word={item.text}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleRemove(item.id);

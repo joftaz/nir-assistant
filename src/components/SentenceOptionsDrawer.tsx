@@ -40,7 +40,9 @@ const SentenceOptionsDrawer: React.FC<SentenceOptionsDrawerProps> = ({
         </DrawerHeader>
         
         <div className="flex flex-col gap-3 items-center justify-center px-4 py-2">
-          <Button 
+          <Button
+            data-track-click="Button clicked"
+            data-analytics-button-name="Generate sentences"
             variant="outline" 
             className="w-full flex items-center gap-2 justify-center text-lg"
             onClick={onGenerateSentences}
@@ -51,6 +53,10 @@ const SentenceOptionsDrawer: React.FC<SentenceOptionsDrawerProps> = ({
           </Button>
 
           <Button 
+            data-track-click="Button clicked"
+            data-analytics-button-name="Toggle conversation mode"
+            data-analytics-conversation-mode={isConversationMode ? "true" : "false"}
+            data-analytics-children-mode={isChildrenMode ? "true" : "false"}
             variant={isConversationMode ? "default" : "outline"}
             className={`w-full flex items-center gap-2 justify-center text-lg ${isConversationMode ? "bg-primary text-primary-foreground" : ""}`}
             onClick={onToggleConversationMode}
@@ -59,7 +65,11 @@ const SentenceOptionsDrawer: React.FC<SentenceOptionsDrawerProps> = ({
             <span>מצב שיחה</span>
           </Button>
                         
-          <Button 
+          <Button
+            data-track-click="Button clicked"
+            data-analytics-button-name="Toggle children mode"
+            data-analytics-conversation-mode={isConversationMode ? "true" : "false"}
+            data-analytics-children-mode={isChildrenMode ? "true" : "false"}
             variant={isChildrenMode ? "default" : "outline"}
             className={`w-full flex items-center gap-2 justify-center text-lg ${isChildrenMode ? "bg-primary text-primary-foreground" : ""}`}
             onClick={onToggleChildrenMode}

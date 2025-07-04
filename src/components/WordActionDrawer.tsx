@@ -247,7 +247,10 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
               transition={{ duration: 0.3 }}
               className="flex flex-col gap-3 items-center px-4 py-2"
             >
-              <Button 
+              <Button
+                data-track-click="Button clicked"
+                data-analytics-button-name="Back"
+                data-analytics-context="Back from synonyms suggestions"
                 variant="ghost" 
                 className="self-start mb-2"
                 onClick={handleBack}
@@ -280,7 +283,11 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
                         }}
                         className="shadow-sm"
                       >
-                        <Button 
+                        <Button
+                          data-track-click="Button clicked"
+                          data-analytics-button-name="Select synonym"
+                          data-analytics-added-word={synonym}
+                          data-analytics-context={word}
                           variant="outline" 
                           className="w-full justify-start py-3 px-4 text-right bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-900 text-lg"
                           onClick={() => handleSelectSynonym(synonym)}
@@ -317,6 +324,9 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
             >
 
               <Button 
+                data-track-click="Button clicked"
+                data-analytics-button-name="Add word"
+                data-analytics-added-word={word}
                 variant="outline" 
                 className="w-full flex items-center gap-2 justify-center text-lg"
                 onClick={handleAddWord}
@@ -326,6 +336,9 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
               </Button>
 
               <Button 
+                data-track-click="Button clicked"
+                data-analytics-button-name="Play word speech"
+                data-analytics-word-spoken={word}
                 variant="outline" 
                 className="w-full flex items-center gap-2 justify-center text-lg"
                 onClick={handleSpeakWord}
@@ -335,7 +348,10 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
               </Button>
                             
               <Button 
-                variant="outline" 
+                data-track-click="Button clicked"
+                data-analytics-button-name="Find synonyms"
+                data-analytics-context={word}
+                variant="outline"
                 className="w-full flex items-center gap-2 justify-center text-lg"
                 onClick={handleFindSynonyms}
               >

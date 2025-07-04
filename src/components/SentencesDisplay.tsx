@@ -135,6 +135,9 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
                 >
                   <div className="flex gap-1">
                     <button
+                      data-track-click="Button clicked"
+                      data-analytics-button-name="Copy sentence"
+                      data-analytics-copied-sentence={sentence}
                       onClick={() => handleCopy(sentence, index)}
                       className="flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
                       aria-label="העתק משפט"
@@ -148,6 +151,9 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
                     </button>
                     {onPlaySpeech && (
                       <button
+                        data-track-click="Button clicked"
+                        data-analytics-button-name="Play sentence speech"
+                        data-analytics-playing-sentence={sentence}
                         onClick={() => handlePlaySpeech(sentence, index)}
                         disabled={loadingSentenceIndex !== null || activeSentenceIndex !== null}
                         className={`flex-shrink-0 p-1.5 transition-colors rounded-full hover:bg-muted ${
@@ -169,6 +175,9 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
                     )}
                   </div>
                   <button
+                    data-track-click="Button clicked"
+                    data-analytics-button-name="Select sentence"
+                    data-analytics-selected-sentence={sentence}
                     onClick={() => onSelectSentence(sentence)}
                     className="flex-grow p-2 text-right text-sm bg-muted/30 hover:bg-primary/10 rounded-md transition-colors border border-border/50 hover:border-primary/30 w-full"
                   >
@@ -269,7 +278,9 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
           {/* Generate more button - now outside the scrollable container */}
           {!isLoading && !isStreaming && onGenerateMore && (
             <div className="mt-3 flex justify-center border-t border-border pt-3">
-              <Button 
+              <Button
+                data-track-click="Button clicked"
+                data-analytics-button-name="Generate more sentences"
                 variant="outline" 
                 className="gap-2 self-center"
                 onClick={onGenerateMore}

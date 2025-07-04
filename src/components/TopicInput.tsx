@@ -83,7 +83,8 @@ const TopicInput: React.FC<TopicInputProps> = ({
         <Button 
           type="button" 
           data-track-click="Button clicked"
-          button-name="Send word"
+          data-analytics-button-name="Send word"
+          data-analytics-word-sanded={topic.trim() || '""'}
           size="icon" 
           className={`rounded-full w-7 h-7 flex items-center justify-center transition-all
                      ${!topic.trim() || isLoading ? 'opacity-50 cursor-not-allowed' : 'opacity-100'}`}

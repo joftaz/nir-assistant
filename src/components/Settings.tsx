@@ -195,6 +195,8 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button 
+          data-track-click="Button clicked"
+          data-analytics-button-name="Settings"
           variant="ghost" 
           size="icon" 
           className="rounded-full"
