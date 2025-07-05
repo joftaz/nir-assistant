@@ -607,8 +607,6 @@ export const generateSentences = async (
   wordsString: string,
   apiKey: string,
   onPartialSentence?: (sentence: string) => void,
-  isConversationMode: boolean = false,
-  isChildrenMode: boolean = false,
   type: string = ""
 ): Promise<string[]> => {
   try {
@@ -617,7 +615,7 @@ export const generateSentences = async (
     
     console.log("Generating sentences from words:", wordsString);
     // Use the getSentencePrompt function with conversation mode, children mode
-    let sentenceGenerationPrompt = replacePromptPlaceholders(getSentencePrompt(isConversationMode, isChildrenMode));
+    let sentenceGenerationPrompt = replacePromptPlaceholders(getSentencePrompt());
 
     let actualType = type;
     if (type == "") {

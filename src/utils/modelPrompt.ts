@@ -114,20 +114,9 @@ export const getSystemPrompt = (): string => {
 
 // Get sentence prompt from localStorage or use default
 export const getSentencePrompt = (
-  isConversationMode: boolean = false,
-  isChildrenMode: boolean = false
 ): string => {
   let storageKey = SENTENCE_PROMPT_STORAGE_KEY;
   let defaultPrompt = defaultSentencePrompt;
-
-  // Intent mode takes precedence
-  if (isChildrenMode) {
-    storageKey = SENTENCE_CHILDREN_PROMPT_STORAGE_KEY;
-    defaultPrompt = defaultChildrenSentencePrompt;
-  } else if (isConversationMode) {
-    storageKey = SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY;
-    defaultPrompt = default2ndPersonSentencePrompt;
-  }
 
   return localStorage.getItem(storageKey) || defaultPrompt;
 };
