@@ -5,14 +5,13 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { MessageSquare, Speech, Baby } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import SentenceTypeChooser from './SentenceTypeChooser';
 
 interface SentenceOptionsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onGenerateSentences: () => void;
+  onGenerateSentences: (type: string) => void;
   isGenerating: boolean;
   isConversationMode: boolean;
   isChildrenMode: boolean;
@@ -39,38 +38,20 @@ const SentenceOptionsDrawer: React.FC<SentenceOptionsDrawerProps> = ({
           <DrawerTitle className="text-xl font-bold">אפשרויות משפטים</DrawerTitle>
         </DrawerHeader>
         
-        <div className="flex flex-col gap-3 items-center justify-center px-4 py-2">
-          <Button 
-            variant="outline" 
+        <div className="flex flex-col gap-3 items-center justify-center px-4 py-2 w-full">
+          <Button
+            variant="outline"
             className="w-full flex items-center gap-2 justify-center text-lg"
-            onClick={onGenerateSentences}
+            onClick={() => onGenerateSentences("")}
             disabled={isGenerating}
           >
-            <MessageSquare className="h-5 w-5" />
             <span>צור משפטים</span>
           </Button>
-
-          <Button 
-            variant={isConversationMode ? "default" : "outline"}
-            className={`w-full flex items-center gap-2 justify-center text-lg ${isConversationMode ? "bg-primary text-primary-foreground" : ""}`}
-            onClick={onToggleConversationMode}
-          >
-            <Speech className="h-5 w-5" />
-            <span>מצב שיחה</span>
-          </Button>
-                        
-          <Button 
-            variant={isChildrenMode ? "default" : "outline"}
-            className={`w-full flex items-center gap-2 justify-center text-lg ${isChildrenMode ? "bg-primary text-primary-foreground" : ""}`}
-            onClick={onToggleChildrenMode}
-          >
-            <Baby className="h-5 w-5" />
-            <span>מצב ילדים</span>
-          </Button>
+          <SentenceTypeChooser onGenerateSentences={onGenerateSentences} isGenerating={isGenerating} />
         </div>
       </DrawerContent>
     </Drawer>
   );
 };
 
-export default SentenceOptionsDrawer; 
+export default SentenceOptionsDrawer;

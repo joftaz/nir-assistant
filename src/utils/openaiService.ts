@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { defaultSystemPrompt, defaultSystemJsonInstruction, getMockResponse, replacePromptPlaceholders, getSentencePrompt, SYSTEM_PROMPT_STORAGE_KEY, CATEGORIES_COUNT_KEY, WORDS_PER_CATEGORY_KEY } from "./modelPrompt";
+import { defaultSystemPrompt, defaultSystemJsonInstruction, getMockResponse, replacePromptPlaceholders, getSentencePrompt, getSentenceIntentUnspecifiedPromptValue, SYSTEM_PROMPT_STORAGE_KEY, CATEGORIES_COUNT_KEY, WORDS_PER_CATEGORY_KEY } from "./modelPrompt";
 import type { TopicCategory } from '../types/models';
 
 // Initialize OpenAI - this will use the API key from OPENAI_API_KEY environment variable
@@ -607,17 +607,23 @@ export const generateSentences = async (
   wordsString: string,
   apiKey: string,
   onPartialSentence?: (sentence: string) => void,
-  isConversationMode: boolean = false,
-  isChildrenMode: boolean = false
+  type: string = ""
 ): Promise<string[]> => {
   try {
     // Initialize OpenAI with the provided API key
     initializeOpenAI(apiKey);
     
     console.log("Generating sentences from words:", wordsString);
-    
-    // Use the getSentencePrompt function with conversation mode and children mode
-    const sentenceGenerationPrompt = replacePromptPlaceholders(getSentencePrompt(isConversationMode, isChildrenMode));
+    // Use the getSentencePrompt function with conversation mode, children mode
+    let sentenceGenerationPrompt = replacePromptPlaceholders(getSentencePrompt());
+
+    let actualType = type;
+    if (type == "") {
+      // Get the default intent value if type is empty
+      actualType = getSentenceIntentUnspecifiedPromptValue();
+    }
+    // Replace sentence type placeholder with the actual type
+    sentenceGenerationPrompt = sentenceGenerationPrompt.replace("{sentences_type_selection}", actualType);  
 
     // If streaming is requested, use streaming implementation
     if (onPartialSentence) {
