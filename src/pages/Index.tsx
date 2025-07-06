@@ -62,8 +62,13 @@ const Index: React.FC = () => {
   // Add new state variables for the drawer
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [activeWord, setActiveWord] = useState<string | null>(null);
+  
+  // Generate a unique user ID if not already set
+  const userId = localStorage.getItem('userId') || uuidv4();
+  localStorage.setItem('userId', userId);
   
   // Add state for sentence options drawer
   const [isSentenceOptionsDrawerOpen, setIsSentenceOptionsDrawerOpen] = useState(false);
@@ -198,8 +203,9 @@ const Index: React.FC = () => {
   };
 
   // Handle word click to open the drawer
-  const handleWordClick = (word: string) => {
+  const handleWordClick = (word: string, categotry: string) => {
     setSelectedWord(word);
+    setSelectedCategory(categotry);
     setIsDrawerOpen(true);
   };
 
@@ -687,6 +693,8 @@ const Index: React.FC = () => {
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
     await generateSentencesFromWords(stagedWords, apiKey, false, false, type);
+    //await generateSentencesFromWords(stagedWords, apiKey, type);
+
   };
   
   const handleGenerateSentencesFromConversation = async (type: string = "") => {
@@ -919,6 +927,8 @@ const Index: React.FC = () => {
         {!isStaging && hasUserMessages && !showingSentences && (
           <div className="flex justify-center mb-2">
             <Button
+              data-track-click="Refresh words clicked"
+              data-analytics-button-name="Refresh Suggested Words"
               variant="ghost"
               size="sm"
               className="text-sm"
@@ -954,6 +964,8 @@ const Index: React.FC = () => {
         {!isStaging && hasUserMessages && !showingSentences && (
           <div className="w-full mobile-sentence-controls mb-2">
             <Button
+              data-track-click="Create Sentences clicked"
+              data-analytics-button-name="Create Sentences"
               variant="outline"
               onClick={handleOpenSentenceOptionsDrawer}
               disabled={isGeneratingSentences || conversation.length === 0}
@@ -984,6 +996,7 @@ const Index: React.FC = () => {
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         word={selectedWord}
+        category={selectedCategory}
         onAddWord={handleAddWordDirectly}
         onSpeakWord={handleSpeakWord}
       />

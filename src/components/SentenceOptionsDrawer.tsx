@@ -40,6 +40,8 @@ const SentenceOptionsDrawer: React.FC<SentenceOptionsDrawerProps> = ({
         
         <div className="flex flex-col gap-3 items-center justify-center px-4 py-2 w-full">
           <Button
+            data-track-click="Generate sentences clicked"
+            data-analytics-button-name="Generate sentences"         
             variant="outline"
             className="w-full flex items-center gap-2 justify-center text-lg"
             onClick={() => onGenerateSentences("")}
@@ -47,6 +49,7 @@ const SentenceOptionsDrawer: React.FC<SentenceOptionsDrawerProps> = ({
           >
             <span>צור משפטים</span>
           </Button>
+
           <SentenceTypeChooser onGenerateSentences={onGenerateSentences} isGenerating={isGenerating} />
         </div>
       </DrawerContent>

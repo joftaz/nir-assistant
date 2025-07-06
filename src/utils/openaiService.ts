@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { defaultSystemPrompt, defaultSystemJsonInstruction, getMockResponse, replacePromptPlaceholders, getSentencePrompt, getSentenceIntentUnspecifiedPromptValue, SYSTEM_PROMPT_STORAGE_KEY, CATEGORIES_COUNT_KEY, WORDS_PER_CATEGORY_KEY } from "./modelPrompt";
 import type { TopicCategory } from '../types/models';
+import { trackEvent } from "@/lib/analytics";
 
 // Initialize OpenAI - this will use the API key from OPENAI_API_KEY environment variable
 // In a production environment, this should come from server-side
@@ -448,6 +449,10 @@ export const getOpenAIStreamingResponse = async (
     // at the end of streaming when we have the full JSON object
     console.log("Processing final complete response");
     console.log("Full response:", fullResponse);
+    trackEvent('Words generated', {
+      "prompt": prompt,
+      ...JSON.parse(fullResponse)
+    });
     
     if (fullResponse.trim().startsWith('{') && fullResponse.trim().endsWith('}')) {
       try {
@@ -791,6 +796,12 @@ export const generateSentences = async (
         .filter((s, i, arr) => s && arr.indexOf(s) === i); // Remove duplicates
         
       console.log("Generated sentences (streaming):", finalSentences);
+      trackEvent('Sentences generated', {
+        "prompt": wordsString,
+        "systemPrompt": sentenceGenerationPrompt,
+        "sentences": finalSentences
+      });
+
       return finalSentences;
     } else {
       // Non-streaming implementation (original code)
@@ -832,6 +843,10 @@ export const generateSentences = async (
         .map(line => line.replace(/^\d+\.\s*|\-\s*/, ''));
       
       console.log("Generated sentences:", sentences);
+      trackEvent('Sentences generated', {
+        "prompt": wordsString,
+        "sentences": sentences
+      });
       
       return sentences;
     }

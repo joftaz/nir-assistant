@@ -103,6 +103,8 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
         </h3>
         <button 
           onClick={onCancel}
+          data-track-click="Close sentences clicked"
+          data-analytics-button-name="Close sentences"
           className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-full hover:bg-muted"
           aria-label="סגור משפטים"
           title="סגור משפטים"
@@ -135,6 +137,9 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
                 >
                   <div className="flex gap-1">
                     <button
+                      data-track-click="Copy sentence clicked"
+                      data-analytics-button-name="Copy sentence"
+                      data-analytics-copied-sentence={sentence}
                       onClick={() => handleCopy(sentence, index)}
                       className="flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
                       aria-label="העתק משפט"
@@ -148,6 +153,9 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
                     </button>
                     {onPlaySpeech && (
                       <button
+                        data-track-click="Play sentence clicked"
+                        data-analytics-button-name="Play sentence speech"
+                        data-analytics-playing-sentence={sentence}
                         onClick={() => handlePlaySpeech(sentence, index)}
                         disabled={loadingSentenceIndex !== null || activeSentenceIndex !== null}
                         className={`flex-shrink-0 p-1.5 transition-colors rounded-full hover:bg-muted ${
@@ -160,15 +168,20 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
                         aria-label="הקרא משפט"
                         title="הקרא משפט"
                       >
-                        {loadingSentenceIndex === index ? (
-                          <Loader2 size={16} className="animate-spin" />
-                        ) : (
-                          <Volume2 size={16} />
-                        )}
+                        <span className="flex items-center">
+                          {loadingSentenceIndex === index ? (
+                            <Loader2 size={16} className="animate-spin" style={{ pointerEvents: 'none' }} />
+                          ) : (
+                            <Volume2 size={16} style={{ pointerEvents: 'none' }} />
+                          )}
+                        </span>
                       </button>
                     )}
                   </div>
                   <button
+                    data-track-click="Add sentence clicked"
+                    data-analytics-button-name="Select sentence"
+                    data-analytics-added-sentence={sentence}
                     onClick={() => onSelectSentence(sentence)}
                     className="flex-grow p-2 text-right text-sm bg-muted/30 hover:bg-primary/10 rounded-md transition-colors border border-border/50 hover:border-primary/30 w-full"
                   >
@@ -218,6 +231,10 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
                         >
                           <div className="flex gap-1">
                             <button
+                              data-track-click="Copy sentence clicked"
+                              data-analytics-button-name="Copy sentence"
+                              data-analytics-copied-sentence={sentence}
+                              data-analytics-location="old-sentences"
                               onClick={() => handleCopy(sentence, index + 1000)} // Using offset to differentiate from new sentences
                               className="flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
                               aria-label="העתק משפט"
@@ -231,6 +248,10 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
                             </button>
                             {onPlaySpeech && (
                               <button
+                                data-track-click="Play sentence clicked"
+                                data-analytics-button-name="Play sentence speech"
+                                data-analytics-playing-sentence={sentence}
+                                data-analytics-location="old-sentences"
                                 onClick={() => handlePlaySpeech(sentence, index + 1000)}
                                 disabled={loadingSentenceIndex !== null || activeSentenceIndex !== null}
                                 className={`flex-shrink-0 p-1.5 transition-colors rounded-full hover:bg-muted ${
@@ -243,15 +264,21 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
                                 aria-label="הקרא משפט"
                                 title="הקרא משפט"
                               >
-                                {loadingSentenceIndex === index + 1000 ? (
-                                  <Loader2 size={16} className="animate-spin" />
-                                ) : (
-                                  <Volume2 size={16} />
-                                )}
+                                <span className="flex items-center">
+                                  {loadingSentenceIndex === index + 1000 ? (
+                                    <Loader2 size={16} className="animate-spin" style={{ pointerEvents: 'none' }} />
+                                  ) : (
+                                    <Volume2 size={16} style={{ pointerEvents: 'none' }} />
+                                  )}
+                                </span>
                               </button>
                             )}
                           </div>
                           <button
+                            data-track-click="Add sentence clicked"
+                            data-analytics-button-name="Select sentence"
+                            data-analytics-added-sentence={sentence}
+                            data-analytics-location="old-sentences"
                             onClick={() => onSelectSentence(sentence)}
                             className="flex-grow p-2 text-right text-sm bg-muted/20 hover:bg-primary/10 rounded-md transition-colors border border-border/30 hover:border-primary/30 w-full text-muted-foreground"
                           >
@@ -269,7 +296,9 @@ const SentencesDisplay: React.FC<SentencesDisplayProps> = ({
           {/* Generate more button - now outside the scrollable container */}
           {!isLoading && !isStreaming && onGenerateMore && (
             <div className="mt-3 flex justify-center border-t border-border pt-3">
-              <Button 
+              <Button
+                data-track-click="Generate sentences clicked"
+                data-analytics-button-name="Generate more sentences"
                 variant="outline" 
                 className="gap-2 self-center"
                 onClick={onGenerateMore}

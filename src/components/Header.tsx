@@ -60,6 +60,9 @@ export default function Header({ title, children }: HeaderProps) {
           <div className="absolute top-0 right-0 flex items-center gap-2 p-2">
             <div className="h-11 w-11 rounded-full flex items-center justify-center">
               <Button
+                data-track-click="Change person type clicked"
+                data-analytics-button-name="Change person type"
+                data-analytics-current-person-type={currentName}
                 variant="ghost"
                 size="icon"
                 title="בחר סוג שיחה"
@@ -79,6 +82,8 @@ export default function Header({ title, children }: HeaderProps) {
           {/* Left Side: Menu Icon */}
           <div className="absolute top-0 left-0 flex gap-2 p-2">
             <Button
+              data-track-click="Open menu clicked"
+              data-analytics-button-name="Menu"
               variant="ghost"
               size="icon"
               className="rounded-full"

@@ -9,6 +9,7 @@ import sentenceIntentUnspecifiedPromptValueMd from './sentenceIntentUnspecifiedP
 
 // Import or define the TopicCategory type to fix the linter errors
 import type { TopicCategory } from '../types/models';
+import { trackEvent } from '@/lib/analytics';
 
 // Use the imported markdown file
 export const defaultSystemPrompt = systemPromptMd;
@@ -240,25 +241,20 @@ export const getModelResponseFromSupabase = async (
     if (onPartialResponse) {
       console.log('Using streaming fetch to Supabase edge function');
       
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-model-response`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('ai-model-response', {
+        body: {
           prompt,
           useOpenAI,
           systemPrompt,
           isStreaming: true
-        })
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (error) {
+        throw new Error(`Supabase function error: ${error.message}`);
       }
 
-      const reader = response.body?.getReader();
+      const reader = data.body?.getReader();
       if (!reader) {
         throw new Error('No readable stream available');
       }
@@ -283,15 +279,20 @@ export const getModelResponseFromSupabase = async (
             if (line.trim() === '') continue;
             
             if (line.startsWith('data: ')) {
-              const data = line.slice(6);
+              const newLine = line.slice(6);
               
-              if (data === '[DONE]') {
+              if (newLine === '[DONE]') {
                 console.log('Streaming complete');
+                trackEvent('Words generated', {
+                  "prompt": prompt,
+                  "results": results,
+                  "systemPrompt": systemPrompt
+                });
                 return results;
               }
               
               try {
-                const parsed = JSON.parse(data);
+                const parsed = JSON.parse(newLine);
                 if (parsed.type === 'category' && parsed.data) {
                   console.log('Received category via stream:', parsed.data.category);
                   onPartialResponse(parsed.data);
