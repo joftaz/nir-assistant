@@ -695,8 +695,7 @@ const Index: React.FC = () => {
     setShowingSentences(true);
 
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-    await generateSentencesFromWords(stagedWords, apiKey, false, false, type, 'ילד קטן' );
-    //await generateSentencesFromWords(stagedWords, apiKey, type);
+    await generateSentencesFromWords(stagedWords, apiKey, type, selectedPartner );
 
   };
   
@@ -728,7 +727,7 @@ const Index: React.FC = () => {
     }
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-    await generateSentencesFromConversation(conversation, apiKey, type);
+    await generateSentencesFromConversation(conversation, apiKey, type, selectedPartner);
   };
   
   const handleSentenceSelect = (sentence: string) => {
@@ -887,12 +886,12 @@ const Index: React.FC = () => {
   return (
     <div className="min-h-screen w-full flex flex-col items-center px-2 sm:px-4 py-4 sm:py-6">
       
-      {<Header
-        selectedPartner={selectedPartner}
-        onPartnerChange={setSelectedPartner}
+      {<Header 
+        selectedPartner={selectedPartner} 
+        setSelectedPartner={setSelectedPartner} 
       />}
       
-    
+
   
       {showingSentences && (
         <SentencesDisplay

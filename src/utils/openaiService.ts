@@ -620,16 +620,24 @@ export const generateSentences = async (
     initializeOpenAI(apiKey);
     
     console.log("Generating sentences from words:", wordsString);
-    // Use the getSentencePrompt function with conversation mode, children mode
+
     let sentenceGenerationPrompt = replacePromptPlaceholders(getSentencePrompt());
 
+    // Handle sentence type selection
     let actualType = type;
     if (type == "") {
       // Get the default intent value if type is empty
       actualType = getSentenceIntentUnspecifiedPromptValue();
     }
     // Replace sentence type placeholder with the actual type
-    sentenceGenerationPrompt = sentenceGenerationPrompt.replace("{sentences_type_selection}", actualType);  
+    sentenceGenerationPrompt = sentenceGenerationPrompt.replace("{sentences_type_selection}", actualType);
+
+    // Handle communication partner
+    let actualPartner = partner;
+    if (partner === "" || partner === "אדם זר") {
+      actualPartner = "לא ידוע למערכת"; 
+    }
+    sentenceGenerationPrompt += `\n\nשותף שיחה: ${actualPartner}\n`;
 
     // If streaming is requested, use streaming implementation
     if (onPartialSentence) {
