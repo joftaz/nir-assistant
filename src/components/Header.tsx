@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import TopDrawerPanel from "@/components/TopDrawerPanel";
+import MenuSideBar from "@/components/MenuSideBar";
 
 const default_icon = "/icons/typePerson/type-person-person.svg";
 const default_name = "אדם זר";
@@ -18,11 +18,10 @@ const icons_second = [
 ];
 
 export default function Header() {
-  const navigate = useNavigate();
   const [showPanel, setShowPanel] = useState(false);
   const [currentIcon, setCurrentIcon] = useState(default_icon);
   const [currentName, setCurrentName] = useState(default_name);
-
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const chooseTypePerson = () => {
     setShowPanel(true);
@@ -36,6 +35,14 @@ export default function Header() {
     setCurrentName(iconDetails.name);
     setCurrentIcon(iconDetails.path);
     setShowPanel(false);
+  };
+
+  const openMenu = () => {
+    setIsMenuOpen(true);
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
   };
 
   return (
@@ -70,7 +77,7 @@ export default function Header() {
               className="rounded-full"
               title="תפריט"
               aria-label="תפריט"
-              onClick={() => navigate("/menu")}
+              onClick={openMenu}
             >
               <img src="/icons/menu.png" alt="תפריט" className="h-5 w-5" />
             </Button>
@@ -78,7 +85,7 @@ export default function Header() {
         </header>
       )}
 
-      {/* New Top Drawer */}
+      {/* Top Drawer Panel */}
       <TopDrawerPanel
         showPanel={showPanel}
         closePanel={closePanel}
@@ -86,6 +93,9 @@ export default function Header() {
         icons_second={icons_second}
         change_icon={change_icon}
       />
+
+      {/* Menu Drawer */}
+      <MenuSideBar isOpen={isMenuOpen} onClose={closeMenu} />
     </>
   );
 } 

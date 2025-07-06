@@ -29,6 +29,7 @@ supabase/.env
 *.sln
 *.sw?
 
+# Cursor local rules to ignore
+.cursor
+
 .env
-
-
