@@ -11,8 +11,46 @@ how to use?
     add attribute with the prefix 'data-analytics-':
           data-analytics-attribute-name="" // 
 
-
 logged buttons:
+
+Change person type
+```
+    data-track-click="Change person type clicked"
+    data-analytics-button-name="Change person type"
+    data-analytics-current-person-type={currentName}
+```
+
+Choose person type
+```
+    data-track-click="Choose person type clicked"
+    data-analytics-button-name="Choose person type"
+    data-analytics-choosen-person-type={icon.name} 
+```
+
+Menu 
+```
+    data-track-click="Open menu clicked"
+    data-analytics-button-name="Menu"
+```
+
+MenuSideBar
+```
+    data-track-click={`${item.id} clicked`}
+    data-analytics-button-name={item.title}
+
+    data-track-click="Login clicked"
+    data-analytics-button-name="Login"
+```
+
+Login
+```
+    data-track-click="Google Sign In clicked"
+    data-analytics-button-name="Google Sign In"
+
+    data-track-click="Login without account clicked"
+    data-analytics-button-name="Login without account"
+```
+
 Send word
 ```   
     data-track-click="Send word clicked"
@@ -171,7 +209,16 @@ Conversation history
     data-analytics-button-name=Conversation history
 ```
 
+History page
+```
+    data-track-click="Start new conversation clicked"
+    data-analytics-button-name="Start new conversation"
 
+    data-track-click="Load conversation history clicked" 
+    data-analytics-button-name="Select conversation history"
+    data-analytics-history={history.messages.length > 0 ? history.messages[0].text : "No messages"}
+
+```
 
 Record word button
 Event Name: `Text transcripted`

@@ -52,6 +52,9 @@ const TopDrawerPanel: React.FC<TopDrawerPanelProps> = ({
           <div className="flex flex-wrap justify-center gap-4 mb-4">
             {icons_first.map((icon, index) => (
               <Button
+                data-track-click="Choose person type clicked"
+                data-analytics-button-name="Choose person type"
+                data-analytics-choosen-person-type={icon.name} 
                 key={index}
                 variant="ghost"
                 size="icon"
@@ -74,6 +77,9 @@ const TopDrawerPanel: React.FC<TopDrawerPanelProps> = ({
           <div className="flex flex-wrap justify-center gap-4 mb-4">
             {icons_second.map((icon, index) => (
               <Button
+                data-track-click="Choose person type clicked"
+                data-analytics-button-name="Choose person type"
+                data-analytics-choosen-person-type={icon.name} 
                 key={index}
                 variant="ghost"
                 size="icon"

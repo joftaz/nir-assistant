@@ -99,6 +99,8 @@ const MenuSideBar: React.FC<MenuSideBarProps> = ({ isOpen, onClose }) => {
             {menuItems.map((item) => (
               <div key={item.id} className="text-right">
                 <Button
+                  data-track-click={`${item.id} clicked`}
+                  data-analytics-button-name={item.title}
                   variant="ghost"
                   disabled={item.disabled}
                   className={`h-auto p-0 text-2xl sm:text-3xl md:text-4xl font-medium text-right w-auto justify-start transition-all duration-200 ${
@@ -119,6 +121,8 @@ const MenuSideBar: React.FC<MenuSideBarProps> = ({ isOpen, onClose }) => {
         <div className="p-6 sm:p-8 border-t border-gray-100">
           <div className="text-right">
             <Button
+              data-track-click="Login clicked"
+              data-analytics-button-name="Login"
               variant="ghost"
               className="h-auto p-0 text-xl sm:text-2xl font-medium text-foreground hover:bg-transparent hover:text-muted-foreground focus-visible:ring-0 transition-all duration-200 text-right w-auto justify-start"
               onClick={handleLoginClick}

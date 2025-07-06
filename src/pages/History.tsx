@@ -91,6 +91,8 @@ const History: React.FC = () => {
             {/* Center the button in the empty state */}
             <div className="flex justify-center mt-10">
               <Button
+                data-track-click="Start new conversation clicked"
+                data-analytics-button-name="Start new conversation"
                 variant="figma"
                 onClick={handleStartNewConversation}
               >
@@ -103,6 +105,9 @@ const History: React.FC = () => {
             <div className="space-y-4">
               {histories.map((history) => (
                 <motion.div
+                  data-track-click="Load conversation history clicked" 
+                  data-analytics-button-name="Select conversation history"
+                  data-analytics-history={history.messages.length > 0 ? history.messages[0].text : "No messages"}
                   key={history.id}
                   className="bg-gray-50 rounded-lg p-4 flex items-center justify-between"
                   initial={{ opacity: 0, y: 5 }}

@@ -58,6 +58,8 @@ const Login: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <Button
+              data-track-click="Google Sign In clicked"
+              data-analytics-button-name="Google Sign In"
               onClick={handleGoogleSignIn}
               className="w-full"
               size="lg"
@@ -68,6 +70,8 @@ const Login: React.FC = () => {
             
             <div className="text-center">
               <Button
+                data-track-click="Login without account clicked"
+                data-analytics-button-name="Login without account"
                 variant="ghost"
                 onClick={() => navigate('/')}
                 className="text-sm text-muted-foreground"
