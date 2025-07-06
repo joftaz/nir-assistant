@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import TopDrawerPanel from "@/components/TopDrawerPanel";
 import MenuSideBar from "@/components/MenuSideBar";
 
@@ -17,7 +17,12 @@ const icons_second = [
   { path: "/icons/typePerson/type-person-add-new-contact.svg", name: "הוסף איש קשר" }
 ];
 
-export default function Header() {
+interface HeaderProps {
+  title?: string;
+  children?: ReactNode;
+}
+
+export default function Header({ title, children }: HeaderProps) {
   const [showPanel, setShowPanel] = useState(false);
   const [currentIcon, setCurrentIcon] = useState(default_icon);
   const [currentName, setCurrentName] = useState(default_name);
@@ -48,7 +53,7 @@ export default function Header() {
   return (
     <>
       {!showPanel && (
-        <header className="w-full max-w-3xl mx-auto mb-2 text-center relative">
+        <header className="w-full max-w-3xl mx-auto mb-2 text-center relative pt-8 pb-4">
           {/* Right Side: Profile Icon + Name */}
           <div className="absolute top-0 right-0 flex items-center gap-2 p-2">
             <div className="h-11 w-11 rounded-full flex items-center justify-center">
@@ -82,6 +87,13 @@ export default function Header() {
               <img src="/icons/menu.png" alt="תפריט" className="h-5 w-5" />
             </Button>
           </div>
+
+          {/* Centered Title */}
+          {title && (
+            <h1 className="text-2xl font-medium text-gray-900 mt-4 mb-0">{title}</h1>
+          )}
+          {/* Optional children below title */}
+          {children}
         </header>
       )}
 
