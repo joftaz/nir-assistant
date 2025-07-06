@@ -76,7 +76,7 @@ export function useSentenceGenerator() {
     }
   };
   
-  const generateSentencesFromConversation = async (conversation: ConversationItem[], apiKey: string, isConversationMode: boolean = false, isChildrenMode: boolean = false, type: string = "") => {
+  const generateSentencesFromConversation = async (conversation: ConversationItem[], apiKey: string, type: string = "") => {
     if (conversation.length === 0) {
       toast({
         title: "אין מילים בשיחה",
@@ -107,8 +107,6 @@ export function useSentenceGenerator() {
         (partialSentence) => {
           addSentence(partialSentence);
         },
-        isConversationMode,
-        isChildrenMode,
         type
       );
       

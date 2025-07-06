@@ -717,7 +717,7 @@ const Index: React.FC = () => {
     }
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-    await generateSentencesFromConversation(conversation, apiKey, isConversationMode, isChildrenMode, type);
+    await generateSentencesFromConversation(conversation, apiKey, type);
   };
   
   const handleSentenceSelect = (sentence: string) => {
@@ -889,7 +889,7 @@ const Index: React.FC = () => {
           isPlayingAudio={isPlayingAudio}
           onSelectSentence={handleSentenceSelect}
           onCancel={handleCancelSentences}
-          onGenerateMore={handleGenerateSentencesFromConversation}
+          onGenerateMore={() => handleGenerateSentencesFromConversation("")}
           onPlaySpeech={handlePlaySpeech}
         />
       )}
