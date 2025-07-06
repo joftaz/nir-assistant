@@ -37,7 +37,7 @@ const SentenceTypeChooser: React.FC<SentenceTypeChooserProps> = ({ onGenerateSen
             <Button
               data-track-click="Generate sentences type clicked"
               data-analytics-button-name="Generate sentences type"
-              data-analitycs-sentence-type={type.value}
+              data-analytics-sentence-type={type.label}
               key={type.key}
               variant="outline"
               className="flex-1 rounded-lg text-lg py-4"
