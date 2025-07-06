@@ -612,7 +612,8 @@ export const generateSentences = async (
   wordsString: string,
   apiKey: string,
   onPartialSentence?: (sentence: string) => void,
-  type: string = ""
+  type: string = "",
+  partner: string = ""
 ): Promise<string[]> => {
   try {
     // Initialize OpenAI with the provided API key
