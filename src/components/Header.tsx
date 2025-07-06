@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import TopDrawerPanel from "@/components/TopDrawerPanel";
 import MenuSideBar from "@/components/MenuSideBar";
 
@@ -21,14 +21,24 @@ const icons_second = [
 interface HeaderProps {
   title?: string;
   children?: ReactNode;
+  selectedPartner: string;
+  setSelectedPartner: (partner: string) => void;
 }
 
-export default function Header({ title, children }: HeaderProps) {
+export default function Header({ 
+  title, 
+  children,
+  selectedPartner,
+  setSelectedPartner
+ }: HeaderProps) {
 
   const [showPanel, setShowPanel] = useState(false);
   const [currentIcon, setCurrentIcon] = useState(default_icon);
   const [currentName, setCurrentName] = useState(default_name);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  useEffect(() => {
+    setSelectedPartner(default_name);
+  }, [setSelectedPartner]);
 
   const chooseTypePerson = () => {
     setShowPanel(true);
@@ -41,6 +51,7 @@ export default function Header({ title, children }: HeaderProps) {
   const change_icon = (iconDetails: { name: string; path: string }) => {
     setCurrentName(iconDetails.name);
     setCurrentIcon(iconDetails.path);
+    setSelectedPartner(iconDetails.name);
     setShowPanel(false);
   };
 
