@@ -798,6 +798,7 @@ export const generateSentences = async (
       console.log("Generated sentences (streaming):", finalSentences);
       trackEvent('Sentences generated', {
         "prompt": wordsString,
+        "systemPrompt": sentenceGenerationPrompt,
         "sentences": finalSentences
       });
 
