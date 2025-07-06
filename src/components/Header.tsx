@@ -41,6 +41,7 @@ export default function Header({ title, children }: HeaderProps) {
   const change_icon = (iconDetails: { name: string; path: string }) => {
     setCurrentName(iconDetails.name);
     setCurrentIcon(iconDetails.path);
+    props.onPartnerChange(iconDetails.name); // Update the selected partner in the parent component
     setShowPanel(false);
   };
 

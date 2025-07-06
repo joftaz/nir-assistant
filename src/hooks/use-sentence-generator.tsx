@@ -26,7 +26,7 @@ export function useSentenceGenerator() {
     });
   };
   
-  const generateSentencesFromWords = async (words: string[], apiKey: string, type: string = "") => {
+  const generateSentencesFromWords = async (words: string[], apiKey: string, type: string = "", partner:string = "") => {
     if (words.length === 0) {
       toast({
         title: "אין מילים נבחרות",
@@ -51,7 +51,8 @@ export function useSentenceGenerator() {
         (partialSentence) => {
           addSentence(partialSentence);
         },
-        type
+        type,
+        partner
       );
       
       // Ensure all sentences from the final list are included
