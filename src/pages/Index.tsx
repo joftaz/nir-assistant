@@ -148,6 +148,8 @@ const Index: React.FC = () => {
         : `משתמש: ${topic}`;
       
       console.log("Starting streaming request...");
+      console.log("prompt is: ", prompt);
+      
       const categoryReceived = new Set<string>();
       
       await getModelResponse(

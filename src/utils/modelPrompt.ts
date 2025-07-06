@@ -5,6 +5,7 @@ import sentencePromptMd from './sentencePrompt.rtl.md?raw';
 import stagedWordsPromptMd from './stagedWordsPrompt.rtl.md?raw';
 import sentence2ndPersonPromptMd from './sentence2ndPersonPrompt.rtl.md?raw';
 import sentenceChildrenPromptMd from './sentenceChildrenPrompt.rtl.md?raw';
+import synonymsPromptMd from './synonymsPrompt.rtl.md?raw';
 
 // Import or define the TopicCategory type to fix the linter errors
 import type { TopicCategory } from '../types/models';
@@ -15,18 +16,13 @@ export const defaultSentencePrompt = sentencePromptMd;
 export const defaultStagedWordsPrompt = stagedWordsPromptMd;
 export const default2ndPersonSentencePrompt = sentence2ndPersonPromptMd;
 export const defaultChildrenSentencePrompt = sentenceChildrenPromptMd;
+export const defaultSynonymsPrompt = synonymsPromptMd;
 
 // Define storage keys
-export const SYSTEM_PROMPT_STORAGE_KEY = 'system_prompt';
-export const SENTENCE_PROMPT_STORAGE_KEY = 'sentence_prompt';
-export const SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY = 'sentence_2nd_person_prompt';
-export const SENTENCE_CHILDREN_PROMPT_STORAGE_KEY = 'sentence_children_prompt';
-export const STAGED_WORDS_PROMPT_STORAGE_KEY = 'staged_words_prompt';
 export const CATEGORIES_COUNT_KEY = 'categories_count';
 export const WORDS_PER_CATEGORY_KEY = 'words_per_category';
 export const WORDS_COUNT_KEY = 'words_count';
 export const GENDER_STORAGE_KEY = 'gender';
-export const SYNONYMS_PROMPT_STORAGE_KEY = 'synonyms_prompt';
 
 export const defaultSystemJsonInstruction = `
 ===== System Instructions =====
@@ -62,26 +58,7 @@ example:
 
 // Initialize system prompt and settings in localStorage if not present
 export const initializeSystemPrompt = (): void => {
-  if (!localStorage.getItem(SYSTEM_PROMPT_STORAGE_KEY)) {
-    localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, defaultSystemPrompt);
-  }
-  
-  if (!localStorage.getItem(SENTENCE_PROMPT_STORAGE_KEY)) {
-    localStorage.setItem(SENTENCE_PROMPT_STORAGE_KEY, defaultSentencePrompt);
-  }
-  
-  if (!localStorage.getItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY)) {
-    localStorage.setItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY, default2ndPersonSentencePrompt);
-  }
-  
-  if (!localStorage.getItem(SENTENCE_CHILDREN_PROMPT_STORAGE_KEY)) {
-    localStorage.setItem(SENTENCE_CHILDREN_PROMPT_STORAGE_KEY, defaultChildrenSentencePrompt);
-  }
-  
-  if (!localStorage.getItem(STAGED_WORDS_PROMPT_STORAGE_KEY)) {
-    localStorage.setItem(STAGED_WORDS_PROMPT_STORAGE_KEY, defaultStagedWordsPrompt);
-  }
-  
+
   if (!localStorage.getItem(CATEGORIES_COUNT_KEY)) {
     localStorage.setItem(CATEGORIES_COUNT_KEY, '4');
   }
@@ -101,29 +78,26 @@ export const initializeSystemPrompt = (): void => {
 
 // Get system prompt from localStorage or use default
 export const getSystemPrompt = (): string => {
-  const prompt = localStorage.getItem(SYSTEM_PROMPT_STORAGE_KEY) || defaultSystemPrompt;
+  const prompt = defaultSystemPrompt;
   return replacePromptPlaceholders(prompt);
 };
 
 // Get sentence prompt from localStorage or use default
 export const getSentencePrompt = (isConversationMode: boolean = false, isChildrenMode: boolean = false): string => {
-  let storageKey = SENTENCE_PROMPT_STORAGE_KEY;
   let defaultPrompt = defaultSentencePrompt;
-  
+
   if (isChildrenMode) {
-    storageKey = SENTENCE_CHILDREN_PROMPT_STORAGE_KEY;
     defaultPrompt = defaultChildrenSentencePrompt;
   } else if (isConversationMode) {
-    storageKey = SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY;
     defaultPrompt = default2ndPersonSentencePrompt;
   }
-  
-  return localStorage.getItem(storageKey) || defaultPrompt;
+
+  return defaultPrompt;
 };
 
 // Get staged words prompt from localStorage or use default
 export const getStagedWordsPrompt = (): string => {
-  return localStorage.getItem(STAGED_WORDS_PROMPT_STORAGE_KEY) || defaultStagedWordsPrompt;
+  return defaultStagedWordsPrompt;
 };
 
 // This is kept for fallback or testing purposes
@@ -227,7 +201,8 @@ export const getModelResponseFromSupabase = async (
     const systemPrompt = getSystemPrompt();
     
     console.log('Calling Supabase edge function:', { useOpenAI, hasApiKey: !!apiKey, isStreaming: !!onPartialResponse });
-    
+    console.log("Yonia: systemPrompt is: ", systemPrompt, "prompt is: ", prompt);
+
     // For streaming requests, use direct fetch to the edge function URL
     if (onPartialResponse) {
       console.log('Using streaming fetch to Supabase edge function');
@@ -409,59 +384,7 @@ export const replacePromptPlaceholders = (prompt: string): string => {
     .replace(/{gender}/g, gender);
 };
 
-// Add these new constants
-export const defaultSynonymsPrompt = `## תפקידך:
-
-הצעת מילים נרדפות ומקבילות למילה ספציפית שנבחרה - עם דגש על דיוק, רלוונטיות, והתאמה תרבותית-שפתית.
-
-## מי אתה?
-
-אתה עוזר לשוני מקצועי בעל ידע עמוק באוצר המילים העברי. תפקידך לזהות ולהציע מילים נרדפות, ביטויים דומים, ומקבילות סמנטיות למילה שהמשתמש בחר.
-
-## הנחיות:
-
-1. הצע בדיוק {wordsCount} מילים נרדפות או קשורות למילה המקורית.
-
-2. המילים צריכות להיות מגוונות ולכסות מספר היבטים:
-   - מילים נרדפות מדויקות (סינונימים)
-   - מילים בעלות משמעות דומה אך עם גוון שונה
-   - מילים מאותו שדה סמנטי אך עם דגשים שונים
-   - ביטויים קשורים (כאשר רלוונטי)
-
-3. שמור על רמת שפה מותאמת:
-   - אם המילה המקורית פורמלית - הצע בעיקר חלופות פורמליות
-   - אם המילה יומיומית - הצע בעיקר חלופות שגורות בשפה היומיומית
-   - שלב מילים מרמות שפה שונות לגיוון
-
-4. שים לב למגדר: המילים המוצעות צריכות להתאים למגדר {gender} כאשר רלוונטי.
-
-5. הימנע מ:
-   - חזרות מיותרות
-   - מילים נדירות מדי שאינן בשימוש יומיומי (אלא אם המילה המקורית נדירה בעצמה)
-   - מילים שאינן באמת נרדפות
-
-## מבנה התשובה:
-
-הצג רשימה פשוטה של מילים נרדפות למילה המקורית, בלי קטגוריות.
-וודא שהרשימה תכיל בדיוק {wordsCount} מילים.
-
-## דוגמה למבנה התשובה:
-
-\`\`\`json
-{
-  "synonyms": ["מילה1", "מילה2", "מילה3", "מילה4", "מילה5", "מילה6", "מילה7", "מילה8"]
-}
-\`\`\`
-
-## הנחיות קריטיות:
-
-- חייב להציע בדיוק {wordsCount} מילים נרדפות
-- כל המילים המוצעות חייבות להיות בעברית תקנית
-- יש להתאים את המילים למגדר {gender} כאשר רלוונטי
-- הצג תשובה בפורמט JSON תקין בלבד`;
-
 // Add this new function to get the synonyms prompt
-export const getSynonymsPrompt = (): string => {
-  const savedPrompt = localStorage.getItem(SYNONYMS_PROMPT_STORAGE_KEY);
-  return savedPrompt || defaultSynonymsPrompt;
+export const getSynonymsPrompt = (): string => {  
+  return defaultSynonymsPrompt;
 };

@@ -76,7 +76,8 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
       // Get the synonyms prompt
       const synonymsPrompt = getSynonymsPrompt();
       const fullPrompt = replacePromptPlaceholders(synonymsPrompt);
-      
+            
+
       // Make the API call with streaming
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -152,6 +153,7 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
               if (content) {
                 accumulatedData += content;
                 console.log("Accumulated:", accumulatedData);
+                console.log("Yonia: synonymsPrompt is: ", synonymsPrompt);
                 
                 // Try to extract synonyms
                 const currentSynonyms = extractSynonymsFromText(accumulatedData);

@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { defaultSystemPrompt, defaultSystemJsonInstruction, getMockResponse, replacePromptPlaceholders, getSentencePrompt, SYSTEM_PROMPT_STORAGE_KEY, CATEGORIES_COUNT_KEY, WORDS_PER_CATEGORY_KEY } from "./modelPrompt";
+import { defaultSystemPrompt, defaultSystemJsonInstruction, getMockResponse, replacePromptPlaceholders, getSentencePrompt, CATEGORIES_COUNT_KEY, WORDS_PER_CATEGORY_KEY } from "./modelPrompt";
 import type { TopicCategory } from '../types/models';
 
 // Initialize OpenAI - this will use the API key from OPENAI_API_KEY environment variable
@@ -181,7 +181,7 @@ export const getOpenAIStreamingResponse = async (
   apiKey: string,
   onPartialResponse?: (group: TopicCategory) => void
 ): Promise<TopicCategory[]> => {
-  const systemPrompt = localStorage.getItem(SYSTEM_PROMPT_STORAGE_KEY) || defaultSystemPrompt;
+  const systemPrompt = defaultSystemPrompt;
   const categoriesCount = localStorage.getItem(CATEGORIES_COUNT_KEY) || '4';
   const wordsPerCategory = localStorage.getItem(WORDS_PER_CATEGORY_KEY) || '10';
   
@@ -618,6 +618,7 @@ export const generateSentences = async (
     
     // Use the getSentencePrompt function with conversation mode and children mode
     const sentenceGenerationPrompt = replacePromptPlaceholders(getSentencePrompt(isConversationMode, isChildrenMode));
+    console.log("sentenceGenerationPrompt is: ", sentenceGenerationPrompt);
 
     // If streaming is requested, use streaming implementation
     if (onPartialSentence) {

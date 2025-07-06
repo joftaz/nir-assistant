@@ -22,18 +22,12 @@ import {
   defaultSentencePrompt,
   defaultStagedWordsPrompt,
   defaultSynonymsPrompt,
-  replacePromptPlaceholders, 
-  SYSTEM_PROMPT_STORAGE_KEY,
-  SENTENCE_PROMPT_STORAGE_KEY,
-  STAGED_WORDS_PROMPT_STORAGE_KEY,
-  SYNONYMS_PROMPT_STORAGE_KEY,
+  replacePromptPlaceholders,
   CATEGORIES_COUNT_KEY,
   WORDS_PER_CATEGORY_KEY,
   WORDS_COUNT_KEY,
   GENDER_STORAGE_KEY,
-  SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY,
   default2ndPersonSentencePrompt,
-  SENTENCE_CHILDREN_PROMPT_STORAGE_KEY,
   defaultChildrenSentencePrompt
 } from '@/utils/modelPrompt';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
@@ -87,24 +81,18 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
 
   // Load saved settings from localStorage or use defaults
   useEffect(() => {
-    const savedPrompt = localStorage.getItem(SYSTEM_PROMPT_STORAGE_KEY);
-    const savedSentencePrompt = localStorage.getItem(SENTENCE_PROMPT_STORAGE_KEY);
-    const savedSentence2ndPersonPrompt = localStorage.getItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY);
-    const savedSentenceChildrenPrompt = localStorage.getItem(SENTENCE_CHILDREN_PROMPT_STORAGE_KEY);
-    const savedStagedWordsPrompt = localStorage.getItem(STAGED_WORDS_PROMPT_STORAGE_KEY);
-    const savedSynonymsPrompt = localStorage.getItem(SYNONYMS_PROMPT_STORAGE_KEY);
     const savedCategoriesCount = localStorage.getItem(CATEGORIES_COUNT_KEY);
     const savedWordsPerCategory = localStorage.getItem(WORDS_PER_CATEGORY_KEY);
     const savedWordsCount = localStorage.getItem(WORDS_COUNT_KEY);
     const savedGender = localStorage.getItem(GENDER_STORAGE_KEY);
     
     const values = {
-      systemPrompt: savedPrompt || defaultSystemPrompt,
-      sentencePrompt: savedSentencePrompt || defaultSentencePrompt,
-      sentence2ndPersonPrompt: savedSentence2ndPersonPrompt || default2ndPersonSentencePrompt,
-      sentenceChildrenPrompt: savedSentenceChildrenPrompt || defaultChildrenSentencePrompt,
-      stagedWordsPrompt: savedStagedWordsPrompt || defaultStagedWordsPrompt,
-      synonymsPrompt: savedSynonymsPrompt || defaultSynonymsPrompt,
+      systemPrompt: defaultSystemPrompt,
+      sentencePrompt: defaultSentencePrompt,
+      sentence2ndPersonPrompt: default2ndPersonSentencePrompt,
+      sentenceChildrenPrompt: defaultChildrenSentencePrompt,
+      stagedWordsPrompt: defaultStagedWordsPrompt,
+      synonymsPrompt: defaultSynonymsPrompt,
       categoriesCount: savedCategoriesCount ? parseInt(savedCategoriesCount) : 4,
       wordsPerCategory: savedWordsPerCategory ? parseInt(savedWordsPerCategory) : 10,
       wordsCount: savedWordsCount ? parseInt(savedWordsCount) : 10,
@@ -119,12 +107,6 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     const currentValues = form.getValues();
     
     // Save all values to localStorage
-    localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, currentValues.systemPrompt);
-    localStorage.setItem(SENTENCE_PROMPT_STORAGE_KEY, currentValues.sentencePrompt);
-    localStorage.setItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY, currentValues.sentence2ndPersonPrompt);
-    localStorage.setItem(SENTENCE_CHILDREN_PROMPT_STORAGE_KEY, currentValues.sentenceChildrenPrompt);
-    localStorage.setItem(STAGED_WORDS_PROMPT_STORAGE_KEY, currentValues.stagedWordsPrompt);
-    localStorage.setItem(SYNONYMS_PROMPT_STORAGE_KEY, currentValues.synonymsPrompt);
     localStorage.setItem(CATEGORIES_COUNT_KEY, currentValues.categoriesCount.toString());
     localStorage.setItem(WORDS_PER_CATEGORY_KEY, currentValues.wordsPerCategory.toString());
     localStorage.setItem(WORDS_COUNT_KEY, currentValues.wordsCount.toString());
@@ -166,12 +148,6 @@ const Settings: React.FC<SettingsProps> = ({ onSystemPromptChange }) => {
     form.reset(defaultValues);
     
     // Save default values to localStorage
-    localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, defaultValues.systemPrompt);
-    localStorage.setItem(SENTENCE_PROMPT_STORAGE_KEY, defaultValues.sentencePrompt);
-    localStorage.setItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY, defaultValues.sentence2ndPersonPrompt);
-    localStorage.setItem(SENTENCE_CHILDREN_PROMPT_STORAGE_KEY, defaultValues.sentenceChildrenPrompt);
-    localStorage.setItem(STAGED_WORDS_PROMPT_STORAGE_KEY, defaultValues.stagedWordsPrompt);
-    localStorage.setItem(SYNONYMS_PROMPT_STORAGE_KEY, defaultValues.synonymsPrompt);
     localStorage.setItem(CATEGORIES_COUNT_KEY, defaultValues.categoriesCount.toString());
     localStorage.setItem(WORDS_PER_CATEGORY_KEY, defaultValues.wordsPerCategory.toString());
     localStorage.setItem(WORDS_COUNT_KEY, defaultValues.wordsCount.toString());
