@@ -17,12 +17,14 @@ const icons_second = [
   { path: "/icons/typePerson/type-person-add-new-contact.svg", name: "הוסף איש קשר" }
 ];
 
+
 interface HeaderProps {
   title?: string;
   children?: ReactNode;
 }
 
 export default function Header({ title, children }: HeaderProps) {
+
   const [showPanel, setShowPanel] = useState(false);
   const [currentIcon, setCurrentIcon] = useState(default_icon);
   const [currentName, setCurrentName] = useState(default_name);
