@@ -62,6 +62,7 @@ const Index: React.FC = () => {
   // Add new state variables for the drawer
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [activeWord, setActiveWord] = useState<string | null>(null);
   
@@ -202,8 +203,9 @@ const Index: React.FC = () => {
   };
 
   // Handle word click to open the drawer
-  const handleWordClick = (word: string) => {
+  const handleWordClick = (word: string, categotry: string) => {
     setSelectedWord(word);
+    setSelectedCategory(categotry);
     setIsDrawerOpen(true);
   };
 
@@ -691,6 +693,8 @@ const Index: React.FC = () => {
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
     await generateSentencesFromWords(stagedWords, apiKey, false, false, type);
+    //await generateSentencesFromWords(stagedWords, apiKey, type);
+
   };
   
   const handleGenerateSentencesFromConversation = async (type: string = "") => {
@@ -992,6 +996,7 @@ const Index: React.FC = () => {
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         word={selectedWord}
+        category={selectedCategory}
         onAddWord={handleAddWordDirectly}
         onSpeakWord={handleSpeakWord}
       />

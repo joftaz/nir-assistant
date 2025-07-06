@@ -45,6 +45,7 @@ Add word
     data-track-click="Add word clicked"
     data-analytics-button-name="Add word"
     data-analytics-added-word={word}
+    data-analytics-word-category={category}
 ```
 
 Play word
@@ -52,13 +53,15 @@ Play word
     data-track-click="Play word clicked"
     data-analytics-button-name="Play word speech"
     data-analytics-word-spoken={word}
+    data-analytics-word-category={category}
 ```
 
 Find synonyms
 ```
     data-track-click="Find synonyms clicked"
     data-analytics-button-name="Find synonyms"
-    data-analytics-context={word}
+    data-analytics-word-context={word}
+    data-analytics-word-category={category}
 ```
 
 Back
@@ -72,8 +75,8 @@ Add word (synonym)
 ```
     data-track-click="Add word (synonym) clicked"
     data-analytics-button-name="Select synonym"
-    data-analytics-added-synonym={synonym}
     data-analytics-word-context={word}
+    data-analytics-word-category={category}
 ```
  
 Remove word
@@ -85,10 +88,16 @@ Remove word
 
 Generate sentences
 ```
-            data-track-click="Generate sentences clicked"
-            data-analytics-button-name="Generate sentences"
+    data-track-click="Generate sentences clicked"
+    data-analytics-button-name="Generate sentences"
 ```
 
+Generate sentences type
+```
+    data-track-click="Generate sentences type clicked"
+    data-analytics-button-name="Generate sentences type"
+    data-analitycs-sentence-type={type.label}
+```
 
 Conversation mode
 ```

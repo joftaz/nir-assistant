@@ -10,19 +10,22 @@ import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getSynonymsPrompt, replacePromptPlaceholders } from '@/utils/modelPrompt';
 import { useToast } from '@/hooks/use-toast';
+import { ca } from 'date-fns/locale';
 
 interface WordActionDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   word: string | null;
-  onAddWord: (word: string) => void;
-  onSpeakWord: (word: string) => void;
+  category: string | null;
+  onAddWord: (word: string, category: string) => void;
+  onSpeakWord: (word: string, category: string) => void;
 }
 
 const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
   isOpen,
   onClose,
   word,
+  category,
   onAddWord,
   onSpeakWord
 }) => {
@@ -44,12 +47,12 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
   if (!word) return null;
 
   const handleAddWord = () => {
-    onAddWord(word);
+    onAddWord(word, category);
     onClose();
   };
 
   const handleSpeakWord = () => {
-    onSpeakWord(word);
+    onSpeakWord(word, category);
   };
 
   const handleFindSynonyms = async () => {
@@ -212,7 +215,7 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
   };
 
   const handleSelectSynonym = (synonym: string) => {
-    onAddWord(synonym);
+    onAddWord(synonym, category);
     setShowingSynonyms(false);
     onClose();
   };
@@ -288,6 +291,7 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
                           data-analytics-button-name="Select synonym"
                           data-analytics-added-synonym={synonym}
                           data-analytics-word-context={word}
+                          data-analytics-word-category={category}
                           variant="outline" 
                           className="w-full justify-start py-3 px-4 text-right bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-900 text-lg"
                           onClick={() => handleSelectSynonym(synonym)}
@@ -327,6 +331,7 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
                 data-track-click="Add word clicked"
                 data-analytics-button-name="Add word"
                 data-analytics-added-word={word}
+                data-analytics-word-category={category}
                 variant="outline" 
                 className="w-full flex items-center gap-2 justify-center text-lg"
                 onClick={handleAddWord}
@@ -339,6 +344,7 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
                 data-track-click="Play word clicked"
                 data-analytics-button-name="Play word speech"
                 data-analytics-word-spoken={word}
+                data-analytics-word-category={category}
                 variant="outline" 
                 className="w-full flex items-center gap-2 justify-center text-lg"
                 onClick={handleSpeakWord}
@@ -350,7 +356,8 @@ const WordActionDrawer: React.FC<WordActionDrawerProps> = ({
               <Button 
                 data-track-click="Find synonyms clicked"
                 data-analytics-button-name="Find synonyms"
-                data-analytics-context={word}
+                data-analytics-word-context={word}
+                data-analytics-word-category={category}
                 variant="outline"
                 className="w-full flex items-center gap-2 justify-center text-lg"
                 onClick={handleFindSynonyms}
