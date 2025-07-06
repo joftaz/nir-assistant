@@ -8,10 +8,9 @@ import StagingArea from '@/components/StagingArea';
 import SentencesDisplay from '@/components/SentencesDisplay';
 import ConversationHistory, { ConversationItem } from '@/components/ConversationHistory';
 import ApiKeyInput from '@/components/ApiKeyInput';
-import Settings from '@/components/Settings';
 import { getModelResponse, initializeSystemPrompt, getStagedWordsPrompt, defaultSystemJsonInstruction, replacePromptPlaceholders } from '@/utils/modelPrompt';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, RefreshCw, History as HistoryIcon, MessageSquare, Plus, Speech, Baby, Trash2 } from 'lucide-react';
+import { Loader2, RefreshCw, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { saveHistory, getHistoryById } from '@/utils/conversationManager';
 import { TopicCategory } from '@/types/models';
@@ -20,7 +19,8 @@ import { useSentenceGenerator } from '@/hooks/use-sentence-generator';
 import { playSpeech } from '@/utils/speechService';
 import WordActionDrawer from '@/components/WordActionDrawer';
 import SentenceOptionsDrawer from '@/components/SentenceOptionsDrawer';
-import { title } from 'process';
+import Header from '@/components/Header';
+
 
 const Index: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -677,7 +677,7 @@ const Index: React.FC = () => {
     }
   };
   
-  const handleGenerateSentences = async () => {
+  const handleGenerateSentences = async (type: string = "") => {
     if (stagedWords.length === 0) {
       toast({
         title: "אין מילים נבחרות",
@@ -690,10 +690,10 @@ const Index: React.FC = () => {
     setShowingSentences(true);
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-    await generateSentencesFromWords(stagedWords, apiKey);
+    await generateSentencesFromWords(stagedWords, apiKey, false, false, type);
   };
   
-  const handleGenerateSentencesFromConversation = async () => {
+  const handleGenerateSentencesFromConversation = async (type: string = "") => {
     if (conversation.length === 0) {
       toast({
         title: "אין מילים בשיחה",
@@ -721,7 +721,7 @@ const Index: React.FC = () => {
     }
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-    await generateSentencesFromConversation(conversation, apiKey, isConversationMode, isChildrenMode);
+    await generateSentencesFromConversation(conversation, apiKey, type);
   };
   
   const handleSentenceSelect = (sentence: string) => {
@@ -879,57 +879,11 @@ const Index: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center px-2 sm:px-4 py-4 sm:py-6">
-      <header className="w-full max-w-3xl mx-auto mb-2 text-center relative">
-        <div className="absolute top-0 right-0">
-          <Settings onSystemPromptChange={handleSystemPromptChange} />
-        </div>
-        <div className="absolute top-0 left-0 flex gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full"
-            title="מחק שיחה"
-            aria-label="מחק שיחה"
-            onClick={handleReset}
-            data-track-click="Delete conversation clicked"
-            data-analytics-button-name="Delete Conversation"
-          >
-            <Trash2 className="h-5 w-5" />
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full"
-            title="היסטוריית שיחות"
-            aria-label="היסטוריית שיחות"
-            data-track-click="Conversation history clicked"
-            data-analytics-button-name="Conversation History"
-            onClick={() => navigate('/history')}
-          >
-            <HistoryIcon className="h-5 w-5" />
-          </Button>
-        </div>
-        <motion.h1 
-          className="text-xl sm:text-2xl font-semibold mb-1"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          סיוע בשליפת מילים
-        </motion.h1>
-        <motion.p 
-          className="text-muted-foreground text-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          הקלד נושא או לחץ על מילים מוצעות להמשך השיחה
-        </motion.p>
-      </header>
-
-
       
+      {<Header/>}
+      
+    
+  
       {showingSentences && (
         <SentencesDisplay
           sentences={sentences}
@@ -939,7 +893,7 @@ const Index: React.FC = () => {
           isPlayingAudio={isPlayingAudio}
           onSelectSentence={handleSentenceSelect}
           onCancel={handleCancelSentences}
-          onGenerateMore={handleGenerateSentencesFromConversation}
+          onGenerateMore={() => handleGenerateSentencesFromConversation("")}
           onPlaySpeech={handlePlaySpeech}
         />
       )}

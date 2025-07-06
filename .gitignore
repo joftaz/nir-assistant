@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# supabase
+supabase/functions/node_modules
+supabase/functions/.env
+supabase/.temp/*
+supabase/.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,5 +28,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Cursor local rules to ignore
+.cursor
 
 .env
