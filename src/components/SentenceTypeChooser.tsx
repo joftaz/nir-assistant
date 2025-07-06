@@ -21,8 +21,8 @@ const SentenceTypeChooser: React.FC<SentenceTypeChooserProps> = ({ onGenerateSen
     <div className="flex flex-col gap-3 items-center justify-center px-4 py-2 w-full">
       {!showTypes ? (
         <Button
-          data-track-click="Generate sentences type selection clicked"
-          data-analytics-button-name="Select sentences type"
+          data-track-click="Open sentence type clicked"
+          data-analytics-button-name="Open sentence type"
           variant="outline"
           className="w-full flex items-center gap-2 justify-center text-lg"
           onClick={() => setShowTypes(true)}
@@ -35,8 +35,8 @@ const SentenceTypeChooser: React.FC<SentenceTypeChooserProps> = ({ onGenerateSen
         <div className="flex flex-row gap-2 w-full">
           {sentenceTypes.map(type => (
             <Button
-              data-track-click="Generate sentences type clicked"
-              data-analytics-button-name="Generate sentences type"
+              data-track-click="Select sentence type clicked"
+              data-analytics-button-name="Select sentence type"
               data-analytics-sentence-type={type.label}
               key={type.key}
               variant="outline"
