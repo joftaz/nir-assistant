@@ -60,11 +60,6 @@
   }
 }
 
-/* RTL Support */
-html {
-  direction: rtl;
-}
-
 .input-container {
   @apply flex flex-row-reverse items-center bg-white dark:bg-gray-800 border border-border rounded-full px-4 py-2 shadow-sm;
 }
