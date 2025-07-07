@@ -692,8 +692,7 @@ const Index: React.FC = () => {
     setShowingSentences(true);
     
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-    await generateSentencesFromWords(stagedWords, apiKey, false, false, type);
-    //await generateSentencesFromWords(stagedWords, apiKey, type);
+    await generateSentencesFromWords(stagedWords, apiKey, type);
 
   };
   
@@ -882,7 +881,7 @@ const Index: React.FC = () => {
   const hasUserMessages = conversation.some(item => item.isUser);
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center px-2 sm:px-4 py-4 sm:py-6">
+    <div className="min-h-screen w-full flex flex-col items-center px-2 sm:px-4 py-4 sm:py-6" style={{ backgroundColor: '#EDE8F4' }}>
       
       {<Header/>}
       
