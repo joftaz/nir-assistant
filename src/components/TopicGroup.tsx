@@ -6,8 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface TopicGroupProps {
   category: string;
   words: string[];
-  onWordSelect: (word: string, category: string) => void;
-  onWordClick?: (word: string, category: string) => void;
+  onWordClick: (word: string, category: string) => void;
   isCollapsed?: boolean;
   isOld?: boolean;
   isStaging?: boolean;
@@ -18,7 +17,6 @@ interface TopicGroupProps {
 const TopicGroup: React.FC<TopicGroupProps> = ({ 
   category, 
   words, 
-  onWordSelect,
   onWordClick,
   isCollapsed = false, 
   isOld = false,
@@ -56,11 +54,7 @@ const TopicGroup: React.FC<TopicGroupProps> = ({
   const wordTextSize = getWordTextSize();
 
   const handleWordClick = (word: string, category: string) => {
-    if (onWordClick) {
-      onWordClick(word,category);
-    } else {
-      onWordSelect(word, category);
-    }
+    onWordClick(word, category);
   };
 
   return (

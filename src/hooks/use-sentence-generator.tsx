@@ -26,56 +26,6 @@ export function useSentenceGenerator() {
     });
   };
   
-  const generateSentencesFromWords = async (words: string[], apiKey: string, type: string = "") => {
-    if (words.length === 0) {
-      toast({
-        title: "אין מילים נבחרות",
-        description: "יש לבחור מילים לפני יצירת משפטים",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Move current sentences to old sentences
-    setOldSentences(prev => [...prev, ...sentences]);
-    
-    setIsGeneratingSentences(true);
-    setIsStreaming(true);
-    setSentences([]);
-    
-    try {
-      // Use the streaming version with callback
-      const generatedSentences = await generateSentences(
-        words.join(' '), 
-        apiKey,
-        (partialSentence) => {
-          addSentence(partialSentence);
-        },
-        type
-      );
-      
-      // Ensure all sentences from the final list are included
-      setTimeout(() => {
-        generatedSentences.forEach(sentence => {
-          addSentence(sentence);
-        });
-      }, 100);
-      
-    } catch (error) {
-      console.error('Error generating sentences:', error);
-      toast({
-        title: "שגיאה",
-        description: "אירעה שגיאה בעת יצירת המשפטים. אנא נסה שוב.",
-        variant: "destructive",
-      });
-    } finally {
-      setTimeout(() => {
-        setIsGeneratingSentences(false);
-        setIsStreaming(false);
-      }, 300); // Small delay to ensure UI updates are complete
-    }
-  };
-  
   const generateSentencesFromConversation = async (conversation: ConversationItem[], apiKey: string, type: string = "") => {
     if (conversation.length === 0) {
       toast({
@@ -146,7 +96,6 @@ export function useSentenceGenerator() {
     oldSentences,
     isGeneratingSentences,
     isStreaming,
-    generateSentencesFromWords,
     generateSentencesFromConversation,
     clearSentences
   };

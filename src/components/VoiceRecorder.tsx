@@ -139,11 +139,11 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       aria-label={isRecording ? "סיים הקלטה" : "התחל הקלטה"}
     >
       {isTranscribing ? (
-        <Loader2 className="h-5 w-5 animate-spin" />
+        <Loader2 className="!h-6 !w-6 animate-spin" />
       ) : isRecording ? (
-        <MicOff className="h-5 w-5" />
+        <MicOff className="!h-6 !w-6" />
       ) : (
-        <Mic className="h-5 w-5" />
+        <Mic className="!h-6 !w-6" />
       )}
     </Button>
   );

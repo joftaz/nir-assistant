@@ -66,28 +66,33 @@ example:
 
 // Initialize system prompt and settings in localStorage if not present
 export const initializeSystemPrompt = (): void => {
-  if (!localStorage.getItem(SYSTEM_PROMPT_STORAGE_KEY)) {
+  const USE_ONLY_DEFAULT_PROMPTS = true;
+  if (USE_ONLY_DEFAULT_PROMPTS || !localStorage.getItem(SYSTEM_PROMPT_STORAGE_KEY)) {
     localStorage.setItem(SYSTEM_PROMPT_STORAGE_KEY, defaultSystemPrompt);
   }
   
-  if (!localStorage.getItem(SENTENCE_PROMPT_STORAGE_KEY)) {
+  if (USE_ONLY_DEFAULT_PROMPTS || !localStorage.getItem(SENTENCE_PROMPT_STORAGE_KEY)) {
     localStorage.setItem(SENTENCE_PROMPT_STORAGE_KEY, defaultSentencePrompt);
   }
   
-  if (!localStorage.getItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY)) {
+  if (USE_ONLY_DEFAULT_PROMPTS || !localStorage.getItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY)) {
     localStorage.setItem(SENTENCE_2ND_PERSON_PROMPT_STORAGE_KEY, default2ndPersonSentencePrompt);
   }
   
-  if (!localStorage.getItem(SENTENCE_CHILDREN_PROMPT_STORAGE_KEY)) {
+  if (USE_ONLY_DEFAULT_PROMPTS || !localStorage.getItem(SENTENCE_CHILDREN_PROMPT_STORAGE_KEY)) {
     localStorage.setItem(SENTENCE_CHILDREN_PROMPT_STORAGE_KEY, defaultChildrenSentencePrompt);
   }
   
-  if (!localStorage.getItem(SENTENCE_INTENT_UNSPECIFIED_PROMPT_VALUE_STORAGE_KEY)) {
+  if (USE_ONLY_DEFAULT_PROMPTS || !localStorage.getItem(SENTENCE_INTENT_UNSPECIFIED_PROMPT_VALUE_STORAGE_KEY)) {
     localStorage.setItem(SENTENCE_INTENT_UNSPECIFIED_PROMPT_VALUE_STORAGE_KEY, defaultIntentUnspecifiedPromptValue);
   }
 
-  if (!localStorage.getItem(STAGED_WORDS_PROMPT_STORAGE_KEY)) {
+  if (USE_ONLY_DEFAULT_PROMPTS || !localStorage.getItem(STAGED_WORDS_PROMPT_STORAGE_KEY)) {
     localStorage.setItem(STAGED_WORDS_PROMPT_STORAGE_KEY, defaultStagedWordsPrompt);
+  }
+  
+  if (USE_ONLY_DEFAULT_PROMPTS || !localStorage.getItem(SYNONYMS_PROMPT_STORAGE_KEY)) {
+    localStorage.setItem(SYNONYMS_PROMPT_STORAGE_KEY, defaultSynonymsPrompt);
   }
   
   if (!localStorage.getItem(CATEGORIES_COUNT_KEY)) {

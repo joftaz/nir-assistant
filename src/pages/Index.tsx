@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import TopicInput from '@/components/TopicInput';
 import TopicGroup from '@/components/TopicGroup';
-import StagingArea from '@/components/StagingArea';
 import SentencesDisplay from '@/components/SentencesDisplay';
 import ConversationHistory, { ConversationItem } from '@/components/ConversationHistory';
 import ApiKeyInput from '@/components/ApiKeyInput';
@@ -14,7 +13,6 @@ import { Loader2, RefreshCw, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { saveHistory, getHistoryById } from '@/utils/conversationManager';
 import { TopicCategory } from '@/types/models';
-import { useStagingArea } from '@/hooks/use-staging-area';
 import { useSentenceGenerator } from '@/hooks/use-sentence-generator';
 import { playSpeech } from '@/utils/speechService';
 import WordActionDrawer from '@/components/WordActionDrawer';
@@ -26,36 +24,23 @@ const Index: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [conversation, setConversation] = useState<ConversationItem[]>([]);
   const [topicGroups, setTopicGroups] = useState<TopicCategory[]>([]);
-  const [stagingTopicGroups, setStagingTopicGroups] = useState<TopicCategory[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [openAIKey, setOpenAIKey] = useState<string>('');
   const [conversationId, setConversationId] = useState<string>(uuidv4());
-  const [isStaging, setIsStaging] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  const {
-    stagedWords,
-    addWordToStaging,
-    removeWordFromStaging,
-    clearStagingArea,
-    createMessageFromStaged
-  } = useStagingArea();
   
   const {
     sentences,
     oldSentences,
     isGeneratingSentences,
     isStreaming: sentenceIsStreaming,
-    generateSentencesFromWords,
     generateSentencesFromConversation,
     clearSentences
   } = useSentenceGenerator();
   
   const [showingSentences, setShowingSentences] = useState(false);
-  const [autoGenerateStagingWords, setAutoGenerateStagingWords] = useState(false);
-  const [hasRefreshedStaging, setHasRefreshedStaging] = useState(false);
   const [isConversationMode, setIsConversationMode] = useState(false);
   const [isChildrenMode, setIsChildrenMode] = useState(false);
 
@@ -225,8 +210,6 @@ const Index: React.FC = () => {
       description: `המילה "${word}" נוספה לשיחה בהצלחה`,
     });
     
-    // Note: Not refreshing categories automatically after adding a word.
-    // User will need to use the refresh button if they want new suggestions.
   };
   
   // New function to refresh the suggested words/categories
@@ -341,315 +324,6 @@ const Index: React.FC = () => {
       });
   };
 
-  const handleWordSelect = (word: string) => {
-    addWordToStaging(word);
-    
-    if (!isStaging) {
-      setIsStaging(true);
-      setHasRefreshedStaging(false);
-    }
-  };
-
-  const generateStagingWords = (words: string[]) => {
-    if (words.length === 0) return;
-    
-    setIsLoading(true);
-    setIsStreaming(true);
-    
-    setStagingTopicGroups([]);
-    
-    const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-    
-    const conversationHistory = conversation.map(item => 
-      `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
-    ).join('\n');
-    
-    const stagedWordsPrompt = getStagedWordsPrompt();
-    const systemPrompt = `${stagedWordsPrompt}\n\n## שיחה:\n ${words.join(', ')}\n\n${conversationHistory}\n\n### מילים רלוונטיות ליצירת מילים נוספות:\n ${words.join(',')}`;
-    
-    const prompt = `${replacePromptPlaceholders(systemPrompt)}\n\n${defaultSystemJsonInstruction}`;
-    
-    console.log("Starting streaming request for staging words...");
-    const categoryReceived = new Set<string>();
-    
-    getModelResponse(
-      prompt, 
-      !!apiKey, 
-      apiKey, 
-      (partialResponse) => {
-        console.log("Received partial response for staging:", partialResponse);
-        
-        if (!categoryReceived.has(partialResponse.category)) {
-          categoryReceived.add(partialResponse.category);
-          
-          const filteredWords = partialResponse.words.filter(
-            suggestedWord => !words.includes(suggestedWord)
-          );
-          
-          setStagingTopicGroups(currentGroups => {
-            return [
-              ...currentGroups.filter(group => !group.isOld),
-              {
-                ...partialResponse, 
-                words: filteredWords,
-                isCollapsed: false, 
-                isOld: false, 
-                isStaging: true
-              }
-            ];
-          });
-        }
-      }
-    ).catch(error => {
-      console.error('Error fetching response:', error);
-      toast({
-        title: "שגיאה",
-        description: "אירעה שגיאה בקבלת תשובה. אנא נסה שוב.",
-        variant: "destructive",
-      });
-    }).finally(() => {
-      setIsLoading(false);
-      setIsStreaming(false);
-    });
-  };
-
-  const handleStagingWordSelect = (word: string) => {
-    const newMessage: ConversationItem = {
-      id: uuidv4(),
-      text: word,
-      isUser: true,
-      timestamp: new Date()
-    };
-    
-    setConversation(prev => [...prev, newMessage]);
-    
-    setIsStaging(false);
-    clearStagingArea();
-    setStagingTopicGroups([]);
-    
-    toast({
-      title: "נוספה מילה",
-      description: `המילה "${word}" נוספה לשיחה בהצלחה`,
-    });
-    
-    setIsLoading(true);
-    setIsStreaming(true);
-    
-    setTopicGroups(currentGroups => 
-      currentGroups.map(group => ({
-        ...group,
-        isCollapsed: true,
-        isOld: true
-      }))
-    );
-    
-    const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-    
-    const updatedConversation = [...conversation, newMessage];
-    const conversationHistory = updatedConversation.map(item => 
-      `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
-    ).join('\n');
-    
-    const allUserWords = updatedConversation
-      .filter(item => item.isUser)
-      .map(item => item.text);
-    
-    const prompt = `${conversationHistory}\n\nהערה למודל: המילים הבאות כבר נבחרו, אנא הצע מילים חדשות שקשורות לנושא אך שונות מאלו: ${allUserWords.join(', ')}`;
-    
-    console.log("Regenerating categories after staging word selection:", prompt);
-    
-    const categoryReceived = new Set<string>();
-    
-    getModelResponse(
-      prompt, 
-      !!apiKey, 
-      apiKey, 
-      (partialResponse) => {
-        console.log("Received partial response for regeneration:", partialResponse);
-        
-        if (!categoryReceived.has(partialResponse.category)) {
-          categoryReceived.add(partialResponse.category);
-          
-          const filteredWords = partialResponse.words.filter(
-            suggestedWord => !allUserWords.includes(suggestedWord)
-          );
-          
-          setTopicGroups(currentGroups => {
-            const oldGroups = currentGroups.filter(group => group.isOld);
-            const newGroups = currentGroups.filter(group => !group.isOld);
-            
-            return [
-              ...newGroups,
-              {
-                ...partialResponse, 
-                words: filteredWords,
-                isCollapsed: false, 
-                isOld: false
-              },
-              ...oldGroups
-            ];
-          });
-        }
-      }
-    ).catch(error => {
-      console.error('Error fetching response:', error);
-      toast({
-        title: "שגיאה",
-        description: "אירעה שגיאה בקבלת תשובה. אנא נסה שוב.",
-        variant: "destructive",
-      });
-    }).finally(() => {
-      setIsLoading(false);
-      setIsStreaming(false);
-    });
-  };
-
-  const handleStagingConfirm = () => {
-    if (stagedWords.length === 0) return;
-    
-    const newMessage = createMessageFromStaged();
-    setConversation(prev => [...prev, newMessage]);
-    
-    setIsStaging(false);
-    clearStagingArea();
-    setStagingTopicGroups([]);
-    
-    toast({
-      title: "נוספו מילים",
-      description: `המילים נוספו לשיחה בהצלחה: ${stagedWords.join(' ')}`,
-    });
-  };
-  
-  const handleAddAllWords = () => {
-    if (stagedWords.length === 0) return;
-    
-    stagedWords.forEach(word => {
-      const newMessage: ConversationItem = {
-        id: uuidv4(),
-        text: word,
-        isUser: true,
-        timestamp: new Date()
-      };
-      setConversation(prev => [...prev, newMessage]);
-    });
-    
-    setIsStaging(false);
-    clearStagingArea();
-    setStagingTopicGroups([]);
-    
-    toast({
-      title: "נוספו מילים",
-      description: `המילים נוספו לשיחה בהצלחה: ${stagedWords.join(' ')}`,
-    });
-    
-    setIsLoading(true);
-    setIsStreaming(true);
-    
-    setTopicGroups(currentGroups => 
-      currentGroups.map(group => ({
-        ...group,
-        isCollapsed: true,
-        isOld: true
-      }))
-    );
-    
-    const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-    
-    const updatedConversation = [...conversation, ...stagedWords.map(word => ({
-      id: uuidv4(),
-      text: word,
-      isUser: true,
-      timestamp: new Date()
-    }))];
-    const conversationHistory = updatedConversation.map(item => 
-      `${item.isUser ? 'User' : 'Assistant'}: ${item.text}`
-    ).join('\n');
-    
-    const allUserWords = updatedConversation
-      .filter(item => item.isUser)
-      .map(item => item.text);
-    
-    const prompt = `${conversationHistory}\n\nהערה למודל: המילים הבאות כבר נבחרו, אנא הצע מילים חדשות שקשורות לנושא אך שונות מאלו: ${allUserWords.join(', ')}`;
-    
-    console.log("Regenerating categories after adding all words:", prompt);
-    
-    const categoryReceived = new Set<string>();
-    
-    getModelResponse(
-      prompt, 
-      !!apiKey, 
-      apiKey, 
-      (partialResponse) => {
-        console.log("Received partial response for regeneration:", partialResponse);
-        
-        if (!categoryReceived.has(partialResponse.category)) {
-          categoryReceived.add(partialResponse.category);
-          
-          const filteredWords = partialResponse.words.filter(
-            suggestedWord => !allUserWords.includes(suggestedWord)
-          );
-          
-          setTopicGroups(currentGroups => {
-            const oldGroups = currentGroups.filter(group => group.isOld);
-            const newGroups = currentGroups.filter(group => !group.isOld);
-            
-            return [
-              ...newGroups,
-              {
-                ...partialResponse, 
-                words: filteredWords,
-                isCollapsed: false, 
-                isOld: false
-              },
-              ...oldGroups
-            ];
-          });
-        }
-      }
-    ).catch(error => {
-      console.error('Error fetching response:', error);
-      toast({
-        title: "שגיאה",
-        description: "אירעה שגיאה בקבלת תשובה. אנא נסה שוב.",
-        variant: "destructive",
-      });
-    }).finally(() => {
-      setIsLoading(false);
-      setIsStreaming(false);
-    });
-  };
-  
-  const handleStagingCancel = () => {
-    setIsStaging(false);
-    clearStagingArea();
-    setStagingTopicGroups([]);
-    setHasRefreshedStaging(false);
-    
-    toast({
-      title: "בוטלה בחירה",
-      description: "המילים הזמניות נמחקו",
-    });
-  };
-
-  const handleRefreshStagingWords = () => {
-    if (stagedWords.length === 0) return;
-    
-    setStagingTopicGroups([]);
-    setHasRefreshedStaging(true);
-    generateStagingWords(stagedWords);
-  };
-
-  const handleSaveApiKey = (apiKey: string) => {
-    setOpenAIKey(apiKey);
-  };
-
-  const handleSystemPromptChange = (newPrompt: string) => {
-    toast({
-      title: "הודעת מערכת עודכנה",
-      description: "השאילתות הבאות ישתמשו בהודעת המערכת החדשה",
-    });
-  };
-
   const handleReset = () => {
     clearSentences();
     setShowingSentences(false);
@@ -657,9 +331,6 @@ const Index: React.FC = () => {
     setConversation([]);
     setTopicGroups([]);
     setConversationId(uuidv4());
-    setIsStaging(false);
-    clearStagingArea();
-    setStagingTopicGroups([]);
     toast({
       title: "השיחה אופסה",
       description: "השיחה אופסה בהצלחה",
@@ -677,24 +348,6 @@ const Index: React.FC = () => {
         description: "ההודעה הוסרה בהצלחה",
       });
     }
-  };
-  
-  const handleGenerateSentences = async (type: string = "") => {
-    if (stagedWords.length === 0) {
-      toast({
-        title: "אין מילים נבחרות",
-        description: "יש לבחור מילים לפני יצירת משפטים",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setShowingSentences(true);
-    
-    const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
-    await generateSentencesFromWords(stagedWords, apiKey, false, false, type);
-    //await generateSentencesFromWords(stagedWords, apiKey, type);
-
   };
   
   const handleGenerateSentencesFromConversation = async (type: string = "") => {
@@ -718,12 +371,6 @@ const Index: React.FC = () => {
       }))
     );
     
-    if (isStaging) {
-      setIsStaging(false);
-      clearStagingArea();
-      setStagingTopicGroups([]);
-    }
-    
     const apiKey = openAIKey || import.meta.env.VITE_OPENAI_API_KEY || '';
     await generateSentencesFromConversation(conversation, apiKey, type);
   };
@@ -738,11 +385,8 @@ const Index: React.FC = () => {
     
     setConversation(prev => [...prev, newMessage]);
     
-    setIsStaging(false);
-    clearStagingArea();
     clearSentences();
     setShowingSentences(false);
-    setStagingTopicGroups([]);
     
     toast({
       title: "נוסף משפט",
@@ -876,13 +520,11 @@ const Index: React.FC = () => {
   const handleOpenSentenceOptionsDrawer = () => {
     setIsSentenceOptionsDrawerOpen(true);
   };
-
-  const activeTopicGroups = isStaging && hasRefreshedStaging ? stagingTopicGroups : topicGroups;
   
   const hasUserMessages = conversation.some(item => item.isUser);
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center px-2 sm:px-4 py-4 sm:py-6">
+    <div className="min-h-screen w-full flex flex-col items-center px-2 sm:px-4 py-4 sm:py-6" style={{ backgroundColor: '#EDE8F4' }}>
       
       {<Header/>}
       
@@ -904,17 +546,14 @@ const Index: React.FC = () => {
       
       <div className="w-full max-w-3xl mx-auto mt-3">
         <div className="grid grid-cols-2 gap-3">
-          {activeTopicGroups.map((group, index) => (
+          {topicGroups.map((group, index) => (
             <TopicGroup
               key={`${group.category}-${index}`}
               category={group.category}
               words={group.words}
-              onWordSelect={handleWordSelect}
               onWordClick={handleWordClick}
               isCollapsed={group.isCollapsed}
               isOld={group.isOld}
-              isStaging={group.isStaging}
-              hasRefreshedStaging={hasRefreshedStaging}
               activeWord={activeWord}
             />
           ))}
@@ -922,9 +561,10 @@ const Index: React.FC = () => {
       </div>
 
       {/* Moved TopicInput to the bottom with styling for fixed position */}
-      <div className="w-full max-w-3xl mx-auto fixed bottom-0 left-0 right-0 px-2 sm:px-4 pb-6 pt-2 bg-background">
+      <div className="w-full mx-auto fixed bottom-0 left-0 right-0 px-0 pb-6 pt-2" style={{ backgroundColor: '#F7F7F7', boxShadow: '0 0 30px rgba(0, 0, 0, 0.25)' }}>
+        <div className="w-full max-w-3xl mx-auto px-2 sm:px-4">
         {/* Refresh button moved above selected words */}
-        {!isStaging && hasUserMessages && !showingSentences && (
+        {hasUserMessages && !showingSentences && (
           <div className="flex justify-center mb-2">
             <Button
               data-track-click="Refresh words clicked"
@@ -940,28 +580,13 @@ const Index: React.FC = () => {
             </Button>
           </div>
         )}
-        
-        {/* Moved StagingArea to be above the sentence controls */}
-        {isStaging && (
-          <div className="mb-2">
-            <StagingArea
-              stagedWords={stagedWords}
-              onRemoveWord={removeWordFromStaging}
-              onWordSelect={handleStagingWordSelect}
-              onCancel={handleStagingCancel}
-              onAddAllWords={handleAddAllWords}
-              onRefresh={handleRefreshStagingWords}
-              isLoading={isLoading}
-            />
-          </div>
-        )}
 
         <ConversationHistory 
           conversation={conversation} 
           onRemoveMessage={handleRemoveMessage}
         />
           
-        {!isStaging && hasUserMessages && !showingSentences && (
+        {hasUserMessages && !showingSentences && (
           <div className="w-full mobile-sentence-controls mb-2">
             <Button
               data-track-click="Create Sentences clicked"
@@ -983,13 +608,8 @@ const Index: React.FC = () => {
           placeholder="הקלד נושא או מילה..."
           isStreaming={isStreaming}
         />
+        </div>
       </div>
-
-      {/* <ApiKeyInput 
-        onSaveApiKey={handleSaveApiKey} 
-        apiKey={openAIKey}
-        className="mt-6"
-      /> */}
       
       {/* Word Action Drawer */}
       <WordActionDrawer 
