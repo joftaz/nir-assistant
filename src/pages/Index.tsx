@@ -921,7 +921,8 @@ const Index: React.FC = () => {
       </div>
 
       {/* Moved TopicInput to the bottom with styling for fixed position */}
-      <div className="w-full max-w-3xl mx-auto fixed bottom-0 left-0 right-0 px-2 sm:px-4 pb-6 pt-2 bg-background">
+      <div className="w-full mx-auto fixed bottom-0 left-0 right-0 px-0 pb-6 pt-2" style={{ backgroundColor: '#F7F7F7', boxShadow: '0 0 30px rgba(0, 0, 0, 0.25)' }}>
+        <div className="w-full max-w-3xl mx-auto px-2 sm:px-4">
         {/* Refresh button moved above selected words */}
         {!isStaging && hasUserMessages && !showingSentences && (
           <div className="flex justify-center mb-2">
@@ -982,6 +983,7 @@ const Index: React.FC = () => {
           placeholder="הקלד נושא או מילה..."
           isStreaming={isStreaming}
         />
+        </div>
       </div>
       
       {/* Word Action Drawer */}
