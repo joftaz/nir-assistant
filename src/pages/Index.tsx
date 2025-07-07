@@ -984,12 +984,6 @@ const Index: React.FC = () => {
           isStreaming={isStreaming}
         />
       </div>
-
-      {/* <ApiKeyInput 
-        onSaveApiKey={handleSaveApiKey} 
-        apiKey={openAIKey}
-        className="mt-6"
-      /> */}
       
       {/* Word Action Drawer */}
       <WordActionDrawer 
