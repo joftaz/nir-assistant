@@ -5,7 +5,7 @@ import Drawer from 'react-modern-drawer';
 import 'react-modern-drawer/dist/index.css';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { X } from 'lucide-react';
+import { X, User } from 'lucide-react';
 
 interface MenuSideBarProps {
   isOpen: boolean;
@@ -117,18 +117,50 @@ const MenuSideBar: React.FC<MenuSideBarProps> = ({ isOpen, onClose }) => {
           </div>
         </nav>
 
-        {/* Login Button at Bottom */}
+        {/* User Authentication Section at Bottom */}
         <div className="p-6 sm:p-8 border-t border-gray-100">
           <div className="text-right">
-            <Button
-              data-track-click="Login clicked"
-              data-analytics-button-name="Login"
-              variant="ghost"
-              className="h-auto p-0 text-xl sm:text-2xl font-medium text-foreground hover:bg-transparent hover:text-muted-foreground focus-visible:ring-0 transition-all duration-200 text-right w-auto justify-start"
-              onClick={handleLoginClick}
-            >
-              התחברות
-            </Button>
+            {user ? (
+              <div className="space-y-4">
+                {/* User Info */}
+                <div className="flex items-center justify-end gap-3 mb-2">
+                  <div className="text-base font-medium text-gray-800">
+                    {user.user_metadata?.name || user.email?.split('@')[0] || 'משתמש'}
+                  </div>
+                  <div className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full overflow-hidden">
+                    {user.user_metadata?.avatar_url ? (
+                      <img 
+                        src={user.user_metadata.avatar_url} 
+                        alt="User Avatar"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-4 h-4 text-gray-600" />
+                    )}
+                  </div>
+                </div>
+                {/* Logout Button */}
+                <Button
+                  data-track-click="Logout clicked"
+                  data-analytics-button-name="Logout"
+                  variant="ghost"
+                  className="h-auto p-0 text-xl sm:text-2xl font-medium text-foreground hover:bg-transparent hover:text-muted-foreground focus-visible:ring-0 transition-all duration-200 text-right w-auto justify-start"
+                  onClick={handleSignOut}
+                >
+                  התנתקות
+                </Button>
+              </div>
+            ) : (
+              <Button
+                data-track-click="Login clicked"
+                data-analytics-button-name="Login"
+                variant="ghost"
+                className="h-auto p-0 text-xl sm:text-2xl font-medium text-foreground hover:bg-transparent hover:text-muted-foreground focus-visible:ring-0 transition-all duration-200 text-right w-auto justify-start"
+                onClick={handleLoginClick}
+              >
+                התחברות
+              </Button>
+            )}
           </div>
         </div>
       </div>
