@@ -12,7 +12,6 @@ interface BottomInputAreaProps {
   isStreaming: boolean;
   showingSentences: boolean;
   onRemoveMessage: (id: string) => void;
-  onRefreshSuggestedWords: () => void;
   onOpenSentenceOptionsDrawer: () => void;
   isGeneratingSentences: boolean;
 }
@@ -25,7 +24,6 @@ const BottomInputArea: React.FC<BottomInputAreaProps> = ({
   isStreaming,
   showingSentences,
   onRemoveMessage,
-  onRefreshSuggestedWords,
   onOpenSentenceOptionsDrawer,
   isGeneratingSentences
 }) => {
@@ -34,24 +32,6 @@ const BottomInputArea: React.FC<BottomInputAreaProps> = ({
   return (
     <div className="w-full mx-auto fixed bottom-0 left-0 right-0 px-0 pb-6 pt-2" style={{ backgroundColor: '#F7F7F7', boxShadow: '0 0 30px rgba(0, 0, 0, 0.25)' }}>
       <div className="w-full max-w-3xl mx-auto px-2 sm:px-4">
-        {/* Refresh button moved above selected words */}
-        {hasUserMessages && !showingSentences && (
-          <div className="flex justify-center mb-2">
-            <Button
-              data-track-click="Refresh words clicked"
-              data-analytics-button-name="Refresh Suggested Words"
-              variant="ghost"
-              size="sm"
-              className="text-sm"
-              onClick={onRefreshSuggestedWords}
-              disabled={!hasUserMessages || isStreaming || isLoading}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              רענן מילים מוצעות
-            </Button>
-          </div>
-        )}
-
         <ConversationHistory 
           conversation={conversation} 
           onRemoveMessage={onRemoveMessage}

@@ -527,7 +527,13 @@ const Index: React.FC = () => {
   return (
     <div className="min-h-screen w-full flex flex-col items-center px-2 sm:px-4 py-4 sm:py-6" style={{ backgroundColor: '#EDE8F4' }}>
       
-      {<Header/>}
+      <Header
+        onRefreshSuggestedWords={handleRefreshSuggestedWords}
+        isLoading={isLoading}
+        isStreaming={isStreaming}
+        hasUserMessages={hasUserMessages}
+        showingSentences={showingSentences}
+      />
       
     
   
@@ -570,7 +576,6 @@ const Index: React.FC = () => {
         isStreaming={isStreaming}
         showingSentences={showingSentences}
         onRemoveMessage={handleRemoveMessage}
-        onRefreshSuggestedWords={handleRefreshSuggestedWords}
         onOpenSentenceOptionsDrawer={handleOpenSentenceOptionsDrawer}
         isGeneratingSentences={isGeneratingSentences}
       />
