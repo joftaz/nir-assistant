@@ -134,16 +134,16 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       disabled={isLoading || isTranscribing || (!isRecording && !apiKey)}
       size="icon"
       variant={isRecording ? "destructive" : "ghost"}
-      className={`rounded-full transition-all ${isRecording ? 'bg-red-500 hover:bg-red-600' : ''}`}
+      className={`rounded-full transition-all w-[15.82px] h-[23.07px] p-0 ${isRecording ? 'bg-red-500 hover:bg-red-600' : ''}`}
       title={isRecording ? "סיים הקלטה" : "התחל הקלטה"}
       aria-label={isRecording ? "סיים הקלטה" : "התחל הקלטה"}
     >
       {isTranscribing ? (
-        <Loader2 className="!h-6 !w-6 animate-spin" />
+        <Loader2 className="!w-[15.82px] !h-[23.07px] animate-spin text-[#6C6C6C]" />
       ) : isRecording ? (
-        <MicOff className="!h-6 !w-6" />
+        <MicOff className="!w-[15.82px] !h-[23.07px] text-white" />
       ) : (
-        <Mic className="!h-6 !w-6" />
+        <Mic className="!w-[15.82px] !h-[23.07px] text-[#6C6C6C]" />
       )}
     </Button>
   );

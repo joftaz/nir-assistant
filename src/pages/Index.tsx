@@ -18,6 +18,7 @@ import { playSpeech } from '@/utils/speechService';
 import WordActionDrawer from '@/components/WordActionDrawer';
 import SentenceOptionsDrawer from '@/components/SentenceOptionsDrawer';
 import Header from '@/components/Header';
+import BottomInputArea from '@/components/BottomInputArea';
 
 
 const Index: React.FC = () => {
@@ -560,56 +561,19 @@ const Index: React.FC = () => {
         </div>
       </div>
 
-      {/* Moved TopicInput to the bottom with styling for fixed position */}
-      <div className="w-full mx-auto fixed bottom-0 left-0 right-0 px-0 pb-6 pt-2" style={{ backgroundColor: '#F7F7F7', boxShadow: '0 0 30px rgba(0, 0, 0, 0.25)' }}>
-        <div className="w-full max-w-3xl mx-auto px-2 sm:px-4">
-        {/* Refresh button moved above selected words */}
-        {hasUserMessages && !showingSentences && (
-          <div className="flex justify-center mb-2">
-            <Button
-              data-track-click="Refresh words clicked"
-              data-analytics-button-name="Refresh Suggested Words"
-              variant="ghost"
-              size="sm"
-              className="text-sm"
-              onClick={handleRefreshSuggestedWords}
-              disabled={!hasUserMessages || isStreaming || isLoading}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              רענן מילים מוצעות
-            </Button>
-          </div>
-        )}
-
-        <ConversationHistory 
-          conversation={conversation} 
-          onRemoveMessage={handleRemoveMessage}
-        />
-          
-        {hasUserMessages && !showingSentences && (
-          <div className="w-full mobile-sentence-controls mb-2">
-            <Button
-              data-track-click="Create Sentences clicked"
-              data-analytics-button-name="Create Sentences"
-              variant="outline"
-              onClick={handleOpenSentenceOptionsDrawer}
-              disabled={isGeneratingSentences || conversation.length === 0}
-              className="gap-2 rtl:flex-row-reverse"
-            >
-              <MessageSquare className="h-4 w-4" />
-              <span>יצירת משפטים</span>
-            </Button>
-          </div>
-        )}
-        <TopicInput 
-          onSubmit={handleSubmitTopic} 
-          isLoading={isLoading}
-          apiKey={openAIKey}
-          placeholder="הקלד נושא או מילה..."
-          isStreaming={isStreaming}
-        />
-        </div>
-      </div>
+      {/* Replace the old bottom section with the new BottomInputArea component */}
+      <BottomInputArea
+        conversation={conversation}
+        onSubmitTopic={handleSubmitTopic}
+        isLoading={isLoading}
+        apiKey={openAIKey}
+        isStreaming={isStreaming}
+        showingSentences={showingSentences}
+        onRemoveMessage={handleRemoveMessage}
+        onRefreshSuggestedWords={handleRefreshSuggestedWords}
+        onOpenSentenceOptionsDrawer={handleOpenSentenceOptionsDrawer}
+        isGeneratingSentences={isGeneratingSentences}
+      />
       
       {/* Word Action Drawer */}
       <WordActionDrawer 
